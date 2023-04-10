@@ -59,7 +59,7 @@ describe('MaxWei', () => {
   });
 
   it('Succeeds for withdraw when under max wei', async () => {
-    await dolomiteMargin.admin.setMaxWei(market, amount.times('4'), { from: admin });
+    await dolomiteMargin.admin.setMaxSupplyWei(market, amount.times('4'), { from: admin });
 
     await dolomiteMargin.operation
       .initiate()
@@ -78,7 +78,7 @@ describe('MaxWei', () => {
   });
 
   it('Succeeds for withdraw when over max wei', async () => {
-    await dolomiteMargin.admin.setMaxWei(market, amount.times('0.01'), { from: admin });
+    await dolomiteMargin.admin.setMaxSupplyWei(market, amount.times('0.01'), { from: admin });
 
     await dolomiteMargin.operation
       .initiate()
@@ -97,7 +97,7 @@ describe('MaxWei', () => {
   });
 
   it('Succeeds for deposit when under max wei', async () => {
-    await dolomiteMargin.admin.setMaxWei(market, amount.times('5'), { from: admin });
+    await dolomiteMargin.admin.setMaxSupplyWei(market, amount.times('5'), { from: admin });
 
     await dolomiteMargin.operation
       .initiate()
@@ -116,7 +116,7 @@ describe('MaxWei', () => {
   });
 
   it('Fails for deposit when currently over max wei', async () => {
-    await dolomiteMargin.admin.setMaxWei(market, amount.times('2'), { from: admin });
+    await dolomiteMargin.admin.setMaxSupplyWei(market, amount.times('2'), { from: admin });
 
     await expectThrow(
       dolomiteMargin.operation
@@ -138,7 +138,7 @@ describe('MaxWei', () => {
   });
 
   it('Fails for deposit that pushes over max wei', async () => {
-    await dolomiteMargin.admin.setMaxWei(market, amount.times('5'), { from: admin });
+    await dolomiteMargin.admin.setMaxSupplyWei(market, amount.times('5'), { from: admin });
 
     await expectThrow(
       dolomiteMargin.operation

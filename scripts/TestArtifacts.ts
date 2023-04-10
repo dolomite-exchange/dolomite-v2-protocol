@@ -25,8 +25,6 @@ import { default as TestDolomiteMargin } from '../build/contracts/TestDolomiteMa
 import { default as UniswapV2Pair } from '../build/contracts/UniswapV2Pair.json';
 import { default as UniswapV2Factory } from '../build/contracts/UniswapV2Factory.json';
 import { default as UniswapV2Router02 } from '../build/contracts/UniswapV2Router02.json';
-import { default as TestRecyclableToken } from '../build/contracts/TestRecyclableToken.json';
-import { default as TestTrader } from '../build/contracts/TestTrader.json';
 import { default as TestAmmRebalancerProxy } from '../build/contracts/TestAmmRebalancerProxy.json';
 import { default as TestUniswapV3MultiRouter } from '../build/contracts/TestUniswapV3MultiRouter.json';
 import { default as TestChainlinkFlags } from '../build/contracts/TestChainlinkFlags.json';
@@ -63,8 +61,6 @@ export default {
   UniswapV2Pair,
   UniswapV2Factory,
   UniswapV2Router02,
-  TestRecyclableToken,
-  TestTrader,
   TestUniswapV3MultiRouter,
   TestChainlinkFlags,
   TestChainlinkPriceOracleV1,

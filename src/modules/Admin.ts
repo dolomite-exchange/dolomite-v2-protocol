@@ -53,9 +53,10 @@ export class Admin {
     interestSetter: address,
     marginPremium: Decimal,
     spreadPremium: Decimal,
-    maxWei: Integer,
+    maxSupplyWei: Integer,
+    maxBorrowWei: Integer,
+    earningsRateOverride: Decimal,
     isClosing: boolean,
-    isRecyclable: boolean,
     options?: ContractCallOptions,
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
@@ -65,23 +66,10 @@ export class Admin {
         interestSetter,
         { value: decimalToString(marginPremium) },
         { value: decimalToString(spreadPremium) },
-        maxWei.toFixed(0),
+        maxSupplyWei.toFixed(0),
+        maxBorrowWei.toFixed(0),
+        { value: decimalToString(earningsRateOverride) },
         isClosing,
-        isRecyclable,
-      ),
-      options,
-    );
-  }
-
-  public async removeMarkets(
-    marketIds: Integer[],
-    salvager: address,
-    options?: ContractCallOptions,
-  ): Promise<TxResult> {
-    return this.contracts.callContractFunction(
-      this.contracts.dolomiteMargin.methods.ownerRemoveMarkets(
-        marketIds.map(marketId => marketId.toFixed(0)),
-        salvager,
       ),
       options,
     );
@@ -107,26 +95,50 @@ export class Admin {
     );
   }
 
-  public async setSpreadPremium(
+  public async setLiquidationSpreadPremium(
     marketId: Integer,
     spreadPremium: Decimal,
     options?: ContractCallOptions,
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.dolomiteMargin.methods.ownerSetSpreadPremium(marketId.toFixed(0), {
+      this.contracts.dolomiteMargin.methods.ownerSetLiquidationSpreadPremium(marketId.toFixed(0), {
         value: decimalToString(spreadPremium),
       }),
       options,
     );
   }
 
-  public async setMaxWei(
+  public async setMaxSupplyWei(
     marketId: Integer,
-    maxWei: Integer,
+    maxSupplyWei: Integer,
     options?: ContractCallOptions,
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.dolomiteMargin.methods.ownerSetMaxWei(marketId.toFixed(0), maxWei.toFixed(0)),
+      this.contracts.dolomiteMargin.methods.ownerSetMaxSupplyWei(marketId.toFixed(0), maxSupplyWei.toFixed(0)),
+      options,
+    );
+  }
+
+  public async setMaxBorrowWei(
+    marketId: Integer,
+    maxBorrowWei: Integer,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.dolomiteMargin.methods.ownerSetMaxBorrowWei(marketId.toFixed(0), maxBorrowWei.toFixed(0)),
+      options,
+    );
+  }
+
+  public async setEarningsRateOverride(
+    marketId: Integer,
+    earningsRateOverride: Decimal,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.dolomiteMargin.methods.ownerSetEarningsRateOverride(marketId.toFixed(0), {
+        value: decimalToString(earningsRateOverride),
+      }),
       options,
     );
   }

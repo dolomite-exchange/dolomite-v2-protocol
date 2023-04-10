@@ -307,7 +307,7 @@ describe('LiquidatorProxyV1', () => {
             marginPremium,
             { from: admin },
           ),
-          dolomiteMargin.admin.setSpreadPremium(
+          dolomiteMargin.admin.setLiquidationSpreadPremium(
             market1,
             spreadPremium,
             { from: admin },

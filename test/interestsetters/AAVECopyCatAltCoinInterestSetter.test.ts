@@ -53,19 +53,19 @@ describe('AAVECopyCatAltCoinInterestSetter', () => {
   });
 
   it('Succeeds for 0/0', async () => {
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(zero);
   });
 
   it('Succeeds for 0/100', async () => {
     await dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, par);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(zero);
   });
 
   it('Succeeds for 100/0', async () => {
     await dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, negPar);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -74,7 +74,7 @@ describe('AAVECopyCatAltCoinInterestSetter', () => {
       dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, par),
       dolomiteMargin.testing.setAccountBalance(owner, accountNumber2, zero, negPar),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -88,7 +88,7 @@ describe('AAVECopyCatAltCoinInterestSetter', () => {
         negPar.times(2),
       ),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -102,7 +102,7 @@ describe('AAVECopyCatAltCoinInterestSetter', () => {
         negPar.div(2),
       ),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(
       getInterestPerSecondForAAVECopyCat(
         isStableCoin,
@@ -181,7 +181,7 @@ describe('AAVECopyCatAltCoinInterestSetter', () => {
           negPar.times(utilization),
         ),
       ]);
-      const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+      const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
       expect(rate).to.eql(
         getInterestPerSecondForAAVECopyCat(
           isStableCoin,

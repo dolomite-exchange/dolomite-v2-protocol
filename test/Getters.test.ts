@@ -179,7 +179,7 @@ describe('Getters', () => {
         expect(limits.liquidationSpreadMax).to.eql(defaultLimits.liquidationSpreadMax);
         expect(limits.earningsRateMax).to.eql(defaultLimits.earningsRateMax);
         expect(limits.marginPremiumMax).to.eql(defaultLimits.marginPremiumMax);
-        expect(limits.spreadPremiumMax).to.eql(defaultLimits.spreadPremiumMax);
+        expect(limits.liquidationSpreadPremiumMax).to.eql(defaultLimits.spreadPremiumMax);
         expect(limits.minBorrowedValueMax).to.eql(defaultLimits.minBorrowedValueMax);
       });
     });
@@ -320,7 +320,7 @@ describe('Getters', () => {
 
         const [totalPar, interestRate, earningsRate] = await Promise.all([
           dolomiteMargin.getters.getMarketTotalPar(market2),
-          dolomiteMargin.getters.getMarketInterestRate(market2),
+          dolomiteMargin.getters.getMarketBorrowInterestRate(market2),
           dolomiteMargin.getters.getEarningsRate(),
         ]);
 
@@ -389,13 +389,13 @@ describe('Getters', () => {
 
     describe('#getMarketSpreadPremium', () => {
       it('Succeeds', async () => {
-        await dolomiteMargin.admin.setSpreadPremium(market2, highPremium, {
+        await dolomiteMargin.admin.setLiquidationSpreadPremium(market2, highPremium, {
           from: admin,
         });
         const result = await Promise.all([
-          dolomiteMargin.getters.getMarketSpreadPremium(market1),
-          dolomiteMargin.getters.getMarketSpreadPremium(market2),
-          dolomiteMargin.getters.getMarketSpreadPremium(market3),
+          dolomiteMargin.getters.getMarketLiquidationSpreadPremium(market1),
+          dolomiteMargin.getters.getMarketLiquidationSpreadPremium(market2),
+          dolomiteMargin.getters.getMarketLiquidationSpreadPremium(market3),
         ]);
         expect(result[0]).to.eql(defaultPremium);
         expect(result[1]).to.eql(highPremium);
@@ -403,7 +403,7 @@ describe('Getters', () => {
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketSpreadPremium(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(dolomiteMargin.getters.getMarketLiquidationSpreadPremium(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 
@@ -445,9 +445,9 @@ describe('Getters', () => {
     describe('#getMarketInterestRate', () => {
       it('Succeeds', async () => {
         const actualRates = await Promise.all([
-          dolomiteMargin.getters.getMarketInterestRate(market1),
-          dolomiteMargin.getters.getMarketInterestRate(market2),
-          dolomiteMargin.getters.getMarketInterestRate(market3),
+          dolomiteMargin.getters.getMarketBorrowInterestRate(market1),
+          dolomiteMargin.getters.getMarketBorrowInterestRate(market2),
+          dolomiteMargin.getters.getMarketBorrowInterestRate(market3),
         ]);
         expect(actualRates[0]).to.eql(rates[0]);
         expect(actualRates[1]).to.eql(rates[1]);
@@ -455,7 +455,7 @@ describe('Getters', () => {
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketInterestRate(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(dolomiteMargin.getters.getMarketBorrowInterestRate(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 
@@ -471,7 +471,7 @@ describe('Getters', () => {
         await Promise.all([
           dolomiteMargin.admin.setIsClosing(market2, true, { from: admin }),
           dolomiteMargin.admin.setMarginPremium(market2, highPremium, { from: admin }),
-          dolomiteMargin.admin.setSpreadPremium(market2, highPremium.div(2), {
+          dolomiteMargin.admin.setLiquidationSpreadPremium(market2, highPremium.div(2), {
             from: admin,
           }),
           dolomiteMargin.testing.setMarketIndex(market2, index),
@@ -484,7 +484,7 @@ describe('Getters', () => {
         expect(market.index).to.eql(index);
         expect(market.interestSetter).to.eql(setterAddress);
         expect(market.marginPremium).to.eql(highPremium);
-        expect(market.spreadPremium).to.eql(highPremium.div(2));
+        expect(market.liquidationSpreadPremium).to.eql(highPremium.div(2));
         expect(market.isClosing).to.eql(true);
         expect(market.priceOracle).to.eql(oracleAddress);
         expect(market.token).to.eql(tokens[1]);
@@ -512,7 +512,7 @@ describe('Getters', () => {
         await Promise.all([
           dolomiteMargin.admin.setIsClosing(market2, true, { from: admin }),
           dolomiteMargin.admin.setMarginPremium(market2, highPremium, { from: admin }),
-          dolomiteMargin.admin.setSpreadPremium(market2, highPremium.div(2), {
+          dolomiteMargin.admin.setLiquidationSpreadPremium(market2, highPremium.div(2), {
             from: admin,
           }),
           dolomiteMargin.testing.setMarketIndex(market2, index),

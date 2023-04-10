@@ -42,7 +42,6 @@ import { default as ArbitrumMultiCall } from '../build/contracts/ArbitrumMultiCa
 import { default as MultiCall } from '../build/contracts/MultiCall.json';
 import { default as IArbitrumGasInfo } from '../build/contracts/IArbitrumGasInfo.json';
 import { default as TestUniswapAmmRebalancerProxy } from '../build/contracts/TestUniswapAmmRebalancerProxy.json';
-import { default as RecyclableTokenProxy } from '../build/contracts/RecyclableTokenProxy.json';
 import { default as AAVECopyCatAltCoinInterestSetter } from '../build/contracts/AAVECopyCatAltCoinInterestSetter.json';
 import { default as AAVECopyCatStableCoinInterestSetter } from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
 import { default as LiquidatorAssetRegistry } from '../build/contracts/LiquidatorAssetRegistry.json';
@@ -89,7 +88,6 @@ export default {
   MultiCall,
   IArbitrumGasInfo,
   TestUniswapAmmRebalancerProxy,
-  RecyclableTokenProxy,
   AAVECopyCatAltCoinInterestSetter,
   AAVECopyCatStableCoinInterestSetter,
   LiquidatorAssetRegistry,

@@ -651,8 +651,8 @@ describe('Expiry', () => {
         .times(heldPremium.plus(1))
         .plus(1);
       await Promise.all([
-        dolomiteMargin.admin.setSpreadPremium(owedMarket, owedPremium, { from: admin }),
-        dolomiteMargin.admin.setSpreadPremium(heldMarket, heldPremium, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(owedMarket, owedPremium, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(heldMarket, heldPremium, { from: admin }),
       ]);
 
       await expectExpireOkay(heldGlob);
@@ -856,8 +856,8 @@ describe('Expiry', () => {
         .times(heldPremium.plus(1))
         .plus(1);
       await Promise.all([
-        dolomiteMargin.admin.setSpreadPremium(owedMarket, owedPremium, { from: admin }),
-        dolomiteMargin.admin.setSpreadPremium(heldMarket, heldPremium, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(owedMarket, owedPremium, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(heldMarket, heldPremium, { from: admin }),
       ]);
 
       await expectExpireOkay({});
@@ -1126,9 +1126,9 @@ describe('Expiry', () => {
       ];
       const collateralPreferences = [owedMarket, heldMarket, collateralMarket];
       await Promise.all([
-        dolomiteMargin.admin.setSpreadPremium(heldMarket, premiums[0][1] as Integer, { from: admin }),
-        dolomiteMargin.admin.setSpreadPremium(owedMarket, premiums[1][1] as Integer, { from: admin }),
-        dolomiteMargin.admin.setSpreadPremium(collateralMarket, premiums[2][1] as Integer, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(heldMarket, premiums[0][1] as Integer, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(owedMarket, premiums[1][1] as Integer, { from: admin }),
+        dolomiteMargin.admin.setLiquidationSpreadPremium(collateralMarket, premiums[2][1] as Integer, { from: admin }),
         dolomiteMargin.testing.setAccountBalance(
           owner2,
           accountNumber2,

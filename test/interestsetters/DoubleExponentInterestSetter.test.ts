@@ -56,19 +56,19 @@ describe('DoubleExponentInterestSetter', () => {
   });
 
   it('Succeeds for 0/0', async () => {
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(zero);
   });
 
   it('Succeeds for 0/100', async () => {
     await dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, par);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(zero);
   });
 
   it('Succeeds for 100/0', async () => {
     await dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, negPar);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -77,7 +77,7 @@ describe('DoubleExponentInterestSetter', () => {
       dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, par),
       dolomiteMargin.testing.setAccountBalance(owner, accountNumber2, zero, negPar),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -91,7 +91,7 @@ describe('DoubleExponentInterestSetter', () => {
         negPar.times(2),
       ),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -105,7 +105,7 @@ describe('DoubleExponentInterestSetter', () => {
         negPar.div(2),
       ),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
     expect(rate).to.eql(
       getInterestPerSecondForDoubleExponent(
         defaultMaxAPR,
@@ -208,7 +208,7 @@ describe('DoubleExponentInterestSetter', () => {
           negPar.times(utilization),
         ),
       ]);
-      const rate = await dolomiteMargin.getters.getMarketInterestRate(zero);
+      const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
       expect(rate).to.eql(
         getInterestPerSecondForDoubleExponent(
           defaultMaxAPR,
