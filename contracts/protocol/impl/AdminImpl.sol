@@ -22,7 +22,6 @@ pragma experimental ABIEncoderV2;
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
-import { IRecyclable } from "../interfaces/IRecyclable.sol";
 import { Decimal } from "../lib/Decimal.sol";
 import { Interest } from "../lib/Interest.sol";
 import { DolomiteMarginMath } from "../lib/DolomiteMarginMath.sol";
@@ -70,11 +69,6 @@ library AdminImpl {
         address token
     );
 
-    event LogRemoveMarket(
-        uint256 marketId,
-        address token
-    );
-
     event LogSetIsClosing(
         uint256 marketId,
         bool isClosing
@@ -97,12 +91,22 @@ library AdminImpl {
 
     event LogSetSpreadPremium(
         uint256 marketId,
-        Decimal.D256 spreadPremium
+        Decimal.D256 liquidationSpreadPremium
     );
 
-    event LogSetMaxWei(
+    event LogSetMaxSupplyWei(
         uint256 marketId,
-        Types.Wei maxWei
+        Types.Wei maxSupplyWei
+    );
+
+    event LogSetMaxBorrowWei(
+        uint256 marketId,
+        Types.Wei maxBorrowWei
+    );
+
+    event LogSetEarningsRateOverride(
+        uint256 marketId,
+        Decimal.D256 earningsRateOverride
     );
 
     event LogSetMarginRatio(
@@ -123,6 +127,12 @@ library AdminImpl {
 
     event LogSetAccountMaxNumberOfMarketsWithBalances(
         uint256 accountMaxNumberOfMarketsWithBalances
+    );
+
+    event LogSetAccountRiskOverride(
+        address account,
+        Decimal.D256 marginRatioOverride,
+        Decimal.D256 liquidationSpreadOverride
     );
 
     event LogSetGlobalOperator(
@@ -194,30 +204,22 @@ library AdminImpl {
         IPriceOracle priceOracle,
         IInterestSetter interestSetter,
         Decimal.D256 memory marginPremium,
-        Decimal.D256 memory spreadPremium,
-        uint256 maxWei,
-        bool isClosing,
-        bool isRecyclable
+        Decimal.D256 memory liquidationSpreadPremium,
+        uint256 maxSupplyWei,
+        uint256 maxBorrowWei,
+        Decimal.D256 memory earningsRateOverride,
+        bool isClosing
     )
     public
     {
         _requireNoMarket(state, token);
 
-        uint256 marketId = state.recycledMarketIds[HEAD_POINTER];
-        if (marketId == 0) {
-            // we can't recycle a marketId, so we get a new ID and increment the number of markets
-            marketId = state.numMarkets;
-            state.numMarkets++;
-        } else {
-            // we successfully recycled the market ID.
-            // reset the head pointer to the next item in the linked list
-            state.recycledMarketIds[HEAD_POINTER] = state.recycledMarketIds[marketId];
-        }
+        uint256 marketId = state.numMarkets;
+        state.numMarkets += 1;
 
         state.markets[marketId].token = token;
         state.markets[marketId].index = Interest.newIndex();
         state.markets[marketId].isClosing = isClosing;
-        state.markets[marketId].isRecyclable = isRecyclable;
         state.tokenToMarketId[token] = marketId;
 
         emit LogAddMarket(marketId, token);
@@ -228,80 +230,10 @@ library AdminImpl {
         _setPriceOracle(state, marketId, priceOracle);
         _setInterestSetter(state, marketId, interestSetter);
         _setMarginPremium(state, marketId, marginPremium);
-        _setSpreadPremium(state, marketId, spreadPremium);
-        _setMaxWei(state, marketId, maxWei);
-
-        if (isRecyclable) {
-            IRecyclable(token).initialize();
-        }
-    }
-
-    function ownerRemoveMarkets(
-        Storage.State storage state,
-        uint[] memory marketIds,
-        address salvager
-    )
-    public
-    {
-        for (uint i = 0; i < marketIds.length; i++) {
-            address token = state.markets[marketIds[i]].token;
-            Require.that(
-                token != address(0),
-                FILE,
-                "market does not exist",
-                marketIds[i]
-            );
-            Require.that(
-                state.markets[marketIds[i]].isRecyclable,
-                FILE,
-                "market is not recyclable",
-                marketIds[i]
-            );
-
-            (
-                Types.Wei memory supplyWei,
-                Types.Wei memory borrowWei
-            ) = Interest.totalParToWei(state.getTotalPar(marketIds[i]), state.getIndex(marketIds[i]));
-
-            Require.that(
-                borrowWei.value == 0,
-                FILE,
-                "market has active borrows",
-                marketIds[i]
-            );
-            uint expirationTimestamp = IRecyclable(state.getToken(marketIds[i])).MAX_EXPIRATION_TIMESTAMP();
-            Require.that(
-                expirationTimestamp < block.timestamp,
-                FILE,
-                "market is not expired",
-                marketIds[i],
-                expirationTimestamp
-            );
-            // Give the expiration timestamp a 7-day buffer to ensure enough time has passed for expirations to occur
-            Require.that(
-                (expirationTimestamp + ONE_WEEK) < block.timestamp,
-                FILE,
-                "expiration must pass buffer",
-                marketIds[i],
-                expirationTimestamp
-            );
-
-            Token.transfer(token, salvager, supplyWei.value);
-
-            delete state.markets[marketIds[i]];
-            delete state.tokenToMarketId[token];
-
-            uint previousHead = state.recycledMarketIds[HEAD_POINTER];
-            state.recycledMarketIds[HEAD_POINTER] = marketIds[i];
-            if (previousHead != 0) {
-                // marketId=0 is not recyclable so we can assume previousHead == 0 means the null case
-                state.recycledMarketIds[marketIds[i]] = previousHead;
-            }
-
-            IRecyclable(token).recycle();
-
-            emit LogRemoveMarket(marketIds[i], token);
-        }
+        _setLiquidationSpreadPremium(state, marketId, liquidationSpreadPremium);
+        _setMaxSupplyWei(state, marketId, maxSupplyWei);
+        _setMaxBorrowWei(state, marketId, maxBorrowWei);
+        _setEarningsRateOverride(state, marketId, earningsRateOverride);
     }
 
     function ownerSetIsClosing(
@@ -350,26 +282,48 @@ library AdminImpl {
         _setMarginPremium(state, marketId, marginPremium);
     }
 
-    function ownerSetSpreadPremium(
+    function ownerSetLiquidationSpreadPremium(
         Storage.State storage state,
         uint256 marketId,
-        Decimal.D256 memory spreadPremium
+        Decimal.D256 memory liquidationSpreadPremium
     )
     public
     {
         _validateMarketId(state, marketId);
-        _setSpreadPremium(state, marketId, spreadPremium);
+        _setLiquidationSpreadPremium(state, marketId, liquidationSpreadPremium);
     }
 
-    function ownerSetMaxWei(
+    function ownerSetMaxSupplyWei(
         Storage.State storage state,
         uint256 marketId,
-        uint256 maxWei
+        uint256 maxSupplyWei
     )
     public
     {
         _validateMarketId(state, marketId);
-        _setMaxWei(state, marketId, maxWei);
+        _setMaxSupplyWei(state, marketId, maxSupplyWei);
+    }
+
+    function ownerSetMaxBorrowWei(
+        Storage.State storage state,
+        uint256 marketId,
+        uint256 maxBorrowWei
+    )
+    public
+    {
+        _validateMarketId(state, marketId);
+        _setMaxBorrowWei(state, marketId, maxBorrowWei);
+    }
+
+    function ownerSetEarningsRateOverride(
+        Storage.State storage state,
+        uint256 marketId,
+        Decimal.D256 memory earningsRateOverride
+    )
+    public
+    {
+        _validateMarketId(state, marketId);
+        _setEarningsRateOverride(state, marketId, earningsRateOverride);
     }
 
     // ============ Risk Functions ============
@@ -457,6 +411,34 @@ library AdminImpl {
         emit LogSetAccountMaxNumberOfMarketsWithBalances(accountMaxNumberOfMarketsWithBalances);
     }
 
+    function ownerSetAccountRiskOverride(
+        Storage.State storage state,
+        address accountOwner,
+        Decimal.D256 memory marginRatio,
+        Decimal.D256 memory liquidationSpread
+    ) public {
+        Require.that(
+            marginRatio.value <= state.riskLimits.marginRatioMax,
+            FILE,
+            "Ratio too high"
+        );
+        Require.that(
+            liquidationSpread.value <= state.riskLimits.liquidationSpreadMax,
+            FILE,
+            "Spread too high"
+        );
+        Require.that(
+            (marginRatio.value == 0 && liquidationSpread.value == 0)
+                || (marginRatio.value > 0 && liquidationSpread.value > 0),
+            FILE,
+            "Invalid ratio/spread combination"
+        );
+
+        state.riskParams.marginRatioOverrideMap[accountOwner] = marginRatio;
+        state.riskParams.liquidationSpreadOverrideMap[accountOwner] = liquidationSpread;
+        emit LogSetAccountRiskOverride(accountOwner, marginRatio, liquidationSpread);
+    }
+
     // ============ Global Operator Functions ============
 
     function ownerSetGlobalOperator(
@@ -539,34 +521,65 @@ library AdminImpl {
         emit LogSetMarginPremium(marketId, marginPremium);
     }
 
-    function _setSpreadPremium(
+    function _setLiquidationSpreadPremium(
         Storage.State storage state,
         uint256 marketId,
-        Decimal.D256 memory spreadPremium
+        Decimal.D256 memory liquidationSpreadPremium
     )
     private
     {
         Require.that(
-            spreadPremium.value <= state.riskLimits.spreadPremiumMax,
+            liquidationSpreadPremium.value <= state.riskLimits.liquidationSpreadPremiumMax,
             FILE,
             "Spread premium too high"
         );
-        state.markets[marketId].spreadPremium = spreadPremium;
+        state.markets[marketId].liquidationSpreadPremium = liquidationSpreadPremium;
 
-        emit LogSetSpreadPremium(marketId, spreadPremium);
+        emit LogSetSpreadPremium(marketId, liquidationSpreadPremium);
     }
 
-    function _setMaxWei(
+    function _setMaxSupplyWei(
         Storage.State storage state,
         uint256 marketId,
-        uint256 maxWei
+        uint256 maxSupplyWei
     )
     private
     {
-        Types.Wei memory maxWeiStruct = Types.Wei(true, maxWei.to128());
-        state.markets[marketId].maxWei = maxWeiStruct;
+        Types.Wei memory maxSupplyWeiStruct = Types.Wei(true, maxSupplyWei.to128());
+        state.markets[marketId].maxSupplyWei = maxSupplyWeiStruct;
 
-        emit LogSetMaxWei(marketId, maxWeiStruct);
+        emit LogSetMaxSupplyWei(marketId, maxSupplyWeiStruct);
+    }
+
+    function _setMaxBorrowWei(
+        Storage.State storage state,
+        uint256 marketId,
+        uint256 maxBorrowWei
+    )
+    private
+    {
+        Types.Wei memory maxBorrowWeiStruct = Types.Wei(true, maxBorrowWei.to128());
+        state.markets[marketId].maxBorrowWei = maxBorrowWeiStruct;
+
+        emit LogSetMaxBorrowWei(marketId, maxBorrowWeiStruct);
+    }
+
+    function _setEarningsRateOverride(
+        Storage.State storage state,
+        uint256 marketId,
+        Decimal.D256 memory earningsRateOverride
+    )
+    private
+    {
+        Require.that(
+            earningsRateOverride.value <= state.riskLimits.earningsRateMax,
+            FILE,
+            "Rate too high"
+        );
+
+        state.markets[marketId].earningsRateOverride = earningsRateOverride;
+
+        emit LogSetEarningsRateOverride(marketId, earningsRateOverride);
     }
 
     function _requireNoMarket(

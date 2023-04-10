@@ -104,6 +104,7 @@ library LiquidateOrVaporizeImpl {
         ) = _getLiquidationPrices(
             state,
             cache,
+            args.liquidAccount.owner,
             args.heldMarket,
             args.owedMarket
         );
@@ -241,6 +242,7 @@ library LiquidateOrVaporizeImpl {
         ) = _getLiquidationPrices(
             state,
             cache,
+            args.vaporAccount.owner,
             args.heldMarket,
             args.owedMarket
         );
@@ -400,6 +402,7 @@ library LiquidateOrVaporizeImpl {
     function _getLiquidationPrices(
         Storage.State storage state,
         Cache.MarketCache memory cache,
+        address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -412,6 +415,7 @@ library LiquidateOrVaporizeImpl {
     {
         uint256 owedPrice = cache.get(owedMarketId).price.value;
         Decimal.D256 memory spread = state.getLiquidationSpreadForPair(
+            liquidAccountOwner,
             heldMarketId,
             owedMarketId
         );

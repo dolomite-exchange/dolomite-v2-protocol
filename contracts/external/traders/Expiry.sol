@@ -221,7 +221,8 @@ contract Expiry is
         return g_expiries[account.owner][account.number][marketId];
     }
 
-    function getSpreadAdjustedPrices(
+    function getLiquidationSpreadAdjustedPrices(
+        address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry
@@ -233,8 +234,9 @@ contract Expiry is
             Monetary.Price memory
         )
     {
-        return _getSpreadAdjustedPrices(
+        return _getLiquidationSpreadAdjustedPrices(
             DOLOMITE_MARGIN,
+            liquidAccountOwner,
             heldMarketId,
             owedMarketId,
             expiry
@@ -243,8 +245,9 @@ contract Expiry is
 
     // ============ Private Functions ============
 
-    function _getSpreadAdjustedPrices(
+    function _getLiquidationSpreadAdjustedPrices(
         IDolomiteMargin dolomiteMargin,
+        address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry
@@ -257,6 +260,7 @@ contract Expiry is
         )
     {
         Decimal.D256 memory spread = dolomiteMargin.getLiquidationSpreadForPair(
+            liquidAccountOwner,
             heldMarketId,
             owedMarketId
         );
@@ -369,6 +373,7 @@ contract Expiry is
             );
             output = _owedWeiToHeldWei(
                 dolomiteMargin,
+                makerAccount.owner,
                 inputWei,
                 outputMarketId,
                 inputMarketId,
@@ -402,6 +407,7 @@ contract Expiry is
             );
             output = _heldWeiToOwedWei(
                 dolomiteMargin,
+                makerAccount.owner,
                 inputWei,
                 inputMarketId,
                 outputMarketId,
@@ -463,6 +469,7 @@ contract Expiry is
 
     function _heldWeiToOwedWei(
         IDolomiteMargin dolomiteMargin,
+        address liquidAccountOwner,
         Types.Wei memory heldWei,
         uint256 heldMarketId,
         uint256 owedMarketId,
@@ -475,8 +482,9 @@ contract Expiry is
         (
             Monetary.Price memory heldPrice,
             Monetary.Price memory owedPrice
-        ) = _getSpreadAdjustedPrices(
+        ) = _getLiquidationSpreadAdjustedPrices(
             dolomiteMargin,
+            liquidAccountOwner,
             heldMarketId,
             owedMarketId,
             expiry
@@ -498,6 +506,7 @@ contract Expiry is
 
     function _owedWeiToHeldWei(
         IDolomiteMargin dolomiteMargin,
+        address liquidAccountOwner,
         Types.Wei memory owedWei,
         uint256 heldMarketId,
         uint256 owedMarketId,
@@ -510,8 +519,9 @@ contract Expiry is
         (
             Monetary.Price memory heldPrice,
             Monetary.Price memory owedPrice
-        ) = _getSpreadAdjustedPrices(
+        ) = _getLiquidationSpreadAdjustedPrices(
             dolomiteMargin,
+            liquidAccountOwner,
             heldMarketId,
             owedMarketId,
             expiry

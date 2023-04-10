@@ -50,7 +50,8 @@ contract IExpiry {
         uint32 minTimeDelta;
     }
 
-    function getSpreadAdjustedPrices(
+    function getLiquidationSpreadAdjustedPrices(
+        address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry

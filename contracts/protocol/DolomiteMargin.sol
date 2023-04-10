@@ -24,8 +24,14 @@ import { Getters } from "./Getters.sol";
 import { Operation } from "./Operation.sol";
 import { Permission } from "./Permission.sol";
 import { State } from "./State.sol";
-import { Storage } from "./lib/Storage.sol";
+
+import { AdminImpl } from "./impl/AdminImpl.sol";
+
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
+
+import { Decimal } from "./lib/Decimal.sol";
+import { Monetary } from "./lib/Monetary.sol";
+import { Storage } from "./lib/Storage.sol";
 
 
 /**
@@ -45,12 +51,20 @@ contract DolomiteMargin is
     // ============ Constructor ============
 
     constructor(
-        Storage.RiskParams memory riskParams,
+        Decimal.D256 memory marginRatio,
+        Decimal.D256 memory liquidationSpread,
+        Decimal.D256 memory earningsRate,
+        Monetary.Value memory minBorrowedValue,
+        uint256 accountMaxNumberOfMarketsWithBalances,
         Storage.RiskLimits memory riskLimits
     )
         public
     {
-        g_state.riskParams = riskParams;
+        AdminImpl.ownerSetMarginRatio(g_state, marginRatio);
+        AdminImpl.ownerSetLiquidationSpread(g_state, liquidationSpread);
+        AdminImpl.ownerSetEarningsRate(g_state, earningsRate);
+        AdminImpl.ownerSetMinBorrowedValue(g_state, minBorrowedValue);
+        AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(g_state, accountMaxNumberOfMarketsWithBalances);
         g_state.riskLimits = riskLimits;
     }
 }

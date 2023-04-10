@@ -149,7 +149,8 @@ contract LiquidatorProxyBase {
 
         uint256 owedPriceAdj;
         if (_constants.expiry > 0) {
-            (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getSpreadAdjustedPrices(
+            (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
+                _constants.liquidAccount.owner,
                 _heldMarket,
                 _owedMarket,
                 _constants.expiry
@@ -157,6 +158,7 @@ contract LiquidatorProxyBase {
             owedPriceAdj = owedPricePrice.value;
         } else {
             Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForPair(
+                _constants.liquidAccount.owner,
                 _heldMarket,
                 _owedMarket
             );

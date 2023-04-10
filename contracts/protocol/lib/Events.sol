@@ -50,6 +50,11 @@ library Events {
         Monetary.Price price
     );
 
+    event LogInterestRate(
+        uint256 indexed market,
+        Interest.Rate rate
+    );
+
     event LogOperation(
         address sender
     );
@@ -174,6 +179,18 @@ library Events {
         emit LogOraclePrice(
             marketInfo.marketId,
             marketInfo.price
+        );
+    }
+
+    function logInterestRate(
+        uint256 marketId,
+        Interest.Rate memory rate
+    )
+        internal
+    {
+        emit LogInterestRate(
+            marketId,
+            rate
         );
     }
 

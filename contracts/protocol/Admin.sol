@@ -21,14 +21,19 @@ pragma experimental ABIEncoderV2;
 
 import { Ownable } from "@openzeppelin/contracts/ownership/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { State } from "./State.sol";
-import { AdminImpl } from "./impl/AdminImpl.sol";
+
+import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
+
+import { AdminImpl } from "./impl/AdminImpl.sol";
+
 import { Decimal } from "./lib/Decimal.sol";
 import { Interest } from "./lib/Interest.sol";
 import { Monetary } from "./lib/Monetary.sol";
 import { Token } from "./lib/Token.sol";
+
+import { State } from "./State.sol";
 
 
 /**
@@ -38,6 +43,7 @@ import { Token } from "./lib/Token.sol";
  * Public functions that allow the privileged owner address to manage DolomiteMargin
  */
 contract Admin is
+    IDolomiteMargin,
     State,
     Ownable,
     ReentrancyGuard
@@ -88,30 +94,6 @@ contract Admin is
     // ============ Market Functions ============
 
     /**
-     * Sets the number of non-zero balances an account may have within the same `accountIndex`. This ensures a user
-     * cannot DOS the system by filling their account with non-zero balances (which linearly increases gas costs when
-     * checking collateralization) and disallowing themselves to close the position, because the number of gas units
-     * needed to process their transaction exceed the block's gas limit. In turn, this would  prevent the user from also
-     * being liquidated, causing the all of the capital to be "stuck" in the position.
-     *
-     * Lowering this number does not "freeze" user accounts that have more than the new limit of balances, because this
-     * variable is enforced by checking the users number of non-zero balances against the max or if it sizes down before
-     * each transaction finishes.
-     */
-    function ownerSetAccountMaxNumberOfMarketsWithBalances(
-        uint256 accountMaxNumberOfMarketsWithBalances
-    )
-        public
-        onlyOwner
-        nonReentrant
-    {
-        AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(
-            g_state,
-            accountMaxNumberOfMarketsWithBalances
-        );
-    }
-
-    /**
      * Add a new market to DolomiteMargin. Must be for a previously-unsupported ERC20 token.
      */
     function ownerAddMarket(
@@ -120,9 +102,10 @@ contract Admin is
         IInterestSetter interestSetter,
         Decimal.D256 memory marginPremium,
         Decimal.D256 memory spreadPremium,
-        uint256 maxWei,
-        bool isClosing,
-        bool isRecyclable
+        uint256 maxSupplyWei,
+        uint256 maxBorrowWei,
+        Decimal.D256 memory earningsRateOverride,
+        bool isClosing
     )
         public
         onlyOwner
@@ -135,28 +118,10 @@ contract Admin is
             interestSetter,
             marginPremium,
             spreadPremium,
-            maxWei,
-            isClosing,
-            isRecyclable
-        );
-    }
-
-    /**
-     * Removes a market from DolomiteMargin, sends any remaining tokens in this contract to `salvager` and invokes the
-     * recyclable callback
-     */
-    function ownerRemoveMarkets(
-        uint[] memory marketIds,
-        address salvager
-    )
-        public
-        onlyOwner
-        nonReentrant
-    {
-        AdminImpl.ownerRemoveMarkets(
-            g_state,
-            marketIds,
-            salvager
+            maxSupplyWei,
+            maxBorrowWei,
+            earningsRateOverride,
+            isClosing
         );
     }
 
@@ -234,18 +199,48 @@ contract Admin is
         );
     }
 
-    function ownerSetMaxWei(
+    function ownerSetMaxSupplyWei(
         uint256 marketId,
-        uint256 maxWei
+        uint256 maxSupplyWei
     )
         public
         onlyOwner
         nonReentrant
     {
-        AdminImpl.ownerSetMaxWei(
+        AdminImpl.ownerSetMaxSupplyWei(
             g_state,
             marketId,
-            maxWei
+            maxSupplyWei
+        );
+    }
+
+    function ownerSetMaxBorrowWei(
+        uint256 marketId,
+        uint256 maxBorrowWei
+    )
+        public
+        onlyOwner
+        nonReentrant
+    {
+        AdminImpl.ownerSetMaxBorrowWei(
+            g_state,
+            marketId,
+            maxBorrowWei
+        );
+    }
+
+    function ownerSetEarningsRateOverride(
+        uint256 marketId,
+        Decimal.D256 memory earningsRateOverride
+    )
+        public
+        onlyOwner
+        nonReentrant
+    {
+        AdminImpl.ownerSetEarningsRateOverride(
+            g_state,
+            marketId,
+            earningsRateOverride
         );
     }
 
@@ -253,18 +248,18 @@ contract Admin is
      * Set a premium on the liquidation spread for a market. This makes it so that any liquidations that include this
      * market have a higher spread than the global default.
      */
-    function ownerSetSpreadPremium(
+    function ownerSetLiquidationSpreadPremium(
         uint256 marketId,
-        Decimal.D256 memory spreadPremium
+        Decimal.D256 memory liquidationSpreadPremium
     )
         public
         onlyOwner
         nonReentrant
     {
-        AdminImpl.ownerSetSpreadPremium(
+        AdminImpl.ownerSetLiquidationSpreadPremium(
             g_state,
             marketId,
-            spreadPremium
+            liquidationSpreadPremium
         );
     }
 
@@ -333,6 +328,51 @@ contract Admin is
         AdminImpl.ownerSetMinBorrowedValue(
             g_state,
             minBorrowedValue
+        );
+    }
+
+    /**
+     * Sets the number of non-zero balances an account may have within the same `accountIndex`. This ensures a user
+     * cannot DOS the system by filling their account with non-zero balances (which linearly increases gas costs when
+     * checking collateralization) and disallowing themselves to close the position, because the number of gas units
+     * needed to process their transaction exceed the block's gas limit. In turn, this would  prevent the user from also
+     * being liquidated, causing the all of the capital to be "stuck" in the position.
+     *
+     * Lowering this number does not "freeze" user accounts that have more than the new limit of balances, because this
+     * variable is enforced by checking the users number of non-zero balances against the max or if it sizes down before
+     * each transaction finishes.
+     */
+    function ownerSetAccountMaxNumberOfMarketsWithBalances(
+        uint256 accountMaxNumberOfMarketsWithBalances
+    )
+    public
+    onlyOwner
+    nonReentrant
+    {
+        AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(
+            g_state,
+            accountMaxNumberOfMarketsWithBalances
+        );
+    }
+
+    /**
+     * Sets the risk overrides for the provided account. This allows addresses that are in isolation mode to implement
+     * a version of e-mode that lets them borrow correlated assets more efficiently.
+     */
+    function ownerSetAccountRiskOverride(
+        address accountOwner,
+        Decimal.D256 memory marginRatio,
+        Decimal.D256 memory liquidationSpread
+    )
+    public
+    onlyOwner
+    nonReentrant
+    {
+        AdminImpl.ownerSetAccountRiskOverride(
+            g_state,
+            accountOwner,
+            marginRatio,
+            liquidationSpread
         );
     }
 

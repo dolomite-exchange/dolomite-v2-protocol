@@ -328,40 +328,48 @@ library OperationImpl {
                 );
             }
 
-            Types.Wei memory maxWei = state.getMaxWei(marketId);
-            if (maxWei.value != 0) {
+            Interest.Index memory index = cache.getAtIndex(i).index;
+            (
+                Types.Wei memory totalSupplyWei,
+                Types.Wei memory totalBorrowWei
+            ) = Interest.totalParToWei(totalPar, index);
+
+            Types.Wei memory maxSupplyWei = state.getMaxSupplyWei(marketId);
+            if (maxSupplyWei.value != 0) {
                 // require total supply is less than the max OR it scaled down
-                Interest.Index memory index = cache.getAtIndex(i).index;
-                (Types.Wei memory totalSupplyWei,) = Interest.totalParToWei(totalPar, index);
                 Types.Wei memory cachedSupplyWei = Interest.parToWei(
                     Types.Par(true, cache.getAtIndex(i).supplyPar),
                     index
                 );
                 Require.that(
-                    totalSupplyWei.value <= maxWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
+                    totalSupplyWei.value <= maxSupplyWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
                     FILE,
                     "Total supply exceeds max supply",
                     marketId
                 );
             }
 
-            if (state.markets[marketId].isRecyclable) {
-                // This market is recyclable. Check that only the `token` is the owner
-                for (uint256 a = 0; a < accounts.length; a++) {
-                    if (accounts[a].owner != cache.getAtIndex(i).token) {
-                        // If the owner of the recyclable token isn't the TokenProxy,
-                        // THEN check that the account doesn't have a balance for this recyclable `marketId`
-                        Require.that(
-                            !state.getMarketsWithBalancesSet(accounts[a]).contains(marketId),
-                            FILE,
-                            "Invalid recyclable owner",
-                            accounts[a].owner,
-                            accounts[a].number,
-                            marketId
-                        );
-                    }
-                }
+            Types.Wei memory maxBorrowWei = state.getMaxBorrowWei(marketId);
+            if (maxBorrowWei.value != 0) {
+                // require total borrow is less than the max OR it scaled down
+                Types.Wei memory cachedBorrowWei = Interest.parToWei(
+                    Types.Par(true, cache.getAtIndex(i).borrowPar),
+                    index
+                );
+                Require.that(
+                    totalBorrowWei.value <= maxBorrowWei.value || totalBorrowWei.value <= cachedBorrowWei.value,
+                    FILE,
+                    "Total borrow exceeds max borrow",
+                    marketId
+                );
             }
+
+            Interest.Rate memory rate = state.markets[marketId].interestSetter.getInterestRate(
+                cache.getAtIndex(i).token,
+                totalBorrowWei.value,
+                totalSupplyWei.value
+            );
+            Events.logInterestRate(marketId, rate);
         }
 
         // verify account collateralization

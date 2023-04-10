@@ -21,7 +21,9 @@ pragma experimental ABIEncoderV2;
 
 import { DolomiteMargin } from "../protocol/DolomiteMargin.sol";
 import { Account } from "../protocol/lib/Account.sol";
+import { Decimal } from "../protocol/lib/Decimal.sol";
 import { Interest } from "../protocol/lib/Interest.sol";
+import { Monetary } from "../protocol/lib/Monetary.sol";
 import { Storage } from "../protocol/lib/Storage.sol";
 import { Types } from "../protocol/lib/Types.sol";
 import { TestOperationImpl } from "./TestOperationImpl.sol";
@@ -32,11 +34,22 @@ contract TestDolomiteMargin is DolomiteMargin {
     // ============ Constructor ============
 
     constructor (
-        Storage.RiskParams memory rp,
-        Storage.RiskLimits memory rl
+        Decimal.D256 memory marginRatio,
+        Decimal.D256 memory liquidationSpread,
+        Decimal.D256 memory earningsRate,
+        Monetary.Value memory minBorrowedValue,
+        uint256 accountMaxNumberOfMarketsWithBalances,
+        Storage.RiskLimits memory riskLimits
     )
         public
-        DolomiteMargin(rp, rl)
+        DolomiteMargin(
+            marginRatio,
+            liquidationSpread,
+            earningsRate,
+            minBorrowedValue,
+            accountMaxNumberOfMarketsWithBalances,
+            riskLimits
+        )
     {}
 
     // ============ Testing Functions ============
