@@ -89,7 +89,7 @@ async function setupProtocol(deployer, network) {
 
 async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters) {
   const marginPremium = { value: '0' };
-  const spreadPremium = { value: '0' };
+  const liquidationSpreadPremium = { value: '0' };
   const maxWei = '0';
   const isClosed = false;
   const isRecyclable = false;
@@ -101,7 +101,7 @@ async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters)
       priceOracles[i].address,
       interestSetters[i].address,
       marginPremium,
-      spreadPremium,
+      liquidationSpreadPremium,
       maxWei,
       isClosed,
       isRecyclable,

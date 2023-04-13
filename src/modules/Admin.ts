@@ -163,10 +163,10 @@ export class Admin {
 
   // ============ Risk Functions ============
 
-  public async setMarginRatio(ratio: Decimal, options?: ContractCallOptions): Promise<TxResult> {
+  public async setMarginRatio(marginRatio: Decimal, options?: ContractCallOptions): Promise<TxResult> {
     return this.contracts.callContractFunction(
       this.contracts.dolomiteMargin.methods.ownerSetMarginRatio({
-        value: decimalToString(ratio),
+        value: decimalToString(marginRatio),
       }),
       options,
     );
@@ -177,6 +177,22 @@ export class Admin {
       this.contracts.dolomiteMargin.methods.ownerSetLiquidationSpread({
         value: decimalToString(spread),
       }),
+      options,
+    );
+  }
+
+  public async setAccountRiskOverride(
+    accountOwner: address,
+    marginRatio: Decimal,
+    liquidationSpread: Decimal,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.dolomiteMargin.methods.ownerSetAccountRiskOverride(
+        accountOwner,
+        { value: decimalToString(marginRatio) },
+        { value: decimalToString(liquidationSpread) },
+      ),
       options,
     );
   }

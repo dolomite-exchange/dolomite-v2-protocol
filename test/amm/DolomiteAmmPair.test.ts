@@ -861,11 +861,12 @@ async function addMarket(token: ErroringToken) {
   const priceOracle = dolomiteMargin.testing.priceOracle.address;
   const interestSetter = dolomiteMargin.testing.interestSetter.address;
   const price = new BigNumber('1e40'); // large to prevent hitting minBorrowValue check
-  const marginPremium = new BigNumber(0);
-  const spreadPremium = new BigNumber(0);
-  const maxWei = new BigNumber(0);
+  const marginPremium = INTEGERS.ZERO;
+  const liquidationSpreadPremium = INTEGERS.ZERO;
+  const maxSupplyWei = INTEGERS.ZERO;
+  const maxBorrowWei = INTEGERS.ZERO;
+  const earningsRateOverride = INTEGERS.ZERO;
   const isClosing = false;
-  const isRecyclable = false;
 
   await dolomiteMargin.testing.priceOracle.setPrice(token.options.address, price);
 
@@ -874,10 +875,11 @@ async function addMarket(token: ErroringToken) {
     priceOracle,
     interestSetter,
     marginPremium,
-    spreadPremium,
-    maxWei,
+    liquidationSpreadPremium,
+    maxSupplyWei,
+    maxBorrowWei,
+    earningsRateOverride,
     isClosing,
-    isRecyclable,
     { from: admin },
   );
 

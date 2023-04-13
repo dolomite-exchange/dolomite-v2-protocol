@@ -19,7 +19,6 @@ const zero = new BigNumber(0);
 const par1 = new BigNumber(100);
 const par2 = new BigNumber(500);
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 
 const SECONDARY_REVERT_REASON = 'TransferProxy: invalid params length';
 
@@ -51,8 +50,9 @@ describe('TransferProxy', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
     await dolomiteMargin.testing.setAccountBalance(owner1, INTEGERS.ZERO, market1, par1);

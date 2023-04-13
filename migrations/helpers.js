@@ -127,22 +127,23 @@ async function getRiskLimits() {
     liquidationSpreadMax: decimalToString('0.50'),
     earningsRateMax: decimalToString('1.00'),
     marginPremiumMax: decimalToString('2.00'),
-    spreadPremiumMax: decimalToString('2.00'),
+    liquidationSpreadPremiumMax: decimalToString('5.00'),
+    interestRateMax: decimalToString('100.00'), // 10,000%
     minBorrowedValueMax: decimalToString('100.00'),
   };
 }
 
 async function getRiskParams(network) {
   verifyNetwork(network);
-  let mbv = '0.00';
+  let minBorrowedValue = '0.00';
   if (isDevNetwork(network)) {
-    mbv = '0.05';
+    minBorrowedValue = '0.05';
   }
   return {
     marginRatio: { value: decimalToString('0.15') },
     liquidationSpread: { value: decimalToString('0.05') },
     earningsRate: { value: decimalToString('0.90') },
-    minBorrowedValue: { value: decimalToString(mbv) },
+    minBorrowedValue: { value: decimalToString(minBorrowedValue) },
     accountMaxNumberOfMarketsWithBalances: '32',
   };
 }

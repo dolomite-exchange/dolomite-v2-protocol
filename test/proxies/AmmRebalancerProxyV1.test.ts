@@ -22,7 +22,6 @@ const prices = [
   new BigNumber('1e21'),
 ];
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 
 describe('AmmRebalancerProxyV1', () => {
   before(async () => {
@@ -70,8 +69,9 @@ describe('AmmRebalancerProxyV1', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
 

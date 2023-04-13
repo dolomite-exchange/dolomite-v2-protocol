@@ -19,6 +19,7 @@ import { default as DoubleExponentInterestSetter } from '../build/contracts/Doub
 import { default as Weth } from '../build/contracts/TestWETH.json';
 import { default as Events } from '../build/contracts/Events.json';
 import { default as AdminImpl } from '../build/contracts/AdminImpl.json';
+import { default as GettersImpl } from '../build/contracts/GettersImpl.json';
 import { default as OperationImpl } from '../build/contracts/OperationImpl.json';
 import { default as DepositImpl } from '../build/contracts/DepositImpl.json';
 import { default as WithdrawalImpl } from '../build/contracts/WithdrawalImpl.json';
@@ -56,6 +57,7 @@ export default {
   CallImpl,
   OperationImpl,
   AdminImpl,
+  GettersImpl,
   DolomiteMargin,
   IERC20,
   IInterestSetter,

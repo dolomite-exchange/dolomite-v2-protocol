@@ -208,12 +208,12 @@ interface IDolomiteMargin {
 
     /**
      * Get the current borrow interest rate for a market. The value is denominated as interest paid per second, and the
-     * number is scaled to have 18 decimals.
+     * number is scaled to have 18 decimals. To get APR, multiply the number returned by 31536000 (seconds in a year).
      *
      * @param  marketId  The market to query
      * @return           The current borrow interest rate
      */
-    function getMarketBorrowInterestRate(
+    function getMarketBorrowInterestRatePerSecond(
         uint256 marketId
     ) external view returns (Interest.Rate memory);
 

@@ -64,13 +64,15 @@ export class Expiry {
   }
 
   public async getPrices(
+    liquidAccountOwner: address,
     heldMarketId: Integer,
     owedMarketId: Integer,
     expiryTimestamp: Integer,
     options?: ContractConstantCallOptions,
   ): Promise<{ heldPrice: Integer; owedPrice: Integer }> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.expiry.methods.getSpreadAdjustedPrices(
+      this.contracts.expiry.methods.getLiquidationSpreadAdjustedPrices(
+        liquidAccountOwner,
         heldMarketId.toFixed(0),
         owedMarketId.toFixed(0),
         expiryTimestamp.toFixed(0),

@@ -27,7 +27,6 @@ const expectedNegativeWalletBalancePar = par.plus(biggerPar);
 const defaultAccountNumber = new BigNumber(0);
 const otherAccountNumber = new BigNumber(123);
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 const defaultBalanceCheckFlag = BalanceCheckFlag.Both;
 
 describe('DepositWithdrawalProxy', () => {
@@ -51,8 +50,9 @@ describe('DepositWithdrawalProxy', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
 

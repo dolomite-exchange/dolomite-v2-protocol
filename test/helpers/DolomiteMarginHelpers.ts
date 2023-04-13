@@ -22,10 +22,11 @@ export async function setupMarkets(
   const interestSetter = dolomiteMargin.testing.interestSetter.address;
   const price = new BigNumber('1e40'); // large to prevent hitting minBorrowValue check
   const marginPremium = INTEGERS.ZERO;
-  const spreadPremium = INTEGERS.ZERO;
-  const maxWei = INTEGERS.ZERO;
+  const liquidationSpreadPremium = INTEGERS.ZERO;
+  const maxSupplyWei = INTEGERS.ZERO;
+  const maxBorrowWei = INTEGERS.ZERO;
+  const earningsRateOverride = INTEGERS.ZERO;
   const isClosing = false;
-  const isRecyclable = false;
 
   await Promise.all([
     dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.testing.tokenA.address, price),
@@ -48,10 +49,11 @@ export async function setupMarkets(
       priceOracle,
       interestSetter,
       marginPremium,
-      spreadPremium,
-      maxWei,
+      liquidationSpreadPremium,
+      maxSupplyWei,
+      maxBorrowWei,
+      earningsRateOverride,
       isClosing,
-      isRecyclable,
       { from: accounts[0] },
     );
   }

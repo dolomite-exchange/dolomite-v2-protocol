@@ -28,7 +28,6 @@ const zero = new BigNumber(0);
 const par = new BigNumber(100);
 const negPar = par.times(-1);
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 
 const PRIMARY_REVERT_REASON = 'PayableProxy: Sender must be primary account';
 const SECONDARY_REVERT_REASON = 'PayableProxy: Sender must be secondary account';
@@ -112,8 +111,9 @@ describe('PayableProxy', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
     await dolomiteMargin.admin.setGlobalOperator(globalOperator, true, { from: admin });

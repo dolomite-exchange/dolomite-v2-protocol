@@ -50,7 +50,6 @@ import liquidatorProxyV2WithExternalLiquidityJson from '../../build/published_co
 import liquidatorProxyV3WithLiquidityTokenJson from '../../build/published_contracts/LiquidatorProxyV3WithLiquidityToken.json';
 import payableProxyJson from '../../build/published_contracts/PayableProxy.json';
 import polynomialInterestSetterJson from '../../build/published_contracts/PolynomialInterestSetter.json';
-import recyclableTokenProxyJson from '../../build/published_contracts/RecyclableTokenProxy.json';
 import signedOperationProxyJson from '../../build/published_contracts/SignedOperationProxy.json';
 import simpleFeeOwnerJson from '../../build/published_contracts/SimpleFeeOwner.json';
 import transferProxyJson from '../../build/published_contracts/TransferProxy.json';
@@ -87,7 +86,6 @@ import { PolynomialInterestSetter } from '../../build/wrappers/PolynomialInteres
 import { SignedOperationProxy } from '../../build/wrappers/SignedOperationProxy';
 import { SimpleFeeOwner } from '../../build/wrappers/SimpleFeeOwner';
 import { DepositWithdrawalProxy } from '../../build/wrappers/DepositWithdrawalProxy';
-import { RecyclableTokenProxy } from '../../build/wrappers/RecyclableTokenProxy';
 import { TransferProxy } from '../../build/wrappers/TransferProxy';
 import { BorrowPositionProxyV1 } from '../../build/wrappers/BorrowPositionProxyV1';
 import { BorrowPositionProxyV2 } from '../../build/wrappers/BorrowPositionProxyV2';
@@ -288,16 +286,6 @@ export class Contracts {
     unwrapper.setProvider(this.provider);
     unwrapper.options.from = this.dolomiteMargin.options.from;
     return unwrapper;
-  }
-
-  public getRecyclableToken(contractAddress: address): RecyclableTokenProxy {
-    const pair = new this.web3.eth.Contract(
-      recyclableTokenProxyJson.abi,
-      contractAddress,
-    ) as RecyclableTokenProxy;
-    pair.setProvider(this.provider);
-    pair.options.from = this.dolomiteMargin.options.from;
-    return pair;
   }
 
   public setProvider(provider: Provider, networkId: number): void {

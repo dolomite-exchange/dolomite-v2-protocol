@@ -69,6 +69,7 @@ const {
 
 // Base Protocol
 const AdminImpl = artifacts.require('AdminImpl');
+const GettersImpl = artifacts.require('GettersImpl');
 const DolomiteMargin = artifacts.require('DolomiteMargin');
 const CallImpl = artifacts.require('CallImpl');
 const DepositImpl = artifacts.require('DepositImpl');
@@ -239,6 +240,12 @@ async function deployBaseProtocol(deployer, network) {
     await deployer.deploy(AdminImpl, getNoOverwriteParams());
   }
 
+  if (shouldOverwrite(GettersImpl, network)) {
+    await deployer.deploy(GettersImpl);
+  } else {
+    await deployer.deploy(GettersImpl, getNoOverwriteParams());
+  }
+
   if (shouldOverwrite(OperationImpl, network)) {
     await deployer.deploy(OperationImpl);
   } else {
@@ -265,6 +272,7 @@ async function deployBaseProtocol(deployer, network) {
 
   await Promise.all([
     dolomiteMargin.link('AdminImpl', AdminImpl.address),
+    dolomiteMargin.link('GettersImpl', GettersImpl.address),
     dolomiteMargin.link('OperationImpl', OperationImpl.address),
   ]);
   if (isDevNetwork(network)) {
@@ -272,7 +280,16 @@ async function deployBaseProtocol(deployer, network) {
   }
 
   if (shouldOverwrite(dolomiteMargin, network)) {
-    await deployer.deploy(dolomiteMargin, getRiskParams(network), getRiskLimits());
+    const riskParams = await getRiskParams(network);
+    await deployer.deploy(
+      dolomiteMargin,
+      riskParams.marginRatio,
+      riskParams.liquidationSpread,
+      riskParams.earningsRate,
+      riskParams.minBorrowedValue,
+      riskParams.accountMaxNumberOfMarketsWithBalances,
+      getRiskLimits(),
+    );
   } else {
     await deployer.deploy(dolomiteMargin, getNoOverwriteParams());
   }

@@ -81,6 +81,26 @@ export class Getters {
     return stringToDecimal(result.value);
   }
 
+  public async getAccountRiskForOverride(
+    accountOwner: address,
+    options?: ContractConstantCallOptions,
+  ): Promise<{ marginRatioOverride: Decimal; liquidationSpreadOverride: Decimal }> {
+    const [marginRatioOverride, liquidationSpreadOverride] = await Promise.all([
+      this.contracts.callConstantContractFunction(
+        this.contracts.dolomiteMargin.methods.getMarginRatioOverrideByAccountOwner(accountOwner),
+        options,
+      ),
+      this.contracts.callConstantContractFunction(
+        this.contracts.dolomiteMargin.methods.getLiquidationSpreadOverrideByAccountOwner(accountOwner),
+        options,
+      ),
+    ]);
+    return {
+      marginRatioOverride: stringToDecimal(marginRatioOverride.value),
+      liquidationSpreadOverride: stringToDecimal(liquidationSpreadOverride.value),
+    };
+  }
+
   public async getEarningsRate(
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
@@ -314,6 +334,19 @@ export class Getters {
     return valueToInteger(maxBorrowWei);
   }
 
+  public async getMarketEarningsRateOverride(
+    marketId: Integer,
+    options?: ContractConstantCallOptions,
+  ): Promise<Integer> {
+    const earningsRateOverride = await this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getMarketEarningsRateOverride(
+        marketId.toFixed(0),
+      ),
+      options,
+    );
+    return stringToDecimal(earningsRateOverride.value);
+  }
+
   public async getMarketIsClosing(
     marketId: Integer,
     options?: ContractConstantCallOptions,
@@ -349,12 +382,12 @@ export class Getters {
     return totalBorrow.div(totalSupply);
   }
 
-  public async getMarketBorrowInterestRate(
+  public async getMarketBorrowInterestRatePerSecond(
     marketId: Integer,
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketBorrowInterestRate(
+      this.contracts.dolomiteMargin.methods.getMarketBorrowInterestRatePerSecond(
         marketId.toFixed(0),
       ),
       options,

@@ -41,7 +41,6 @@ const defaultDeadline = new BigNumber('123456789123');
 const defaultBalanceCheckFlag = BalanceCheckFlag.From;
 const defaultBalanceCheckFlagForMarginTrade = BalanceCheckFlag.To;
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 
 describe('DolomiteAmmRouterProxy', () => {
   before(async () => {
@@ -75,8 +74,9 @@ describe('DolomiteAmmRouterProxy', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
 
@@ -2416,7 +2416,8 @@ async function createLpTokenMarket(lpToken: address): Promise<Integer> {
     INTEGERS.ZERO,
     INTEGERS.ZERO,
     INTEGERS.ZERO,
-    false,
+    INTEGERS.ZERO,
+    INTEGERS.ZERO,
     false,
     { from: admin },
   );

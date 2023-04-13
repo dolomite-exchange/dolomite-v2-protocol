@@ -22,7 +22,6 @@ const maximumRate = new BigNumber(31709791983).div('1e18');
 const defaultCoefficients = [0, 10, 10, 0, 0, 80];
 const defaultMaxAPR = new BigNumber('1.00');
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 
 describe('PolynomialInterestSetter', () => {
   let snapshotId: string;
@@ -44,8 +43,9 @@ describe('PolynomialInterestSetter', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
     snapshotId = await snapshot();
@@ -56,19 +56,19 @@ describe('PolynomialInterestSetter', () => {
   });
 
   it('Succeeds for 0/0', async () => {
-    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
     expect(rate).to.eql(zero);
   });
 
   it('Succeeds for 0/100', async () => {
     await dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, par);
-    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
     expect(rate).to.eql(zero);
   });
 
   it('Succeeds for 100/0', async () => {
     await dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, negPar);
-    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -77,7 +77,7 @@ describe('PolynomialInterestSetter', () => {
       dolomiteMargin.testing.setAccountBalance(owner, accountNumber1, zero, par),
       dolomiteMargin.testing.setAccountBalance(owner, accountNumber2, zero, negPar),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -91,7 +91,7 @@ describe('PolynomialInterestSetter', () => {
         negPar.times(2),
       ),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
     expect(rate).to.eql(maximumRate);
   });
 
@@ -105,7 +105,7 @@ describe('PolynomialInterestSetter', () => {
         negPar.div(2),
       ),
     ]);
-    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+    const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
     expect(rate).to.eql(
       getInterestPerSecondForPolynomial(defaultMaxAPR, defaultCoefficients, {
         totalBorrowed: par.div(2),
@@ -156,7 +156,7 @@ describe('PolynomialInterestSetter', () => {
           negPar.times(utilization),
         ),
       ]);
-      const rate = await dolomiteMargin.getters.getMarketBorrowInterestRate(zero);
+      const rate = await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(zero);
       expect(rate).to.eql(
         getInterestPerSecondForPolynomial(defaultMaxAPR, defaultCoefficients, {
           totalBorrowed: par.times(utilization),

@@ -171,31 +171,9 @@ export class Logs {
         throw new Error(`Unknown event arg type ${input.type}`);
       }
       parsed[input.name] = val;
-
-      if (input.name === 'orderFlags') {
-        const parsedOrderFlags = Logs.parseOrderFlags(eventArgs[input.name]);
-        parsed.isBuy = parsedOrderFlags.isBuy;
-        parsed.isDecreaseOnly = parsedOrderFlags.isDecreaseOnly;
-        parsed.isNegativeLimitFee = parsedOrderFlags.isNegativeLimitFee;
-      }
     });
 
     return parsed;
-  }
-
-  private static parseOrderFlags(
-    flags: string,
-  ): {
-    isBuy: boolean;
-    isDecreaseOnly: boolean;
-    isNegativeLimitFee: boolean;
-  } {
-    const flag = new BigNumber(flags.charAt(flags.length - 1)).toNumber();
-    return {
-      isBuy: (flag & 1) !== 0,
-      isDecreaseOnly: (flag & 2) !== 0,
-      isNegativeLimitFee: (flag & 4) !== 0,
-    };
   }
 
   private static parseTuple(input: any, eventArgs: any) {

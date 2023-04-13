@@ -44,7 +44,6 @@ const price2 = prices[1]; // $1
 const price3 = prices[2]; // $1
 const price4 = prices[3]; // $1000
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 const marketIdToTokenMap = {};
 
 describe('LiquidatorProxyV2WithExternalLiquidity', () => {
@@ -81,8 +80,9 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
 
@@ -308,7 +308,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
 
       it('Succeeds for liquid account under collateralized because of margin premium', async () => {
         const marginPremium = new BigNumber('0.1'); // // this raises the liquidation threshold to 126.5% (115% * 1.1)
-        const spreadPremium = new BigNumber('0.4'); // this raises the spread to 107% 100% + (5% * 1.4)
+        const liquidationSpreadPremium = new BigNumber('0.4'); // this raises the spread to 107% 100% + (5% * 1.4)
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(solidOwner, solidNumber, market1, par),
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, negPar),
@@ -320,7 +320,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
           ),
           dolomiteMargin.admin.setLiquidationSpreadPremium(
             market1,
-            spreadPremium,
+            liquidationSpreadPremium,
             { from: admin },
           ),
         ]);
@@ -616,7 +616,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
 
       it('Succeeds when there is a margin premium', async () => {
         const marginPremium = new BigNumber('0.1'); // // this raises the liquidation threshold to 126.5% (115% * 1.1)
-        const spreadPremium = new BigNumber('0.4'); // this raises the spread to 107% 100% + (5% * 1.4)
+        const liquidationSpreadPremium = new BigNumber('0.4'); // this raises the spread to 107% 100% + (5% * 1.4)
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(solidOwner, solidNumber, market1, par),
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, negPar),
@@ -628,7 +628,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
           ),
           dolomiteMargin.admin.setLiquidationSpreadPremium(
             market1,
-            spreadPremium,
+            liquidationSpreadPremium,
             { from: admin },
           ),
         ]);
@@ -784,7 +784,7 @@ async function liquidate(
   const rawHeldAmount = (await dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, heldMarket)).abs();
   const owedPrice = await dolomiteMargin.getters.getMarketPrice(owedMarket);
   const liquidationRewardAdditive = INTEGERS.ONE.plus(
-    await dolomiteMargin.getters.getLiquidationSpreadForPair(heldMarket, owedMarket)
+    await dolomiteMargin.getters.getLiquidationSpreadForPair(liquidOwner, heldMarket, owedMarket)
   );
 
   let owedAmount: BigNumber;

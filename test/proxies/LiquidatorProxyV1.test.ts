@@ -31,7 +31,6 @@ const prices = [
   new BigNumber('1e21'),
 ];
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 
 describe('LiquidatorProxyV1', () => {
   before(async () => {
@@ -77,8 +76,9 @@ describe('LiquidatorProxyV1', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
     await mineAvgBlock();
@@ -287,7 +287,7 @@ describe('LiquidatorProxyV1', () => {
 
       it('Succeeds for liquid account under collateralized because of margin premium', async () => {
         const marginPremium = new BigNumber('0.1'); // // this raises the liquidation threshold to 126.5% (115% * 1.1)
-        const spreadPremium = new BigNumber('0.4'); // this raises the spread to 107% 100% + (5% * 1.4)
+        const liquidationSpreadPremium = new BigNumber('0.4'); // this raises the spread to 107% 100% + (5% * 1.4)
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(owner1, accountNumber1, market1, par),
           dolomiteMargin.testing.setAccountBalance(
@@ -309,7 +309,7 @@ describe('LiquidatorProxyV1', () => {
           ),
           dolomiteMargin.admin.setLiquidationSpreadPremium(
             market1,
-            spreadPremium,
+            liquidationSpreadPremium,
             { from: admin },
           ),
         ]);

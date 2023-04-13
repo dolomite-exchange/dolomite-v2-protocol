@@ -60,11 +60,11 @@ contract DolomiteMargin is
     )
         public
     {
+        g_state.riskLimits = riskLimits; // set risk limits first so the AdminImpl setters can refer to them
         AdminImpl.ownerSetMarginRatio(g_state, marginRatio);
         AdminImpl.ownerSetLiquidationSpread(g_state, liquidationSpread);
         AdminImpl.ownerSetEarningsRate(g_state, earningsRate);
         AdminImpl.ownerSetMinBorrowedValue(g_state, minBorrowedValue);
         AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(g_state, accountMaxNumberOfMarketsWithBalances);
-        g_state.riskLimits = riskLimits;
     }
 }

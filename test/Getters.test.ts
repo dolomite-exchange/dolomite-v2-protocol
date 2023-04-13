@@ -23,9 +23,10 @@ const rates = [
   new BigNumber(303).div(INTEGERS.INTEREST_RATE_BASE),
 ];
 const defaultPremium = new BigNumber(0);
-const defaultMaxWei = new BigNumber(0);
+const defaultSupplyMaxWei = new BigNumber(0);
+const defaultBorrowMaxWei = new BigNumber(0);
+const defaultEarningsRateOverride = new BigNumber(0);
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 const highPremium = new BigNumber('.2');
 const market1 = new BigNumber(0);
 const market2 = new BigNumber(1);
@@ -110,7 +111,7 @@ describe('Getters', () => {
       liquidationSpreadMax: new BigNumber('0.5'),
       earningsRateMax: new BigNumber('1.0'),
       marginPremiumMax: new BigNumber('2.0'),
-      spreadPremiumMax: new BigNumber('2.0'),
+      liquidationSpreadPremiumMax: new BigNumber('2.0'),
       minBorrowedValueMax: new BigNumber('100e18'),
     };
 
@@ -179,7 +180,7 @@ describe('Getters', () => {
         expect(limits.liquidationSpreadMax).to.eql(defaultLimits.liquidationSpreadMax);
         expect(limits.earningsRateMax).to.eql(defaultLimits.earningsRateMax);
         expect(limits.marginPremiumMax).to.eql(defaultLimits.marginPremiumMax);
-        expect(limits.liquidationSpreadPremiumMax).to.eql(defaultLimits.spreadPremiumMax);
+        expect(limits.liquidationSpreadPremiumMax).to.eql(defaultLimits.liquidationSpreadPremiumMax);
         expect(limits.minBorrowedValueMax).to.eql(defaultLimits.minBorrowedValueMax);
       });
     });
@@ -201,9 +202,10 @@ describe('Getters', () => {
           setterAddress,
           defaultPremium,
           defaultPremium,
-          defaultMaxWei,
+          defaultSupplyMaxWei,
+          defaultBorrowMaxWei,
+          defaultEarningsRateOverride,
           defaultIsClosing,
-          defaultIsRecyclable,
           { from: admin },
         );
         const nm2 = await dolomiteMargin.getters.getNumMarkets();
@@ -320,7 +322,7 @@ describe('Getters', () => {
 
         const [totalPar, interestRate, earningsRate] = await Promise.all([
           dolomiteMargin.getters.getMarketTotalPar(market2),
-          dolomiteMargin.getters.getMarketBorrowInterestRate(market2),
+          dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market2),
           dolomiteMargin.getters.getEarningsRate(),
         ]);
 
@@ -445,9 +447,9 @@ describe('Getters', () => {
     describe('#getMarketInterestRate', () => {
       it('Succeeds', async () => {
         const actualRates = await Promise.all([
-          dolomiteMargin.getters.getMarketBorrowInterestRate(market1),
-          dolomiteMargin.getters.getMarketBorrowInterestRate(market2),
-          dolomiteMargin.getters.getMarketBorrowInterestRate(market3),
+          dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market1),
+          dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market2),
+          dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market3),
         ]);
         expect(actualRates[0]).to.eql(rates[0]);
         expect(actualRates[1]).to.eql(rates[1]);
@@ -455,7 +457,7 @@ describe('Getters', () => {
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketBorrowInterestRate(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 

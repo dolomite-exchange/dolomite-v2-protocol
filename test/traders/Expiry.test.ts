@@ -1207,6 +1207,7 @@ describe('Expiry', () => {
       );
       await mineAvgBlock();
       const prices = await dolomiteMargin.expiry.getPrices(
+        owner2,
         heldMarket,
         owedMarket,
         new BigNumber(timestamp),
@@ -1218,6 +1219,7 @@ describe('Expiry', () => {
 
     it('Succeeds for very expired positions', async () => {
       const prices = await dolomiteMargin.expiry.getPrices(
+        owner2,
         heldMarket,
         owedMarket,
         INTEGERS.ONE,

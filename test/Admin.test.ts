@@ -14,6 +14,7 @@ let accounts: address[];
 let admin: address;
 let nonAdmin: address;
 let operator: address;
+let accountForOverride: address;
 let riskLimits: RiskLimits;
 let riskParams: RiskParams;
 let dolomiteMarginAddress: address;
@@ -29,6 +30,8 @@ const defaultMaxBorrowWei = new BigNumber(0);
 const highPremium = new BigNumber('0.2');
 const highMaxSupplyWei = new BigNumber('1000e18');
 const highMaxBorrowWei = new BigNumber('1000e18');
+const lowEarningsRateOverride = smallestDecimal;
+const highEarningsRateOverride = new BigNumber('1.0');
 const defaultMarket = new BigNumber(1);
 const defaultIsClosing = false;
 const defaultEarningsRateOverride = new BigNumber(0);
@@ -45,6 +48,7 @@ describe('Admin', () => {
     admin = accounts[0];
     nonAdmin = accounts[2];
     operator = accounts[6];
+    accountForOverride = accounts[7];
     expect(admin).not.to.eql(nonAdmin);
 
     await resetEVM();
@@ -321,25 +325,25 @@ describe('Admin', () => {
       expect(addLog.args.marketId).to.eql(marketId);
       expect(addLog.args.token.toLowerCase()).to.eql(token);
 
-      const oracleLog = logs[1];
-      expect(oracleLog.name).to.eql('LogSetPriceOracle');
-      expect(oracleLog.args.marketId).to.eql(marketId);
-      expect(oracleLog.args.priceOracle).to.eql(oracleAddress);
+      const priceOracleLog = logs[1];
+      expect(priceOracleLog.name).to.eql('LogSetPriceOracle');
+      expect(priceOracleLog.args.marketId).to.eql(marketId);
+      expect(priceOracleLog.args.priceOracle).to.eql(oracleAddress);
 
-      const setterLog = logs[2];
-      expect(setterLog.name).to.eql('LogSetInterestSetter');
-      expect(setterLog.args.marketId).to.eql(marketId);
-      expect(setterLog.args.interestSetter).to.eql(setterAddress);
+      const interestSetterLog = logs[2];
+      expect(interestSetterLog.name).to.eql('LogSetInterestSetter');
+      expect(interestSetterLog.args.marketId).to.eql(marketId);
+      expect(interestSetterLog.args.interestSetter).to.eql(setterAddress);
 
       const marginPremiumLog = logs[3];
       expect(marginPremiumLog.name).to.eql('LogSetMarginPremium');
       expect(marginPremiumLog.args.marketId).to.eql(marketId);
       expect(marginPremiumLog.args.marginPremium).to.eql(marginPremium);
 
-      const spreadPremiumLog = logs[4];
-      expect(spreadPremiumLog.name).to.eql('LogSetLiquidationSpreadPremium');
-      expect(spreadPremiumLog.args.marketId).to.eql(marketId);
-      expect(spreadPremiumLog.args.spreadPremium).to.eql(liquidationSpreadPremium);
+      const liquidationSpreadPremiumLog = logs[4];
+      expect(liquidationSpreadPremiumLog.name).to.eql('LogSetLiquidationSpreadPremium');
+      expect(liquidationSpreadPremiumLog.args.marketId).to.eql(marketId);
+      expect(liquidationSpreadPremiumLog.args.liquidationSpreadPremium).to.eql(liquidationSpreadPremium);
 
       const maxSupplyWeiLog = logs[5];
       expect(maxSupplyWeiLog.name).to.eql('LogSetMaxSupplyWei');
@@ -357,9 +361,11 @@ describe('Admin', () => {
       expect(earningsRateOverrideLog.args.earningsRateOverride).to.eql(earningsRateOverride);
     });
 
-    it('Successfully adds a market that is closing and recyclable', async () => {
+    it('Successfully adds a market that is closing', async () => {
+      await dolomiteMargin.testing.priceOracle.setPrice(token, defaultPrice);
+
       const marginPremium = new BigNumber('0.11');
-      const spreadPremium = new BigNumber('0.22');
+      const liquidationSpreadPremium = new BigNumber('0.22');
       const maxSupplyWei = new BigNumber('333');
       const maxBorrowWei = new BigNumber('444');
       const earningsRateOverride = new BigNumber('0.55');
@@ -370,7 +376,7 @@ describe('Admin', () => {
         oracleAddress,
         setterAddress,
         marginPremium,
-        spreadPremium,
+        liquidationSpreadPremium,
         maxSupplyWei,
         maxBorrowWei,
         earningsRateOverride,
@@ -389,7 +395,7 @@ describe('Admin', () => {
       expect(marketInfo.market.priceOracle).to.eql(oracleAddress);
       expect(marketInfo.market.interestSetter).to.eql(setterAddress);
       expect(marketInfo.market.marginPremium).to.eql(marginPremium);
-      expect(marketInfo.market.liquidationSpreadPremium).to.eql(spreadPremium);
+      expect(marketInfo.market.liquidationSpreadPremium).to.eql(liquidationSpreadPremium);
       expect(marketInfo.market.maxSupplyWei).to.eql(maxSupplyWei);
       expect(marketInfo.market.maxBorrowWei).to.eql(maxBorrowWei);
       expect(marketInfo.market.earningsRateOverride).to.eql(earningsRateOverride);
@@ -434,10 +440,10 @@ describe('Admin', () => {
       expect(marginPremiumLog.args.marketId).to.eql(marketId);
       expect(marginPremiumLog.args.marginPremium).to.eql(marginPremium);
 
-      const spreadPremiumLog = logs[5];
-      expect(spreadPremiumLog.name).to.eql('LogSetLiquidationSpreadPremium');
-      expect(spreadPremiumLog.args.marketId).to.eql(marketId);
-      expect(spreadPremiumLog.args.spreadPremium).to.eql(spreadPremium);
+      const liquidationSpreadPremiumLog = logs[5];
+      expect(liquidationSpreadPremiumLog.name).to.eql('LogSetLiquidationSpreadPremium');
+      expect(liquidationSpreadPremiumLog.args.marketId).to.eql(marketId);
+      expect(liquidationSpreadPremiumLog.args.liquidationSpreadPremium).to.eql(liquidationSpreadPremium);
 
       const maxSupplyWeiLog = logs[6];
       expect(maxSupplyWeiLog.name).to.eql('LogSetMaxSupplyWei');
@@ -445,7 +451,7 @@ describe('Admin', () => {
       expect(maxSupplyWeiLog.args.maxSupplyWei).to.eql(maxSupplyWei);
 
       const maxBorrowWeiLog = logs[7];
-      expect(maxBorrowWeiLog.name).to.eql('LogSetMaxSupplyWei');
+      expect(maxBorrowWeiLog.name).to.eql('LogSetMaxBorrowWei');
       expect(maxBorrowWeiLog.args.marketId).to.eql(marketId);
       expect(maxBorrowWeiLog.args.maxBorrowWei).to.eql(maxBorrowWei);
 
@@ -516,7 +522,7 @@ describe('Admin', () => {
       );
     });
 
-    it('Fails for broken spreadPremium', async () => {
+    it('Fails for broken liquidationSpreadPremium', async () => {
       await Promise.all([
         dolomiteMargin.testing.priceOracle.setPrice(token, defaultPrice),
         dolomiteMargin.testing.interestSetter.setInterestRate(token, defaultRate),
@@ -855,7 +861,7 @@ describe('Admin', () => {
         expect(logs.length).to.eql(1);
         const log = logs[0];
         expect(log.name).to.eql('LogSetLiquidationSpreadPremium');
-        expect(log.args.spreadPremium).to.eql(e);
+        expect(log.args.liquidationSpreadPremium).to.eql(e);
       }
       const premium = await dolomiteMargin.getters.getMarketLiquidationSpreadPremium(defaultMarket);
       expect(premium).to.eql(e);
@@ -864,31 +870,31 @@ describe('Admin', () => {
 
   describe('#ownerSetMaxSupplyWei', () => {
     it('Succeeds', async () => {
-      await expectMaxWei(null, defaultMaxSupplyWei);
+      await expectMaxSupplyWei(null, defaultMaxSupplyWei);
 
       // set to default
       txr = await dolomiteMargin.admin.setMaxSupplyWei(defaultMarket, defaultMaxSupplyWei, {
         from: admin,
       });
-      await expectMaxWei(txr, defaultMaxSupplyWei);
+      await expectMaxSupplyWei(txr, defaultMaxSupplyWei);
 
       // set less risky
       txr = await dolomiteMargin.admin.setMaxSupplyWei(defaultMarket, highMaxSupplyWei, {
         from: admin,
       });
-      await expectMaxWei(txr, highMaxSupplyWei);
+      await expectMaxSupplyWei(txr, highMaxSupplyWei);
 
       // set to risky again
       txr = await dolomiteMargin.admin.setMaxSupplyWei(defaultMarket, highMaxSupplyWei, {
         from: admin,
       });
-      await expectMaxWei(txr, highMaxSupplyWei);
+      await expectMaxSupplyWei(txr, highMaxSupplyWei);
 
       // set back to default
       txr = await dolomiteMargin.admin.setMaxSupplyWei(defaultMarket, defaultMaxSupplyWei, {
         from: admin,
       });
-      await expectMaxWei(txr, defaultMaxSupplyWei);
+      await expectMaxSupplyWei(txr, defaultMaxSupplyWei);
     });
 
     it('Succeeds for two markets', async () => {
@@ -900,8 +906,8 @@ describe('Admin', () => {
         dolomiteMargin.admin.setMaxSupplyWei(secondaryMarket, maxWei2, { from: admin }),
       ]);
 
-      await expectMaxWei(result1, maxWei1, defaultMarket);
-      await expectMaxWei(result2, maxWei2, secondaryMarket);
+      await expectMaxSupplyWei(result1, maxWei1, defaultMarket);
+      await expectMaxSupplyWei(result2, maxWei2, secondaryMarket);
     });
 
     it('Fails for invalid market', async () => {
@@ -921,13 +927,13 @@ describe('Admin', () => {
       );
     });
 
-    async function expectMaxWei(txResult: any, e: Integer, market: Integer = defaultMarket) {
+    async function expectMaxSupplyWei(txResult: any, e: Integer, market: Integer = defaultMarket) {
       if (txResult) {
         const logs = dolomiteMargin.logs.parseLogs(txResult);
         expect(logs.length).to.eql(1);
         const log = logs[0];
         expect(log.name).to.eql('LogSetMaxSupplyWei');
-        expect(log.args.maxWei).to.eql(e);
+        expect(log.args.maxSupplyWei).to.eql(e);
       }
       const maxWei = await dolomiteMargin.getters.getMarketMaxSupplyWei(market);
       expect(maxWei).to.eql(e);
@@ -1004,6 +1010,79 @@ describe('Admin', () => {
       }
       const maxBorrowWei = await dolomiteMargin.getters.getMarketMaxBorrowWei(market);
       expect(maxBorrowWei).to.eql(e);
+    }
+  });
+
+  describe('#ownerSetEarningsRateOverride', () => {
+    it('Succeeds', async () => {
+      await expectEarningsRateOverride(null, defaultEarningsRateOverride);
+
+      // set to default
+      txr = await dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, defaultEarningsRateOverride, {
+        from: admin,
+      });
+      await expectEarningsRateOverride(txr, defaultEarningsRateOverride);
+
+      // set less risky
+      txr = await dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, lowEarningsRateOverride, {
+        from: admin,
+      });
+      await expectEarningsRateOverride(txr, lowEarningsRateOverride);
+
+      // set to risky again
+      txr = await dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, highEarningsRateOverride, {
+        from: admin,
+      });
+      await expectEarningsRateOverride(txr, highEarningsRateOverride);
+
+      // set back to default
+      txr = await dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, defaultEarningsRateOverride, {
+        from: admin,
+      });
+      await expectEarningsRateOverride(txr, defaultEarningsRateOverride);
+    });
+
+    it('Succeeds for two markets', async () => {
+      const earningsRateOverride1 = new BigNumber('0.2');
+      const earningsRateOverride2 = new BigNumber('0.25');
+
+      const [result1, result2] = await Promise.all([
+        dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, earningsRateOverride1, { from: admin }),
+        dolomiteMargin.admin.setEarningsRateOverride(secondaryMarket, earningsRateOverride2, { from: admin }),
+      ]);
+
+      await expectEarningsRateOverride(result1, earningsRateOverride1, defaultMarket);
+      await expectEarningsRateOverride(result2, earningsRateOverride2, secondaryMarket);
+    });
+
+    it('Fails for invalid market', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setEarningsRateOverride(invalidMarket, highPremium, {
+          from: admin,
+        }),
+        `AdminImpl: Invalid market <${invalidMarket.toFixed()}>`,
+      );
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, highPremium, {
+          from: nonAdmin,
+        }),
+      );
+    });
+
+    async function expectEarningsRateOverride(txResult: any, e: Integer, market: Integer = defaultMarket) {
+      if (txResult) {
+        const logs = dolomiteMargin.logs.parseLogs(txResult);
+        expect(logs.length).to.eql(1);
+        const log = logs[0];
+        expect(log.name).to.eql('LogSetEarningsRateOverride');
+        expect(log.args.marketId).to.eql(market);
+        expect(log.args.earningsRateOverride).to.eql(e);
+      }
+      const earningsRateOverride = await dolomiteMargin.getters.getMarketEarningsRateOverride(market);
+      expect(earningsRateOverride).to.eql(e);
     }
   });
 
@@ -1148,6 +1227,158 @@ describe('Admin', () => {
       }
       const result = await dolomiteMargin.getters.getLiquidationSpread();
       expect(result).to.eql(e);
+    }
+  });
+
+  describe('#ownerSetAccountRiskOverride', () => {
+    it('Succeeds', async () => {
+      await expectAccountRiskOverride(null, accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO);
+
+      const marginRatio = new BigNumber('0.1');
+      const liquidationSpread = new BigNumber('0.04');
+
+      // keep same
+      txr = await dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, marginRatio, liquidationSpread, {
+        from: admin,
+      });
+      await expectAccountRiskOverride(txr, accountForOverride, marginRatio, liquidationSpread);
+
+      // set to max
+      txr = await dolomiteMargin.admin.setAccountRiskOverride(
+        accountForOverride,
+        riskLimits.marginRatioMax,
+        riskLimits.liquidationSpreadMax,
+        { from: admin },
+      );
+      await expectAccountRiskOverride(
+        txr,
+        accountForOverride,
+        riskLimits.marginRatioMax,
+        riskLimits.liquidationSpreadMax,
+      );
+
+      // set back to original
+      txr = await dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO, {
+        from: admin,
+      });
+      await expectAccountRiskOverride(txr, accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO);
+    });
+
+    it('Fails for spread >= ratio', async () => {
+      // setup
+      const error = 'AdminImpl: Spread cannot be >= ratio';
+      const ratio = new BigNumber('0.1');
+
+      // passes when ratio is above the spread
+      txr = await dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, ratio, riskParams.liquidationSpread, {
+        from: admin,
+      });
+      await expectAccountRiskOverride(txr, accountForOverride, ratio, riskParams.liquidationSpread);
+
+      // revert when equal to the spread
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, ratio, ratio, { from: admin }),
+        error,
+      );
+
+      // revert when below the spread
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, ratio.minus(smallestDecimal), ratio, {
+          from: admin,
+        }),
+        error,
+      );
+    });
+
+    it('Fails when spread or ratio is 0 (but not both)', async () => {
+      // setup
+      const error = 'AdminImpl: Spread and ratio must both be 0';
+      const marginRatioOverride = new BigNumber('0.1');
+      const liquidationSpreadOverride = new BigNumber('0.04');
+
+      // passes when below the ratio
+      txr = await dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO, {
+        from: admin,
+      });
+      await expectAccountRiskOverride(txr, accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO);
+
+      // reverts when ratio is equal to 0 but not the spread
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, INTEGERS.ZERO, liquidationSpreadOverride, {
+          from: admin,
+        }),
+        error,
+      );
+
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, marginRatioOverride, INTEGERS.ZERO, {
+          from: admin,
+        }),
+        error,
+      );
+    });
+
+    it('Fails for too-high value', async () => {
+      const txr = await dolomiteMargin.admin.setAccountRiskOverride(
+        accountForOverride,
+        riskLimits.marginRatioMax,
+        riskLimits.liquidationSpreadMax,
+        { from: admin },
+      );
+      await expectAccountRiskOverride(
+        txr,
+        accountForOverride,
+        riskLimits.marginRatioMax,
+        riskLimits.liquidationSpreadMax,
+      );
+
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(
+          accountForOverride,
+          riskLimits.marginRatioMax.plus(smallestDecimal),
+          riskLimits.liquidationSpreadMax,
+          { from: admin },
+        ),
+        'AdminImpl: Ratio too high',
+      );
+
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(
+          accountForOverride,
+          riskLimits.marginRatioMax,
+          riskLimits.liquidationSpreadMax.plus(smallestDecimal),
+          { from: admin },
+        ),
+        'AdminImpl: Spread too high',
+      );
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO, {
+          from: nonAdmin,
+        }),
+      );
+    });
+
+    async function expectAccountRiskOverride(
+      txResult: any,
+      accountOwner: address,
+      marginRatio: Integer,
+      liquidationSpread: Integer,
+    ) {
+      if (txResult) {
+        const logs = dolomiteMargin.logs.parseLogs(txResult);
+        expect(logs.length).to.eql(1);
+        const log = logs[0];
+        expect(log.name).to.eql('LogSetAccountRiskOverride');
+        expect(log.args.accountOwner).to.eql(accountOwner);
+        expect(log.args.marginRatioOverride).to.eql(marginRatio);
+        expect(log.args.liquidationSpreadOverride).to.eql(liquidationSpread);
+      }
+      const result = await dolomiteMargin.getters.getAccountRiskForOverride(accountOwner);
+      expect(result.marginRatioOverride).to.eql(marginRatio);
+      expect(result.liquidationSpreadOverride).to.eql(liquidationSpread);
     }
   });
 

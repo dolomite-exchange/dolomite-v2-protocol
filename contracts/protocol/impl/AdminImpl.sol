@@ -48,10 +48,6 @@ library AdminImpl {
 
     bytes32 constant FILE = "AdminImpl";
 
-    uint256 constant HEAD_POINTER = uint(-1);
-
-    uint256 constant ONE_WEEK = 86400 * 7;
-
     // ============ Events ============
 
     event LogWithdrawExcessTokens(
@@ -89,7 +85,7 @@ library AdminImpl {
         Decimal.D256 marginPremium
     );
 
-    event LogSetSpreadPremium(
+    event LogSetLiquidationSpreadPremium(
         uint256 marketId,
         Decimal.D256 liquidationSpreadPremium
     );
@@ -130,7 +126,7 @@ library AdminImpl {
     );
 
     event LogSetAccountRiskOverride(
-        address account,
+        address accountOwner,
         Decimal.D256 marginRatioOverride,
         Decimal.D256 liquidationSpreadOverride
     );
@@ -427,6 +423,19 @@ library AdminImpl {
             FILE,
             "Spread too high"
         );
+        if (marginRatio.value > 0 && liquidationSpread.value > 0) {
+            Require.that(
+                liquidationSpread.value < marginRatio.value,
+                FILE,
+                "Spread cannot be >= ratio"
+            );
+        } else {
+            Require.that(
+                liquidationSpread.value == 0 && marginRatio.value == 0,
+                FILE,
+                "Spread and ratio must both be 0"
+            );
+        }
         Require.that(
             (marginRatio.value == 0 && liquidationSpread.value == 0)
                 || (marginRatio.value > 0 && liquidationSpread.value > 0),
@@ -535,7 +544,7 @@ library AdminImpl {
         );
         state.markets[marketId].liquidationSpreadPremium = liquidationSpreadPremium;
 
-        emit LogSetSpreadPremium(marketId, liquidationSpreadPremium);
+        emit LogSetLiquidationSpreadPremium(marketId, liquidationSpreadPremium);
     }
 
     function _setMaxSupplyWei(
