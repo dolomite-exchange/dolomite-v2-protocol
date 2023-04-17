@@ -1,9 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { getDolomiteMargin } from '../helpers/DolomiteMargin';
-import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
-import { toBytes } from '../../src/lib/BytesHelper';
-import { resetEVM, snapshot } from '../helpers/EVM';
-import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
 import {
   AccountStatus,
   address,
@@ -14,7 +9,12 @@ import {
   INTEGERS,
   Trade,
 } from '../../src';
+import { toBytes } from '../../src/lib/BytesHelper';
+import { getDolomiteMargin } from '../helpers/DolomiteMargin';
+import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
+import { resetEVM, snapshot } from '../helpers/EVM';
 import { expectThrow } from '../helpers/Expect';
+import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 
 let who1: address;
 let who2: address;
@@ -23,9 +23,9 @@ let dolomiteMargin: TestDolomiteMargin;
 let accounts: address[];
 const accountNumber1 = new BigNumber(111);
 const accountNumber2 = new BigNumber(222);
-const collateralMkt = new BigNumber(0);
-const inputMkt = new BigNumber(1);
-const outputMkt = new BigNumber(2);
+const collateralMarket = new BigNumber(0);
+const inputMarket = new BigNumber(1);
+const outputMarket = new BigNumber(2);
 const collateralAmount = new BigNumber(1000000);
 const zero = new BigNumber(0);
 const par = new BigNumber(100);
@@ -63,8 +63,8 @@ describe('Trade', () => {
       primaryAccountId: accountNumber1,
       otherAccountOwner: who2,
       otherAccountId: accountNumber2,
-      inputMarketId: inputMkt,
-      outputMarketId: outputMkt,
+      inputMarketId: inputMarket,
+      outputMarketId: outputMarket,
       autoTrader: dolomiteMargin.testing.autoTrader.address,
       data: toBytes(tradeId),
       amount: {
@@ -82,10 +82,10 @@ describe('Trade', () => {
       supply: wei.div(par),
     };
     await Promise.all([
-      dolomiteMargin.testing.setMarketIndex(inputMkt, defaultIndex),
-      dolomiteMargin.testing.setMarketIndex(outputMkt, defaultIndex),
-      dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, collateralMkt, collateralAmount),
-      dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, collateralMkt, collateralAmount),
+      dolomiteMargin.testing.setMarketIndex(inputMarket, defaultIndex),
+      dolomiteMargin.testing.setMarketIndex(outputMarket, defaultIndex),
+      dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, collateralMarket, collateralAmount),
+      dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, collateralMarket, collateralAmount),
     ]);
     snapshotId = await snapshot();
   });
@@ -109,26 +109,20 @@ describe('Trade', () => {
     ]);
     const txResult = await expectTradeOkay({}, { from: operator });
 
-    const [
-      inputIndex,
-      outputIndex,
-      collateralIndex,
-      inputOraclePrice,
-      outputOraclePrice,
-      collateralOraclePrice,
-    ] = await Promise.all([
-      dolomiteMargin.getters.getMarketCachedIndex(inputMkt),
-      dolomiteMargin.getters.getMarketCachedIndex(outputMkt),
-      dolomiteMargin.getters.getMarketCachedIndex(collateralMkt),
-      dolomiteMargin.getters.getMarketPrice(inputMkt),
-      dolomiteMargin.getters.getMarketPrice(outputMkt),
-      dolomiteMargin.getters.getMarketPrice(collateralMkt),
-      expectBalances1(par, negPar),
-      expectBalances2(negPar, par),
-    ]);
+    const [inputIndex, outputIndex, collateralIndex, inputOraclePrice, outputOraclePrice, collateralOraclePrice] =
+      await Promise.all([
+        dolomiteMargin.getters.getMarketCachedIndex(inputMarket),
+        dolomiteMargin.getters.getMarketCachedIndex(outputMarket),
+        dolomiteMargin.getters.getMarketCachedIndex(collateralMarket),
+        dolomiteMargin.getters.getMarketPrice(inputMarket),
+        dolomiteMargin.getters.getMarketPrice(outputMarket),
+        dolomiteMargin.getters.getMarketPrice(collateralMarket),
+        expectBalances1(par, negPar),
+        expectBalances2(negPar, par),
+      ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(8);
+    expect(logs.length).to.eql(11);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -136,33 +130,33 @@ describe('Trade', () => {
 
     const inputIndexLog = logs[1];
     expect(inputIndexLog.name).to.eql('LogIndexUpdate');
-    expect(inputIndexLog.args.market).to.eql(inputMkt);
+    expect(inputIndexLog.args.market).to.eql(inputMarket);
     expect(inputIndexLog.args.index).to.eql(inputIndex);
 
     const outputIndexLog = logs[2];
     expect(outputIndexLog.name).to.eql('LogIndexUpdate');
-    expect(outputIndexLog.args.market).to.eql(outputMkt);
+    expect(outputIndexLog.args.market).to.eql(outputMarket);
     expect(outputIndexLog.args.index).to.eql(outputIndex);
 
     const collateralIndexLog = logs[3];
     expect(collateralIndexLog.name).to.eql('LogIndexUpdate');
-    expect(collateralIndexLog.args.market).to.eql(collateralMkt);
+    expect(collateralIndexLog.args.market).to.eql(collateralMarket);
     expect(collateralIndexLog.args.index).to.eql(collateralIndex);
 
     // oracle price logs are emitted in order by the `marketId`
     const collateralOraclePriceLog = logs[4];
     expect(collateralOraclePriceLog.name).to.eql('LogOraclePrice');
-    expect(collateralOraclePriceLog.args.market).to.eql(collateralMkt);
+    expect(collateralOraclePriceLog.args.market).to.eql(collateralMarket);
     expect(collateralOraclePriceLog.args.price).to.eql(collateralOraclePrice);
 
     const inputOraclePriceLog = logs[5];
     expect(inputOraclePriceLog.name).to.eql('LogOraclePrice');
-    expect(inputOraclePriceLog.args.market).to.eql(inputMkt);
+    expect(inputOraclePriceLog.args.market).to.eql(inputMarket);
     expect(inputOraclePriceLog.args.price).to.eql(inputOraclePrice);
 
     const outputOraclePriceLog = logs[6];
     expect(outputOraclePriceLog.name).to.eql('LogOraclePrice');
-    expect(outputOraclePriceLog.args.market).to.eql(outputMkt);
+    expect(outputOraclePriceLog.args.market).to.eql(outputMarket);
     expect(outputOraclePriceLog.args.price).to.eql(outputOraclePrice);
 
     const tradeLog = logs[7];
@@ -171,8 +165,8 @@ describe('Trade', () => {
     expect(tradeLog.args.takerAccountNumber).to.eql(accountNumber1);
     expect(tradeLog.args.makerAccountOwner).to.eql(who2);
     expect(tradeLog.args.makerAccountNumber).to.eql(accountNumber2);
-    expect(tradeLog.args.inputMarket).to.eql(inputMkt);
-    expect(tradeLog.args.outputMarket).to.eql(outputMkt);
+    expect(tradeLog.args.inputMarket).to.eql(inputMarket);
+    expect(tradeLog.args.outputMarket).to.eql(outputMarket);
     expect(tradeLog.args.takerInputUpdate).to.eql({
       newPar: par,
       deltaWei: wei,
@@ -190,6 +184,28 @@ describe('Trade', () => {
       deltaWei: wei,
     });
     expect(tradeLog.args.autoTrader).to.eql(dolomiteMargin.testing.autoTrader.address);
+
+    // interest rates are sorted by marketId, asc
+    const collateralMarketInterestRateLog = logs[8];
+    expect(collateralMarketInterestRateLog.name).to.eql('LogInterestRate');
+    expect(collateralMarketInterestRateLog.args.market).to.eql(collateralMarket);
+    expect(collateralMarketInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(collateralMarket),
+    );
+
+    const inputMarketInterestRateLog = logs[9];
+    expect(inputMarketInterestRateLog.name).to.eql('LogInterestRate');
+    expect(inputMarketInterestRateLog.args.market).to.eql(inputMarket);
+    expect(inputMarketInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(inputMarket),
+    );
+
+    const outputMarketInterestRateLog = logs[10];
+    expect(outputMarketInterestRateLog.name).to.eql('LogInterestRate');
+    expect(outputMarketInterestRateLog.args.market).to.eql(outputMarket);
+    expect(outputMarketInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(outputMarket),
+    );
   });
 
   it('Succeeds for positive delta par/wei', async () => {
@@ -624,10 +640,10 @@ describe('Trade', () => {
     await Promise.all([
       approveTrader(),
       setTradeData(),
-      dolomiteMargin.testing.autoTrader.setRequireInputMarketId(outputMkt),
+      dolomiteMargin.testing.autoTrader.setRequireInputMarketId(outputMarket),
     ]);
     await expectTradeRevert({}, 'TestAutoTrader: input market mismatch');
-    await dolomiteMargin.testing.autoTrader.setRequireInputMarketId(inputMkt);
+    await dolomiteMargin.testing.autoTrader.setRequireInputMarketId(inputMarket);
     await expectTradeOkay({});
   });
 
@@ -635,10 +651,10 @@ describe('Trade', () => {
     await Promise.all([
       approveTrader(),
       setTradeData(),
-      dolomiteMargin.testing.autoTrader.setRequireOutputMarketId(inputMkt),
+      dolomiteMargin.testing.autoTrader.setRequireOutputMarketId(inputMarket),
     ]);
     await expectTradeRevert({}, 'TestAutoTrader: output market mismatch');
-    await dolomiteMargin.testing.autoTrader.setRequireOutputMarketId(outputMkt);
+    await dolomiteMargin.testing.autoTrader.setRequireOutputMarketId(outputMarket);
     await expectTradeOkay({});
   });
 
@@ -746,15 +762,15 @@ describe('Trade', () => {
 
 async function setBalances1(inputPar: Integer, outputPar: Integer) {
   return Promise.all([
-    dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, inputMkt, inputPar),
-    dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, outputMkt, outputPar),
+    dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, inputMarket, inputPar),
+    dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, outputMarket, outputPar),
   ]);
 }
 
 async function setBalances2(inputPar: Integer, outputPar: Integer) {
   return Promise.all([
-    dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, inputMkt, inputPar),
-    dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, outputMkt, outputPar),
+    dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, inputMarket, inputPar),
+    dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, outputMarket, outputPar),
   ]);
 }
 
@@ -775,11 +791,11 @@ async function expectBalances2(expectedInputPar: Integer, expectedOutputPar: Int
 
 function expectBalances(balances: Balance[], expectedInputPar: Integer, expectedOutputPar: Integer) {
   balances.forEach(balance => {
-    if (balance.marketId.eq(inputMkt)) {
+    if (balance.marketId.eq(inputMarket)) {
       expect(balance.par).to.eql(expectedInputPar);
-    } else if (balance.marketId.eq(outputMkt)) {
+    } else if (balance.marketId.eq(outputMarket)) {
       expect(balance.par).to.eql(expectedOutputPar);
-    } else if (balance.marketId.eq(collateralMkt)) {
+    } else if (balance.marketId.eq(collateralMarket)) {
       expect(balance.par).to.eql(collateralAmount);
     } else {
       expect(balance.par).to.eql(zero);
@@ -797,10 +813,7 @@ async function approveOperator() {
 
 async function expectTradeOkay(glob: Object, options?: Object) {
   const combinedGlob = { ...defaultGlob, ...glob };
-  return dolomiteMargin.operation
-    .initiate()
-    .trade(combinedGlob)
-    .commit(options);
+  return dolomiteMargin.operation.initiate().trade(combinedGlob).commit(options);
 }
 
 async function expectTradeRevert(glob: Object, reason?: string, options?: Object) {

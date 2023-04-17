@@ -20,6 +20,7 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 import { Account } from "../lib/Account.sol";
@@ -118,6 +119,36 @@ library GettersImpl {
         returns (uint256)
     {
         return state.riskParams.accountMaxNumberOfMarketsWithBalances;
+    }
+
+    function getOracleSentinel(
+        Storage.State storage state
+    )
+        public
+        view
+        returns (IOracleSentinel)
+    {
+        return state.riskParams.oracleSentinel;
+    }
+
+    function getIsBorrowAllowed(
+        Storage.State storage state
+    )
+        public
+        view
+        returns (bool)
+    {
+        return state.riskParams.oracleSentinel.isBorrowAllowed();
+    }
+
+    function getIsLiquidationAllowed(
+        Storage.State storage state
+    )
+        public
+        view
+        returns (bool)
+    {
+        return state.riskParams.oracleSentinel.isLiquidationAllowed();
     }
 
     function getMarginRatioOverrideByAccountOwner(

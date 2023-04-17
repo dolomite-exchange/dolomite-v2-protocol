@@ -21,6 +21,7 @@ pragma experimental ABIEncoderV2;
 
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 
 import { GettersImpl } from "./impl/GettersImpl.sol";
@@ -45,10 +46,6 @@ contract Getters is
     IDolomiteMargin,
     State
 {
-    // ============ Constants ============
-
-    bytes32 FILE = "Getters";
-
     // ============ Getters for Risk ============
 
     function getMarginRatio()
@@ -99,6 +96,30 @@ contract Getters is
         returns (uint256)
     {
         return GettersImpl.getAccountMaxNumberOfMarketsWithBalances(g_state);
+    }
+
+    function getOracleSentinel()
+        public
+        view
+        returns (IOracleSentinel)
+    {
+        return GettersImpl.getOracleSentinel(g_state);
+    }
+
+    function getIsBorrowAllowed()
+        public
+        view
+        returns (bool)
+    {
+        return GettersImpl.getIsBorrowAllowed(g_state);
+    }
+
+    function getIsLiquidationAllowed()
+        public
+        view
+        returns (bool)
+    {
+        return GettersImpl.getIsLiquidationAllowed(g_state);
     }
 
     function getMarginRatioOverrideByAccountOwner(

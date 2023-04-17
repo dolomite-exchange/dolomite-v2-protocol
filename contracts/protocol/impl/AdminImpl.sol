@@ -21,7 +21,9 @@ pragma experimental ABIEncoderV2;
 
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+
 import { Decimal } from "../lib/Decimal.sol";
 import { Interest } from "../lib/Interest.sol";
 import { DolomiteMarginMath } from "../lib/DolomiteMarginMath.sol";
@@ -123,6 +125,10 @@ library AdminImpl {
 
     event LogSetAccountMaxNumberOfMarketsWithBalances(
         uint256 accountMaxNumberOfMarketsWithBalances
+    );
+
+    event LogSetOracleSentinel(
+        IOracleSentinel oracleSentinel
     );
 
     event LogSetAccountRiskOverride(
@@ -407,6 +413,19 @@ library AdminImpl {
         emit LogSetAccountMaxNumberOfMarketsWithBalances(accountMaxNumberOfMarketsWithBalances);
     }
 
+    function ownerSetOracleSentinel(
+        Storage.State storage state,
+        IOracleSentinel oracleSentinel
+    ) public {
+        Require.that(
+            oracleSentinel.isBorrowAllowed() && oracleSentinel.isLiquidationAllowed(),
+            FILE,
+            "Invalid oracle sentinel"
+        );
+        state.riskParams.oracleSentinel = oracleSentinel;
+        emit LogSetOracleSentinel(oracleSentinel);
+    }
+
     function ownerSetAccountRiskOverride(
         Storage.State storage state,
         address accountOwner,
@@ -567,7 +586,7 @@ library AdminImpl {
     )
     private
     {
-        Types.Wei memory maxBorrowWeiStruct = Types.Wei(true, maxBorrowWei.to128());
+        Types.Wei memory maxBorrowWeiStruct = Types.Wei(false, maxBorrowWei.to128());
         state.markets[marketId].maxBorrowWei = maxBorrowWeiStruct;
 
         emit LogSetMaxBorrowWei(marketId, maxBorrowWeiStruct);

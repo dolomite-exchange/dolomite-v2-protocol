@@ -114,7 +114,7 @@ export class Expiry {
 
   // ============ Admin ============
 
-  public async setRampTime(
+  public async setExpiryRampTime(
     newExpiryRampTime: Integer,
     options?: ContractCallOptions,
   ): Promise<TxResult> {

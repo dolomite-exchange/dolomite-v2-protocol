@@ -20,6 +20,7 @@ pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 import { Account } from "../lib/Account.sol";
@@ -621,6 +622,14 @@ interface IDolomiteMargin {
      */
     function ownerSetAccountMaxNumberOfMarketsWithBalances(
         uint256 accountMaxNumberOfMarketsWithBalances
+    )
+    external;
+
+    /**
+     * Sets the current oracle sentinel used to report if borrowing and liquidations are enabled.
+     */
+    function ownerSetOracleSentinel(
+        IOracleSentinel oracleSentinel
     )
     external;
 

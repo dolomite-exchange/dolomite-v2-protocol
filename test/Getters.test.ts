@@ -1,9 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { AccountStatus, address, ADDRESSES, Decimal, Index, Integer, INTEGERS, TotalPar } from '../src';
-import { expectThrow } from './helpers/Expect';
 import { getDolomiteMargin } from './helpers/DolomiteMargin';
 import { setupMarkets } from './helpers/DolomiteMarginHelpers';
 import { fastForward, mineAvgBlock, resetEVM, snapshot } from './helpers/EVM';
+import { expectThrow } from './helpers/Expect';
 import { TestDolomiteMargin } from './modules/TestDolomiteMargin';
 
 let dolomiteMargin: TestDolomiteMargin;
@@ -44,9 +44,25 @@ const defaultIndex = {
 const zero = INTEGERS.ZERO;
 let tokens: address[];
 let markets: Integer[];
-const INVALID_MARKET_ERROR = 'Getters: Invalid market';
+const INVALID_MARKET_ERROR = 'GettersImpl: Invalid market';
 
 describe('Getters', () => {
+  let defaultParams: {
+    earningsRate: Decimal;
+    marginRatio: Decimal;
+    liquidationSpread: Decimal;
+    minBorrowedValue: Integer;
+    accountMaxNumberOfMarketsWithBalances: Integer;
+    oracleSentinel: address;
+  };
+  let defaultLimits: {
+    marginRatioMax: Decimal;
+    liquidationSpreadMax: Decimal;
+    earningsRateMax: Decimal;
+    marginPremiumMax: Decimal;
+    liquidationSpreadPremiumMax: Decimal;
+    minBorrowedValueMax: Integer;
+  };
   let snapshotId: string;
 
   before(async () => {
@@ -90,6 +106,23 @@ describe('Getters', () => {
     owner1 = accounts[7];
     owner2 = accounts[8];
 
+    defaultParams = {
+      earningsRate: new BigNumber('0.9'),
+      marginRatio: new BigNumber('0.15'),
+      liquidationSpread: new BigNumber('0.05'),
+      minBorrowedValue: new BigNumber('5e16'),
+      accountMaxNumberOfMarketsWithBalances: new BigNumber(32),
+      oracleSentinel: dolomiteMargin.testing.oracleSentinel.address,
+    };
+    defaultLimits = {
+      marginRatioMax: new BigNumber('2.0'),
+      liquidationSpreadMax: new BigNumber('0.5'),
+      earningsRateMax: new BigNumber('1.0'),
+      marginPremiumMax: new BigNumber('2.0'),
+      liquidationSpreadPremiumMax: new BigNumber('5.0'),
+      minBorrowedValueMax: new BigNumber('100e18'),
+    };
+
     snapshotId = await snapshot();
   });
 
@@ -100,21 +133,6 @@ describe('Getters', () => {
   // ============ Getters for Risk ============
 
   describe('Risk', () => {
-    const defaultParams = {
-      earningsRate: new BigNumber('0.9'),
-      marginRatio: new BigNumber('0.15'),
-      liquidationSpread: new BigNumber('0.05'),
-      minBorrowedValue: new BigNumber('5e16'),
-    };
-    const defaultLimits = {
-      marginRatioMax: new BigNumber('2.0'),
-      liquidationSpreadMax: new BigNumber('0.5'),
-      earningsRateMax: new BigNumber('1.0'),
-      marginPremiumMax: new BigNumber('2.0'),
-      liquidationSpreadPremiumMax: new BigNumber('2.0'),
-      minBorrowedValueMax: new BigNumber('100e18'),
-    };
-
     describe('#getMarginRatio', () => {
       it('Succeeds', async () => {
         const value1 = await dolomiteMargin.getters.getMarginRatio();
@@ -160,6 +178,40 @@ describe('Getters', () => {
         await dolomiteMargin.admin.setMinBorrowedValue(defaultLimits.minBorrowedValueMax, { from: admin });
         const value2 = await dolomiteMargin.getters.getMinBorrowedValue();
         expect(value2).to.eql(defaultLimits.minBorrowedValueMax);
+      });
+    });
+
+    describe('#getAccountMaxNumberOfMarketsWithBalances', () => {
+      it('Succeeds', async () => {
+        const value1 = await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances();
+        expect(value1).to.eql(defaultParams.accountMaxNumberOfMarketsWithBalances);
+
+        await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(64, { from: admin });
+        expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber(64));
+      });
+    });
+
+    describe('#getOracleSentinel', () => {
+      it('Succeeds', async () => {
+        expect(await dolomiteMargin.getters.getOracleSentinel()).to.eql(defaultParams.oracleSentinel);
+      });
+    });
+
+    describe('#getIsBorrowAllowed()', () => {
+      it('Succeeds', async () => {
+        expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
+
+        await dolomiteMargin.testing.oracleSentinel.setIsBorrowAllowed(false);
+        expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
+      });
+    });
+
+    describe('#getIsLiquidationAllowed', () => {
+      it('Succeeds', async () => {
+        expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
+
+        await dolomiteMargin.testing.oracleSentinel.setIsLiquidationAllowed(false);
+        expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
       });
     });
 
@@ -245,11 +297,11 @@ describe('Getters', () => {
       it('Fails for Invalid token', async () => {
         await expectThrow(
           dolomiteMargin.getters.getMarketIdByTokenAddress(ADDRESSES.ZERO),
-          'Getters: Invalid token',
+          'GettersImpl: Invalid token',
         );
         await expectThrow(
           dolomiteMargin.getters.getMarketIdByTokenAddress('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'),
-          'Getters: Invalid token',
+          'GettersImpl: Invalid token',
         );
       });
     });
@@ -405,7 +457,10 @@ describe('Getters', () => {
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketLiquidationSpreadPremium(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(
+          dolomiteMargin.getters.getMarketLiquidationSpreadPremium(invalidMarket),
+          INVALID_MARKET_ERROR,
+        );
       });
     });
 
@@ -457,7 +512,10 @@ describe('Getters', () => {
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(
+          dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(invalidMarket),
+          INVALID_MARKET_ERROR,
+        );
       });
     });
 
@@ -652,10 +710,7 @@ describe('Getters', () => {
     }
 
     function crop(b: BigNumber) {
-      return b
-        .times('1e18')
-        .integerValue(BigNumber.ROUND_DOWN)
-        .div('1e18');
+      return b.times('1e18').integerValue(BigNumber.ROUND_DOWN).div('1e18');
     }
   });
 

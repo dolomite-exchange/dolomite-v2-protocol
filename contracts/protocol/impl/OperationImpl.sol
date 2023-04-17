@@ -314,11 +314,21 @@ library OperationImpl {
     )
         private
     {
-        // verify no increase in borrowPar for closing markets
+        bool isBorrowAllowed = state.riskParams.oracleSentinel.isBorrowAllowed();
+
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
             uint256 marketId = cache.getAtIndex(i).marketId;
             Types.TotalPar memory totalPar = state.getTotalPar(marketId);
+            (
+                Types.Wei memory totalSupplyWei,
+                Types.Wei memory totalBorrowWei
+            ) = Interest.totalParToWei(totalPar, cache.getAtIndex(i).index);
+
+            Types.Wei memory maxBorrowWei = state.getMaxBorrowWei(marketId);
+            Types.Wei memory maxSupplyWei = state.getMaxSupplyWei(marketId);
+
+            // first check if the market is closing, borrowing is enabled, or if too much is being borrowed
             if (cache.getAtIndex(i).isClosing) {
                 Require.that(
                     totalPar.borrow <= cache.getAtIndex(i).borrowPar,
@@ -326,35 +336,18 @@ library OperationImpl {
                     "Market is closing",
                     marketId
                 );
-            }
-
-            Interest.Index memory index = cache.getAtIndex(i).index;
-            (
-                Types.Wei memory totalSupplyWei,
-                Types.Wei memory totalBorrowWei
-            ) = Interest.totalParToWei(totalPar, index);
-
-            Types.Wei memory maxSupplyWei = state.getMaxSupplyWei(marketId);
-            if (maxSupplyWei.value != 0) {
-                // require total supply is less than the max OR it scaled down
-                Types.Wei memory cachedSupplyWei = Interest.parToWei(
-                    Types.Par(true, cache.getAtIndex(i).supplyPar),
-                    index
-                );
+            } else if (!isBorrowAllowed) {
                 Require.that(
-                    totalSupplyWei.value <= maxSupplyWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
+                    totalPar.borrow <= cache.getAtIndex(i).borrowPar,
                     FILE,
-                    "Total supply exceeds max supply",
+                    "Borrowing is currently disabled",
                     marketId
                 );
-            }
-
-            Types.Wei memory maxBorrowWei = state.getMaxBorrowWei(marketId);
-            if (maxBorrowWei.value != 0) {
+            } else if (maxBorrowWei.value != 0) {
                 // require total borrow is less than the max OR it scaled down
                 Types.Wei memory cachedBorrowWei = Interest.parToWei(
                     Types.Par(true, cache.getAtIndex(i).borrowPar),
-                    index
+                    cache.getAtIndex(i).index
                 );
                 Require.that(
                     totalBorrowWei.value <= maxBorrowWei.value || totalBorrowWei.value <= cachedBorrowWei.value,
@@ -364,6 +357,22 @@ library OperationImpl {
                 );
             }
 
+            // check if too much is being supplied
+            if (maxSupplyWei.value != 0) {
+                // require total supply is less than the max OR it scaled down
+                Types.Wei memory cachedSupplyWei = Interest.parToWei(
+                    Types.Par(true, cache.getAtIndex(i).supplyPar),
+                    cache.getAtIndex(i).index
+                );
+                Require.that(
+                    totalSupplyWei.value <= maxSupplyWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
+                    FILE,
+                    "Total supply exceeds max supply",
+                    marketId
+                );
+            }
+
+            // Log the current interest rate
             Interest.Rate memory rate = state.markets[marketId].interestSetter.getInterestRate(
                 cache.getAtIndex(i).token,
                 totalBorrowWei.value,

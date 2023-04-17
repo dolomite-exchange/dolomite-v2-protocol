@@ -34,6 +34,7 @@ import { Token } from "./Token.sol";
 import { Types } from "./Types.sol";
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 
@@ -125,6 +126,8 @@ library Storage {
 
         // The maximum number of markets a user can have a non-zero balance for a given account.
         uint256 accountMaxNumberOfMarketsWithBalances;
+
+        IOracleSentinel oracleSentinel;
 
         // Certain addresses are allowed to borrow with different LTV requirements. When an account's risk is overrode,
         // the global risk parameters are ignored and the account's risk parameters are used instead.
@@ -526,11 +529,13 @@ library Storage {
             return true;
         }
 
-        // get account values (adjusted for liquidity)
+        Decimal.D256 memory marginRatioOverride = state.riskParams.marginRatioOverrideMap[account.owner];
+
+        // get account values (adjusted for liquidity, if there isn't a margin ratio override)
         (
             Monetary.Value memory supplyValue,
             Monetary.Value memory borrowValue
-        ) = state.getAccountValues(account, cache, /* adjustForLiquidity = */ true);
+        ) = state.getAccountValues(account, cache, /* adjustForLiquidity = */ marginRatioOverride.value == 0);
 
         if (requireMinBorrow) {
             Require.that(
@@ -542,11 +547,10 @@ library Storage {
             );
         }
 
-        Decimal.D256 memory marginRatio = state.riskParams.marginRatioOverrideMap[account.owner];
-        if (marginRatio.value == 0) {
-            marginRatio = state.riskParams.marginRatio;
+        if (marginRatioOverride.value == 0) {
+            marginRatioOverride = state.riskParams.marginRatio;
         }
-        uint256 requiredMargin = Decimal.mul(borrowValue.value, marginRatio);
+        uint256 requiredMargin = Decimal.mul(borrowValue.value, marginRatioOverride);
 
         return supplyValue.value >= borrowValue.value.add(requiredMargin);
     }

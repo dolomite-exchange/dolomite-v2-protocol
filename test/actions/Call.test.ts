@@ -1,11 +1,12 @@
 import BigNumber from 'bignumber.js';
 import { toBytes } from '../../src/lib/BytesHelper';
-import { INTEGERS } from '../../src/lib/Constants';
 import { expectThrow } from '../helpers/Expect';
 import {
   AccountStatus,
   address,
-  Call, TxResult,
+  Call,
+  TxResult,
+  INTEGERS,
 } from '../../src';
 import { getDolomiteMargin } from '../helpers/DolomiteMargin';
 import { setupMarkets } from '../helpers/DolomiteMarginHelpers';

@@ -34,7 +34,8 @@ describe('StandardActions', () => {
       INTEGERS.ZERO,
       INTEGERS.ZERO,
       INTEGERS.ZERO,
-      false,
+      INTEGERS.ZERO,
+      INTEGERS.ZERO,
       false,
       { from: r.accounts[0] },
     );

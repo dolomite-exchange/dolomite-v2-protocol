@@ -23,6 +23,8 @@ import { DolomiteMargin } from "../protocol/DolomiteMargin.sol";
 
 import { GettersImpl } from "../protocol/impl/GettersImpl.sol";
 
+import { IOracleSentinel } from "../protocol/interfaces/IOracleSentinel.sol";
+
 import { Account } from "../protocol/lib/Account.sol";
 import { Decimal } from "../protocol/lib/Decimal.sol";
 import { Interest } from "../protocol/lib/Interest.sol";
@@ -43,6 +45,7 @@ contract TestDolomiteMargin is DolomiteMargin {
         Decimal.D256 memory earningsRate,
         Monetary.Value memory minBorrowedValue,
         uint256 accountMaxNumberOfMarketsWithBalances,
+        IOracleSentinel oracleSentinel,
         Storage.RiskLimits memory riskLimits
     )
         public
@@ -52,6 +55,7 @@ contract TestDolomiteMargin is DolomiteMargin {
             earningsRate,
             minBorrowedValue,
             accountMaxNumberOfMarketsWithBalances,
+            oracleSentinel,
             riskLimits
         )
     {}

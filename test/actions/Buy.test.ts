@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { AccountStatus, address, AmountDenomination, AmountReference, Buy, Integer } from '../../src';
-import { INTEGERS } from '../../src/lib/Constants';
+import { AccountStatus, address, AmountDenomination, AmountReference, Buy, Integer, INTEGERS } from '../../src';
 import { expectThrow } from '../helpers/Expect';
 import { getDolomiteMargin } from '../helpers/DolomiteMargin';
 import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
@@ -129,7 +128,7 @@ describe('Buy', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(8);
+    expect(logs.length).to.eql(11);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -180,6 +179,28 @@ describe('Buy', () => {
       deltaWei: makerWei,
     });
     expect(buyLog.args.exchangeWrapper).to.eql(dolomiteMargin.testing.exchangeWrapper.address);
+
+    // interest rates are sorted by marketId, asc
+    const makerMarketInterestRateLog = logs[8];
+    expect(makerMarketInterestRateLog.name).to.eql('LogInterestRate');
+    expect(makerMarketInterestRateLog.args.market).to.eql(makerMarket);
+    expect(makerMarketInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(makerMarket),
+    );
+
+    const takerMarketInterestRateLog = logs[9];
+    expect(takerMarketInterestRateLog.name).to.eql('LogInterestRate');
+    expect(takerMarketInterestRateLog.args.market).to.eql(takerMarket);
+    expect(takerMarketInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(takerMarket),
+    );
+
+    const collateralMarketInterestRateLog = logs[10];
+    expect(collateralMarketInterestRateLog.name).to.eql('LogInterestRate');
+    expect(collateralMarketInterestRateLog.args.market).to.eql(collateralMarket);
+    expect(collateralMarketInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(collateralMarket),
+    );
   });
 
   it('Succeeds for zero makerAmount', async () => {

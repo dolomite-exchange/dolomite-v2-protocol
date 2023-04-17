@@ -3,7 +3,6 @@ import { getDolomiteMargin } from '../helpers/DolomiteMargin';
 import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 import { resetEVM, snapshot } from '../helpers/EVM';
 import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
-import { INTEGERS } from '../../src/lib/Constants';
 import { expectThrow } from '../helpers/Expect';
 import {
   AccountStatus,
@@ -11,6 +10,7 @@ import {
   AmountDenomination,
   AmountReference,
   Integer,
+  INTEGERS,
   Transfer,
 } from '../../src';
 
@@ -151,7 +151,7 @@ describe('Transfer', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -186,6 +186,21 @@ describe('Transfer', () => {
     expect(transferLog.args.market).to.eql(market);
     expect(transferLog.args.updateOne).to.eql({ newPar: par, deltaWei: wei });
     expect(transferLog.args.updateTwo).to.eql({ newPar: negPar, deltaWei: negWei });
+
+    // interest rates are sorted by marketId, asc
+    const interestRateLog = logs[6];
+    expect(interestRateLog.name).to.eql('LogInterestRate');
+    expect(interestRateLog.args.market).to.eql(market);
+    expect(interestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market),
+    );
+
+    const collateralInterestRateLog = logs[7];
+    expect(collateralInterestRateLog.name).to.eql('LogInterestRate');
+    expect(collateralInterestRateLog.args.market).to.eql(collateralMarket);
+    expect(collateralInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(collateralMarket),
+    );
   });
 
   it('Succeeds for positive delta par/wei', async () => {

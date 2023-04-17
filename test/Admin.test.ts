@@ -1,7 +1,11 @@
 import BigNumber from 'bignumber.js';
 
+import testOracleSentinelJson from '../build/contracts/TestSimpleOracleSentinel.json';
+import { TestSimpleOracleSentinel } from '../build/testing_wrappers/TestSimpleOracleSentinel';
+
 import { address, ADDRESSES, Decimal, Integer, INTEGERS, MarketWithInfo, RiskLimits, RiskParams } from '../src';
 import { stringToDecimal } from '../src/lib/Helpers';
+import { deployContract } from './helpers/Deploy';
 import { getDolomiteMargin } from './helpers/DolomiteMargin';
 import { setupMarkets } from './helpers/DolomiteMarginHelpers';
 import { resetEVM, snapshot } from './helpers/EVM';
@@ -244,28 +248,6 @@ describe('Admin', () => {
 
   // ============ Market Functions ============
 
-  describe('#setAccountMaxNumberOfMarketsWithBalances', () => {
-    it('Successfully sets value', async () => {
-      const txResult = await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: admin });
-      const logs = dolomiteMargin.logs.parseLogs(txResult);
-      expect(logs.length).to.eql(1);
-      expect(logs[0].name).to.eql('LogSetAccountMaxNumberOfMarketsWithBalances');
-      expect(logs[0].args.accountMaxNumberOfMarketsWithBalances).to.eql(new BigNumber('100'));
-      expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber('100'));
-    });
-
-    it('Fails for non-admin', async () => {
-      await expectThrow(dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: nonAdmin }));
-    });
-
-    it('Fails for when too low', async () => {
-      await expectThrow(
-        dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(1, { from: admin }),
-        'AdminImpl: Acct MaxNumberOfMarkets too low',
-      );
-    });
-  });
-
   describe('#ownerAddMarket', () => {
     const token = ADDRESSES.TEST[2];
 
@@ -303,7 +285,7 @@ describe('Admin', () => {
       expect(marketInfo.market.marginPremium).to.eql(marginPremium);
       expect(marketInfo.market.liquidationSpreadPremium).to.eql(liquidationSpreadPremium);
       expect(marketInfo.market.maxSupplyWei).to.eql(maxSupplyWei);
-      expect(marketInfo.market.maxBorrowWei).to.eql(maxBorrowWei);
+      expect(marketInfo.market.maxBorrowWei).to.eql(maxBorrowWei.negated());
       expect(marketInfo.market.earningsRateOverride).to.eql(earningsRateOverride);
       expect(marketInfo.market.isClosing).to.eql(false);
       expect(marketInfo.market.totalPar.borrow).to.eql(INTEGERS.ZERO);
@@ -353,7 +335,7 @@ describe('Admin', () => {
       const maxBorrowWeiLog = logs[6];
       expect(maxBorrowWeiLog.name).to.eql('LogSetMaxBorrowWei');
       expect(maxBorrowWeiLog.args.marketId).to.eql(marketId);
-      expect(maxBorrowWeiLog.args.maxBorrowWei).to.eql(maxBorrowWei);
+      expect(maxBorrowWeiLog.args.maxBorrowWei).to.eql(maxBorrowWei.negated());
 
       const earningsRateOverrideLog = logs[7];
       expect(earningsRateOverrideLog.name).to.eql('LogSetEarningsRateOverride');
@@ -397,7 +379,7 @@ describe('Admin', () => {
       expect(marketInfo.market.marginPremium).to.eql(marginPremium);
       expect(marketInfo.market.liquidationSpreadPremium).to.eql(liquidationSpreadPremium);
       expect(marketInfo.market.maxSupplyWei).to.eql(maxSupplyWei);
-      expect(marketInfo.market.maxBorrowWei).to.eql(maxBorrowWei);
+      expect(marketInfo.market.maxBorrowWei).to.eql(maxBorrowWei.negated());
       expect(marketInfo.market.earningsRateOverride).to.eql(earningsRateOverride);
       expect(marketInfo.market.isClosing).to.eql(true);
       expect(marketInfo.market.totalPar.borrow).to.eql(INTEGERS.ZERO);
@@ -453,7 +435,7 @@ describe('Admin', () => {
       const maxBorrowWeiLog = logs[7];
       expect(maxBorrowWeiLog.name).to.eql('LogSetMaxBorrowWei');
       expect(maxBorrowWeiLog.args.marketId).to.eql(marketId);
-      expect(maxBorrowWeiLog.args.maxBorrowWei).to.eql(maxBorrowWei);
+      expect(maxBorrowWeiLog.args.maxBorrowWei).to.eql(maxBorrowWei.negated());
 
       const earningsRateOverrideLog = logs[8];
       expect(earningsRateOverrideLog.name).to.eql('LogSetEarningsRateOverride');
@@ -954,13 +936,13 @@ describe('Admin', () => {
       txr = await dolomiteMargin.admin.setMaxBorrowWei(defaultMarket, highMaxBorrowWei, {
         from: admin,
       });
-      await expectMaxBorrowWei(txr, highMaxBorrowWei);
+      await expectMaxBorrowWei(txr, highMaxBorrowWei.negated());
 
       // set to risky again
       txr = await dolomiteMargin.admin.setMaxBorrowWei(defaultMarket, highMaxBorrowWei, {
         from: admin,
       });
-      await expectMaxBorrowWei(txr, highMaxBorrowWei);
+      await expectMaxBorrowWei(txr, highMaxBorrowWei.negated());
 
       // set back to default
       txr = await dolomiteMargin.admin.setMaxBorrowWei(defaultMarket, defaultMaxBorrowWei, {
@@ -978,8 +960,8 @@ describe('Admin', () => {
         dolomiteMargin.admin.setMaxBorrowWei(secondaryMarket, maxWei2, { from: admin }),
       ]);
 
-      await expectMaxBorrowWei(result1, maxWei1, defaultMarket);
-      await expectMaxBorrowWei(result2, maxWei2, secondaryMarket);
+      await expectMaxBorrowWei(result1, maxWei1.negated(), defaultMarket);
+      await expectMaxBorrowWei(result2, maxWei2.negated(), secondaryMarket);
     });
 
     it('Fails for invalid market', async () => {
@@ -1480,6 +1462,83 @@ describe('Admin', () => {
       const result = await dolomiteMargin.getters.getMinBorrowedValue();
       expect(result).to.eql(e);
     }
+  });
+
+  describe('#ownerSetAccountMaxNumberOfMarketsWithBalances', () => {
+    it('Successfully sets value', async () => {
+      const txResult = await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: admin });
+      const logs = dolomiteMargin.logs.parseLogs(txResult);
+      expect(logs.length).to.eql(1);
+      expect(logs[0].name).to.eql('LogSetAccountMaxNumberOfMarketsWithBalances');
+      expect(logs[0].args.accountMaxNumberOfMarketsWithBalances).to.eql(new BigNumber('100'));
+      expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber('100'));
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: nonAdmin }));
+    });
+
+    it('Fails for when too low', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(1, { from: admin }),
+        'AdminImpl: Acct MaxNumberOfMarkets too low',
+      );
+    });
+  });
+
+  describe('#ownerSetOracleSentinel', () => {
+    it('Successfully sets value', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        testOracleSentinelJson,
+        [],
+      )) as TestSimpleOracleSentinel;
+      const txResult = await dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin });
+      const logs = dolomiteMargin.logs.parseLogs(txResult);
+      expect(logs.length).to.eql(1);
+      expect(logs[0].name).to.eql('LogSetOracleSentinel');
+      expect(logs[0].args.oracleSentinel).to.eql(oracleSentinel.options.address);
+      expect(await dolomiteMargin.getters.getOracleSentinel()).to.eql(oracleSentinel.options.address);
+    });
+
+    it('Fails for non-admin', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        testOracleSentinelJson,
+        [],
+      )) as TestSimpleOracleSentinel;
+      await expectThrow(dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: nonAdmin }));
+    });
+
+    it('Fails for when borrow allowed is set to false', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        testOracleSentinelJson,
+        [],
+      )) as TestSimpleOracleSentinel;
+      await dolomiteMargin.contracts.callContractFunction(oracleSentinel.methods.setIsBorrowAllowed(false), {
+        from: admin,
+      });
+      await expectThrow(
+        dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin }),
+        'AdminImpl: Invalid oracle sentinel',
+      );
+    });
+
+    it('Fails for when liquidation allowed is set to false', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        testOracleSentinelJson,
+        [],
+      )) as TestSimpleOracleSentinel;
+      await dolomiteMargin.contracts.callContractFunction(oracleSentinel.methods.setIsLiquidationAllowed(false), {
+        from: admin,
+      });
+      await expectThrow(
+        dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin }),
+        'AdminImpl: Invalid oracle sentinel',
+      );
+    });
   });
 
   // ============ Global Operator Functions ============

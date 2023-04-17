@@ -1,10 +1,10 @@
 import BigNumber from 'bignumber.js';
-import { getDolomiteMargin } from '../helpers/DolomiteMargin';
-import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
-import { resetEVM, snapshot } from '../helpers/EVM';
-import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
-import { expectThrow } from '../helpers/Expect';
 import { AccountStatus, address, AmountDenomination, AmountReference, Integer, INTEGERS, Withdraw } from '../../src';
+import { getDolomiteMargin } from '../helpers/DolomiteMargin';
+import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
+import { resetEVM, snapshot } from '../helpers/EVM';
+import { expectThrow } from '../helpers/Expect';
+import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 
 let who: address;
 let dolomiteMargin: TestDolomiteMargin;
@@ -58,12 +58,7 @@ describe('Withdraw', () => {
         borrow: wei.div(par),
         supply: wei.div(par),
       }),
-      dolomiteMargin.testing.setAccountBalance(
-        who,
-        accountNumber,
-        collateralMarket,
-        collateralAmount,
-      ),
+      dolomiteMargin.testing.setAccountBalance(who, accountNumber, collateralMarket, collateralAmount),
     ]);
     snapshotId = await snapshot();
   });
@@ -75,10 +70,7 @@ describe('Withdraw', () => {
   });
 
   it('Basic withdraw test', async () => {
-    await Promise.all([
-      issueTokensToDolomiteMargin(wei),
-      setAccountBalance(par.times(2)),
-    ]);
+    await Promise.all([issueTokensToDolomiteMargin(wei), setAccountBalance(par.times(2))]);
     const txResult = await expectWithdrawOkay({});
     await expectBalances(par, wei, wei, zero);
     console.log(`\tWithdraw gas used: ${txResult.gasUsed}`);
@@ -90,10 +82,7 @@ describe('Withdraw', () => {
       setAccountBalance(par.times(2)),
       dolomiteMargin.permissions.approveOperator(operator, { from: who }),
     ]);
-    const txResult = await expectWithdrawOkay(
-      { to: operator },
-      { from: operator },
-    );
+    const txResult = await expectWithdrawOkay({ to: operator }, { from: operator });
 
     const [marketIndex, collateralIndex, marketOraclePrice, collateralOraclePrice] = await Promise.all([
       dolomiteMargin.getters.getMarketCachedIndex(market),
@@ -104,7 +93,7 @@ describe('Withdraw', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -137,6 +126,19 @@ describe('Withdraw', () => {
     expect(withdrawLog.args.market).to.eql(market);
     expect(withdrawLog.args.update).to.eql({ newPar: par, deltaWei: negWei });
     expect(withdrawLog.args.to).to.eql(operator);
+
+    // interest rates are sorted by marketId, asc
+    const interestRateLog = logs[6];
+    expect(interestRateLog.name).to.eql('LogInterestRate');
+    expect(interestRateLog.args.market).to.eql(market);
+    expect(interestRateLog.args.rate).to.eql(await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market));
+
+    const collateralInterestRateLog = logs[7];
+    expect(collateralInterestRateLog.name).to.eql('LogInterestRate');
+    expect(collateralInterestRateLog.args.market).to.eql(collateralMarket);
+    expect(collateralInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(collateralMarket),
+    );
   });
 
   it('Succeeds for negative delta par/wei', async () => {
@@ -164,10 +166,7 @@ describe('Withdraw', () => {
       await expectBalances(negPar, negWei, wei, zero);
 
       // starting positive (>par)
-      await Promise.all([
-        issueTokensToDolomiteMargin(wei),
-        setAccountBalance(par.times(2)),
-      ]);
+      await Promise.all([issueTokensToDolomiteMargin(wei), setAccountBalance(par.times(2))]);
       await expectWithdrawOkay(globs[i]);
       await expectBalances(par, wei, wei, zero);
 
@@ -177,10 +176,7 @@ describe('Withdraw', () => {
       await expectBalances(zero, zero, wei, zero);
 
       // starting positive (<par)
-      await Promise.all([
-        issueTokensToDolomiteMargin(wei),
-        setAccountBalance(par.div(2)),
-      ]);
+      await Promise.all([issueTokensToDolomiteMargin(wei), setAccountBalance(par.div(2))]);
       await expectWithdrawOkay(globs[i]);
       await expectBalances(negPar.div(2), negWei.div(2), wei, zero);
 
@@ -288,10 +284,7 @@ describe('Withdraw', () => {
       await expectBalances(negPar, negWei, wei, zero);
 
       // starting negative (<target)
-      await Promise.all([
-        setAccountBalance(negPar.div(2)),
-        issueTokensToDolomiteMargin(wei.div(2)),
-      ]);
+      await Promise.all([setAccountBalance(negPar.div(2)), issueTokensToDolomiteMargin(wei.div(2))]);
       await expectWithdrawOkay(globs[i]);
       await expectBalances(negPar, negWei, wei.div(2), zero);
 
@@ -305,10 +298,7 @@ describe('Withdraw', () => {
       await expectWithdrawRevert(globs[i], CANNOT_WITHDRAW_POSITIVE);
 
       // starting positive
-      await Promise.all([
-        setAccountBalance(par),
-        issueTokensToDolomiteMargin(wei.times(2)),
-      ]);
+      await Promise.all([setAccountBalance(par), issueTokensToDolomiteMargin(wei.times(2))]);
       await expectWithdrawOkay(globs[i]);
       await expectBalances(negPar, negWei, wei.times(2), zero);
     }
@@ -373,10 +363,7 @@ describe('Withdraw', () => {
       await expectWithdrawRevert(globs[i], CANNOT_WITHDRAW_POSITIVE);
 
       // starting positive (<target)
-      await Promise.all([
-        setAccountBalance(par.times(2)),
-        issueTokensToDolomiteMargin(wei),
-      ]);
+      await Promise.all([setAccountBalance(par.times(2)), issueTokensToDolomiteMargin(wei)]);
       await expectWithdrawOkay(globs[i]);
       await expectBalances(par, wei, wei, zero);
 
@@ -397,9 +384,7 @@ describe('Withdraw', () => {
 
   it('Succeeds for withdrawing in par', async () => {
     const supplyIndex = new BigNumber('1.99');
-    const expectedWei = par
-      .times(supplyIndex)
-      .integerValue(BigNumber.ROUND_DOWN);
+    const expectedWei = par.times(supplyIndex).integerValue(BigNumber.ROUND_DOWN);
     await Promise.all([
       issueTokensToDolomiteMargin(expectedWei),
       dolomiteMargin.testing.setMarketIndex(market, {
@@ -421,9 +406,7 @@ describe('Withdraw', () => {
 
   it('Succeeds for withdrawing in wei', async () => {
     const supplyIndex = new BigNumber('1.99');
-    const expectedWei = par
-      .times(supplyIndex)
-      .integerValue(BigNumber.ROUND_DOWN);
+    const expectedWei = par.times(supplyIndex).integerValue(BigNumber.ROUND_DOWN);
     await Promise.all([
       issueTokensToDolomiteMargin(expectedWei),
       dolomiteMargin.testing.setMarketIndex(market, {
@@ -445,9 +428,7 @@ describe('Withdraw', () => {
 
   it('Succeeds for borrowing in par', async () => {
     const borrowIndex = new BigNumber('3.99');
-    const expectedWei = par
-      .times(borrowIndex)
-      .integerValue(BigNumber.ROUND_DOWN);
+    const expectedWei = par.times(borrowIndex).integerValue(BigNumber.ROUND_DOWN);
     await Promise.all([
       issueTokensToDolomiteMargin(expectedWei),
       dolomiteMargin.testing.setMarketIndex(market, {
@@ -468,9 +449,7 @@ describe('Withdraw', () => {
 
   it('Succeeds for borrowing in wei', async () => {
     const borrowIndex = new BigNumber('3.99');
-    const expectedWei = par
-      .times(borrowIndex)
-      .integerValue(BigNumber.ROUND_DOWN);
+    const expectedWei = par.times(borrowIndex).integerValue(BigNumber.ROUND_DOWN);
     await Promise.all([
       issueTokensToDolomiteMargin(expectedWei),
       dolomiteMargin.testing.setMarketIndex(market, {
@@ -504,11 +483,7 @@ describe('Withdraw', () => {
   it('Succeeds and sets status to Normal', async () => {
     await Promise.all([
       issueTokensToDolomiteMargin(wei),
-      dolomiteMargin.testing.setAccountStatus(
-        who,
-        accountNumber,
-        AccountStatus.Liquidating,
-      ),
+      dolomiteMargin.testing.setAccountStatus(who, accountNumber, AccountStatus.Liquidating),
     ]);
     await expectWithdrawOkay({});
     const status = await dolomiteMargin.getters.getAccountStatus(who, accountNumber);
@@ -516,18 +491,12 @@ describe('Withdraw', () => {
   });
 
   it('Succeeds for local operator', async () => {
-    await Promise.all([
-      issueTokensToDolomiteMargin(wei),
-      dolomiteMargin.permissions.approveOperator(operator),
-    ]);
+    await Promise.all([issueTokensToDolomiteMargin(wei), dolomiteMargin.permissions.approveOperator(operator)]);
     await expectWithdrawOkay({}, { from: operator });
   });
 
   it('Succeeds for global operator', async () => {
-    await Promise.all([
-      issueTokensToDolomiteMargin(wei),
-      dolomiteMargin.permissions.approveOperator(operator),
-    ]);
+    await Promise.all([issueTokensToDolomiteMargin(wei), dolomiteMargin.permissions.approveOperator(operator)]);
     await expectWithdrawOkay({}, { from: operator });
   });
 
@@ -552,18 +521,25 @@ describe('Withdraw', () => {
     );
   });
 
-  it('Succeeds if the user has too many non-zero balances but does not decrease the number', async () => {
+  it('Succeeds if the user has too many non-zero balances but does not increase the number', async () => {
     await issueTokensToDolomiteMargin(wei);
     await dolomiteMargin.testing.setAccountBalance(who, accountNumber, market, wei.times(2));
     await dolomiteMargin.testing.setAccountBalance(who, accountNumber, otherMarket, wei);
 
-    const numberOfMarketsWithBalances = await dolomiteMargin.getters.getAccountNumberOfMarketsWithBalances(who, accountNumber);
-    expect(numberOfMarketsWithBalances).to.eql(new BigNumber(3));
+    const numberOfMarketsWithBalancesBefore = await dolomiteMargin.getters.getAccountNumberOfMarketsWithBalances(
+      who,
+      accountNumber,
+    );
+    expect(numberOfMarketsWithBalancesBefore).to.eql(new BigNumber(3));
 
     await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(2, { from: admin });
 
     await expectWithdrawOkay({});
-    expect(numberOfMarketsWithBalances).to.eql(new BigNumber(3));
+    const numberOfMarketsWithBalancesAfter = await dolomiteMargin.getters.getAccountNumberOfMarketsWithBalances(
+      who,
+      accountNumber,
+    );
+    expect(numberOfMarketsWithBalancesAfter).to.eql(new BigNumber(3));
   });
 });
 
@@ -574,10 +550,7 @@ async function setAccountBalance(amount: BigNumber) {
 }
 
 async function issueTokensToDolomiteMargin(amount: BigNumber) {
-  return dolomiteMargin.testing.tokenA.issueTo(
-    amount,
-    dolomiteMargin.address,
-  );
+  return dolomiteMargin.testing.tokenA.issueTo(amount, dolomiteMargin.address);
 }
 
 async function expectBalances(
@@ -587,18 +560,13 @@ async function expectBalances(
   dolomiteMarginWei: Integer,
   operatorWei: Integer = zero,
 ) {
-  const [
-    accountBalances,
-    dolomiteMarginTokenBalance,
-    walletTokenBalance,
-    operatorTokenBalance,
-  ] = await Promise.all([
+  const [accountBalances, dolomiteMarginTokenBalance, walletTokenBalance, operatorTokenBalance] = await Promise.all([
     dolomiteMargin.getters.getAccountBalances(who, accountNumber),
     dolomiteMargin.testing.tokenA.getBalance(dolomiteMargin.address),
     dolomiteMargin.testing.tokenA.getBalance(who),
     dolomiteMargin.testing.tokenA.getBalance(operator),
   ]);
-  accountBalances.forEach((balance) => {
+  accountBalances.forEach(balance => {
     let expected = { par: zero, wei: zero };
     if (balance.marketId.eq(market)) {
       expected = { par: expectedPar, wei: expectedWei };
@@ -620,16 +588,9 @@ async function expectBalances(
 
 async function expectWithdrawOkay(glob: Object, options?: Object) {
   const combinedGlob = { ...defaultGlob, ...glob };
-  return dolomiteMargin.operation
-    .initiate()
-    .withdraw(combinedGlob)
-    .commit(options);
+  return dolomiteMargin.operation.initiate().withdraw(combinedGlob).commit(options);
 }
 
-async function expectWithdrawRevert(
-  glob: Object,
-  reason?: string,
-  options?: Object,
-) {
+async function expectWithdrawRevert(glob: Object, reason?: string, options?: Object) {
   await expectThrow(expectWithdrawOkay(glob, options), reason);
 }

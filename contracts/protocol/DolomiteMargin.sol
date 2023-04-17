@@ -28,6 +28,7 @@ import { State } from "./State.sol";
 import { AdminImpl } from "./impl/AdminImpl.sol";
 
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
+import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
 
 import { Decimal } from "./lib/Decimal.sol";
 import { Monetary } from "./lib/Monetary.sol";
@@ -56,6 +57,7 @@ contract DolomiteMargin is
         Decimal.D256 memory earningsRate,
         Monetary.Value memory minBorrowedValue,
         uint256 accountMaxNumberOfMarketsWithBalances,
+        IOracleSentinel oracleSentinel,
         Storage.RiskLimits memory riskLimits
     )
         public
@@ -66,5 +68,6 @@ contract DolomiteMargin is
         AdminImpl.ownerSetEarningsRate(g_state, earningsRate);
         AdminImpl.ownerSetMinBorrowedValue(g_state, minBorrowedValue);
         AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(g_state, accountMaxNumberOfMarketsWithBalances);
+        AdminImpl.ownerSetOracleSentinel(g_state, oracleSentinel);
     }
 }

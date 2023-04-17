@@ -31,6 +31,7 @@ import { default as TestChainlinkFlags } from '../build/contracts/TestChainlinkF
 import { default as TestChainlinkPriceOracleV1 } from '../build/contracts/TestChainlinkPriceOracleV1.json';
 import { default as TestParaswapAugustusRouter } from '../build/contracts/TestParaswapAugustusRouter.json';
 import { default as TestLiquidityTokenUnwrapperForLiquidation } from '../build/contracts/TestLiquidityTokenUnwrapperForLiquidation.json';
+import { default as TestSimpleOracleSentinel } from '../build/contracts/TestSimpleOracleSentinel.json';
 
 export default {
   CustomTestToken,
@@ -66,4 +67,5 @@ export default {
   TestChainlinkPriceOracleV1,
   TestParaswapAugustusRouter,
   TestLiquidityTokenUnwrapperForLiquidation,
+  TestSimpleOracleSentinel,
 };

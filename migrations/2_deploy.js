@@ -135,6 +135,10 @@ const TransferProxy = artifacts.require('TransferProxy');
 const BorrowPositionProxyV1 = artifacts.require('BorrowPositionProxyV1');
 const BorrowPositionProxyV2 = artifacts.require('BorrowPositionProxyV2');
 
+// Oracle Sentinels
+const SimpleOracleSentinel = artifacts.require('SimpleOracleSentinel');
+const TestSimpleOracleSentinel = artifacts.require('TestSimpleOracleSentinel');
+
 // Interest Setters
 const DoubleExponentInterestSetter = artifacts.require('DoubleExponentInterestSetter');
 const AAVECopyCatAltCoinInterestSetter = artifacts.require('AAVECopyCatAltCoinInterestSetter');
@@ -279,6 +283,19 @@ async function deployBaseProtocol(deployer, network) {
     await dolomiteMargin.link('TestOperationImpl', TestOperationImpl.address);
   }
 
+  let oracleSentinel;
+  if (isDevNetwork(network)) {
+    oracleSentinel = TestSimpleOracleSentinel;
+  } else {
+    oracleSentinel = SimpleOracleSentinel;
+  }
+
+  if (shouldOverwrite(oracleSentinel, network)) {
+    await deployer.deploy(oracleSentinel);
+  } else {
+    await deployer.deploy(oracleSentinel, getNoOverwriteParams());
+  }
+
   if (shouldOverwrite(dolomiteMargin, network)) {
     const riskParams = await getRiskParams(network);
     await deployer.deploy(
@@ -288,6 +305,7 @@ async function deployBaseProtocol(deployer, network) {
       riskParams.earningsRate,
       riskParams.minBorrowedValue,
       riskParams.accountMaxNumberOfMarketsWithBalances,
+      oracleSentinel.address,
       getRiskLimits(),
     );
   } else {

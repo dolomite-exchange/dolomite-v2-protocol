@@ -3,7 +3,6 @@ import { getDolomiteMargin } from '../helpers/DolomiteMargin';
 import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 import { resetEVM, snapshot } from '../helpers/EVM';
 import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
-import { INTEGERS } from '../../src/lib/Constants';
 import { expectThrow } from '../helpers/Expect';
 import {
   AccountStatus,
@@ -11,6 +10,7 @@ import {
   AmountDenomination,
   AmountReference,
   Integer,
+  INTEGERS,
   Vaporize,
 } from '../../src';
 
@@ -115,7 +115,7 @@ describe('Vaporize', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -161,6 +161,21 @@ describe('Vaporize', () => {
       newPar: zero,
       deltaWei: wei,
     });
+
+    // interest rates are sorted by marketId, asc
+    const owedInterestRateLog = logs[6];
+    expect(owedInterestRateLog.name).to.eql('LogInterestRate');
+    expect(owedInterestRateLog.args.market).to.eql(owedMarket);
+    expect(owedInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(owedMarket),
+    );
+
+    const heldInterestRateLog = logs[7];
+    expect(heldInterestRateLog.name).to.eql('LogInterestRate');
+    expect(heldInterestRateLog.args.market).to.eql(heldMarket);
+    expect(heldInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(heldMarket),
+    );
   });
 
   it('Fails for unvaporizable account', async () => {
@@ -190,7 +205,7 @@ describe('Vaporize', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -236,6 +251,21 @@ describe('Vaporize', () => {
       newPar: zero,
       deltaWei: wei,
     });
+
+    // interest rates are sorted by marketId, asc
+    const owedInterestRateLog = logs[6];
+    expect(owedInterestRateLog.name).to.eql('LogInterestRate');
+    expect(owedInterestRateLog.args.market).to.eql(owedMarket);
+    expect(owedInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(owedMarket),
+    );
+
+    const heldInterestRateLog = logs[7];
+    expect(heldInterestRateLog.name).to.eql('LogInterestRate');
+    expect(heldInterestRateLog.args.market).to.eql(heldMarket);
+    expect(heldInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(heldMarket),
+    );
   });
 
   it('Succeeds if half excess owedTokens', async () => {
@@ -259,7 +289,7 @@ describe('Vaporize', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -305,6 +335,21 @@ describe('Vaporize', () => {
       newPar: zero,
       deltaWei: wei,
     });
+
+    // interest rates are sorted by marketId, asc
+    const owedInterestRateLog = logs[6];
+    expect(owedInterestRateLog.name).to.eql('LogInterestRate');
+    expect(owedInterestRateLog.args.market).to.eql(owedMarket);
+    expect(owedInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(owedMarket),
+    );
+
+    const heldInterestRateLog = logs[7];
+    expect(heldInterestRateLog.name).to.eql('LogInterestRate');
+    expect(heldInterestRateLog.args.market).to.eql(heldMarket);
+    expect(heldInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(heldMarket),
+    );
   });
 
   it('Succeeds when bound by owedToken', async () => {

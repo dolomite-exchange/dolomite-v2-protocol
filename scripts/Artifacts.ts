@@ -47,6 +47,7 @@ import { default as AAVECopyCatAltCoinInterestSetter } from '../build/contracts/
 import { default as AAVECopyCatStableCoinInterestSetter } from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
 import { default as LiquidatorAssetRegistry } from '../build/contracts/LiquidatorAssetRegistry.json';
 import { default as ILiquidityTokenUnwrapperForLiquidation } from '../build/contracts/ILiquidityTokenUnwrapperForLiquidation.json';
+import { default as IOracleSentinel } from '../build/contracts/IOracleSentinel.json';
 
 export default {
   DepositImpl,
@@ -94,4 +95,5 @@ export default {
   AAVECopyCatStableCoinInterestSetter,
   LiquidatorAssetRegistry,
   ILiquidityTokenUnwrapperForLiquidation,
+  IOracleSentinel,
 };

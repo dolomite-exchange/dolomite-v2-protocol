@@ -1233,14 +1233,14 @@ describe('Expiry', () => {
     it('Succeeds for owner', async () => {
       const oldValue = await dolomiteMargin.expiry.getRampTime();
       expect(oldValue).to.eql(INTEGERS.ONE_HOUR_IN_SECONDS);
-      await dolomiteMargin.expiry.setRampTime(INTEGERS.ONE_DAY_IN_SECONDS, { from: admin });
+      await dolomiteMargin.expiry.setExpiryRampTime(INTEGERS.ONE_DAY_IN_SECONDS, { from: admin });
       const newValue = await dolomiteMargin.expiry.getRampTime();
       expect(newValue).to.eql(INTEGERS.ONE_DAY_IN_SECONDS);
     });
 
     it('Fails for non-owner', async () => {
       await expectThrow(
-        dolomiteMargin.expiry.setRampTime(INTEGERS.ONE_DAY_IN_SECONDS, { from: owner1 }),
+        dolomiteMargin.expiry.setExpiryRampTime(INTEGERS.ONE_DAY_IN_SECONDS, { from: owner1 }),
       );
     });
   });

@@ -45,6 +45,16 @@ export class Admin {
     );
   }
 
+  public async setOracleSentinel(
+    oracleSentinel: address,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.dolomiteMargin.methods.ownerSetOracleSentinel(oracleSentinel),
+      options,
+    );
+  }
+
   // ============ Market Functions ============
 
   public async addMarket(
@@ -235,15 +245,6 @@ export class Admin {
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
       this.contracts.dolomiteMargin.methods.ownerSetAutoTraderSpecial(autoTrader, isSpecial),
-      options,
-    );
-  }
-
-  // ============ Expiry Functions ============
-
-  public async setExpiryRampTime(newExpiryRampTime: Integer, options?: ContractCallOptions): Promise<TxResult> {
-    return this.contracts.callContractFunction(
-      this.contracts.expiry.methods.ownerSetExpiryRampTime(newExpiryRampTime.toFixed(0)),
       options,
     );
   }

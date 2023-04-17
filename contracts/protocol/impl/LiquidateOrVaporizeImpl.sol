@@ -60,6 +60,11 @@ library LiquidateOrVaporizeImpl {
     public
     {
         state.requireIsGlobalOperator(msg.sender);
+        Require.that(
+            state.riskParams.oracleSentinel.isLiquidationAllowed(),
+            FILE,
+            "Liquidations are inactive"
+        );
 
         // verify liquidatable
         if (Account.Status.Liquid != state.getStatus(args.liquidAccount)) {

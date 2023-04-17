@@ -185,6 +185,33 @@ export class Getters {
     return new BigNumber(result);
   }
 
+  public async getOracleSentinel(
+    options?: ContractConstantCallOptions,
+  ): Promise<address> {
+    return this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getOracleSentinel(),
+      options,
+    );
+  }
+
+  public async getIsBorrowAllowed(
+    options?: ContractConstantCallOptions,
+  ): Promise<boolean> {
+    return this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getIsBorrowAllowed(),
+      options,
+    );
+  }
+
+  public async getIsLiquidationAllowed(
+    options?: ContractConstantCallOptions,
+  ): Promise<boolean> {
+    return await this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getIsLiquidationAllowed(),
+      options,
+    );
+  }
+
   public async getNumMarkets(
     options?: ContractConstantCallOptions,
   ): Promise<Integer> {
@@ -478,8 +505,8 @@ export class Getters {
         index: Getters.parseIndex(market.index),
         marginPremium: stringToDecimal(market.marginPremium.value),
         liquidationSpreadPremium: stringToDecimal(market.liquidationSpreadPremium.value),
-        maxSupplyWei: new BigNumber(market.maxSupplyWei.value),
-        maxBorrowWei: new BigNumber(market.maxBorrowWei.value),
+        maxSupplyWei: valueToInteger(market.maxSupplyWei),
+        maxBorrowWei: valueToInteger(market.maxBorrowWei),
         earningsRateOverride: stringToDecimal(market.earningsRateOverride.value),
       },
       currentIndex: Getters.parseIndex(currentIndex),

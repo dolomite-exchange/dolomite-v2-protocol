@@ -1,10 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { deployContract } from '../helpers/Deploy';
-import { getDolomiteMargin } from '../helpers/DolomiteMargin';
-import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
-import { resetEVM, snapshot } from '../helpers/EVM';
-import { setGlobalOperator, setupMarkets } from '../helpers/DolomiteMarginHelpers';
-import { expectOutOfGasFailure, expectThrow } from '../helpers/Expect';
+import TestLiquidationCallbackJSON from '../../build/contracts/TestLiquidationCallback.json';
+import { TestLiquidationCallback } from '../../build/testing_wrappers/TestLiquidationCallback';
 import {
   AccountStatus,
   address,
@@ -15,8 +11,12 @@ import {
   INTEGERS,
   Liquidate,
 } from '../../src';
-import { TestLiquidationCallback } from '../../build/testing_wrappers/TestLiquidationCallback';
-import TestLiquidationCallbackJSON from '../../build/contracts/TestLiquidationCallback.json';
+import { deployContract } from '../helpers/Deploy';
+import { getDolomiteMargin } from '../helpers/DolomiteMargin';
+import { setGlobalOperator, setupMarkets } from '../helpers/DolomiteMarginHelpers';
+import { resetEVM, snapshot } from '../helpers/EVM';
+import { expectOutOfGasFailure, expectThrow } from '../helpers/Expect';
+import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 
 let liquidOwner: address;
 let solidOwner: address;
@@ -107,7 +107,7 @@ describe('Liquidate', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -157,6 +157,21 @@ describe('Liquidate', () => {
       newPar: zero,
       deltaWei: wei,
     });
+
+    // interest rates are sorted by marketId, asc
+    const owedInterestRateLog = logs[6];
+    expect(owedInterestRateLog.name).to.eql('LogInterestRate');
+    expect(owedInterestRateLog.args.market).to.eql(owedMarket);
+    expect(owedInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(owedMarket),
+    );
+
+    const heldInterestRateLog = logs[7];
+    expect(heldInterestRateLog.name).to.eql('LogInterestRate');
+    expect(heldInterestRateLog.args.market).to.eql(heldMarket);
+    expect(heldInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(heldMarket),
+    );
   });
 
   it('Succeeds when partially liquidating', async () => {
@@ -281,10 +296,9 @@ describe('Liquidate', () => {
     const revertMessage =
       'This is a long revert message that will get cut off before the vertical bar character. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eget tempus nisi, quis volutpat nulla. Proin tempus nisl id rutrum scelerisque. Praesent id magna eget lorem dictum interdum nec ac lorem. Aliquam ornare iaculis lectus ut pellentesque. Maecenas id tellus facilisis est finibus convallis id tempus odio. Sed risus nibh.';
     // tslint:enable:max-line-length
-    await dolomiteMargin.contracts.callContractFunction(
-      liquidContract.methods.setRevertMessage(revertMessage),
-      { from: accounts[0] },
-    );
+    await dolomiteMargin.contracts.callContractFunction(liquidContract.methods.setRevertMessage(revertMessage), {
+      from: accounts[0],
+    });
     await Promise.all([
       dolomiteMargin.testing.setAccountBalance(liquidContract.options.address, liquidAccountNumber, owedMarket, negPar),
       dolomiteMargin.testing.setAccountBalance(
@@ -402,16 +416,14 @@ describe('Liquidate', () => {
       ),
     );
 
-    const txResult = await expectLiquidateOkay(
-      {
-        liquidAccountOwner: liquidContract.options.address,
-        amount: {
-          value: par.times(2),
-          denomination: AmountDenomination.Principal,
-          reference: AmountReference.Delta,
-        },
+    const txResult = await expectLiquidateOkay({
+      liquidAccountOwner: liquidContract.options.address,
+      amount: {
+        value: par.times(2),
+        denomination: AmountDenomination.Principal,
+        reference: AmountReference.Delta,
       },
-    );
+    });
     console.log(`\tLiquidate with callback reversion with massive gas consumption gas used: ${txResult.gasUsed}`);
 
     await Promise.all([
@@ -676,17 +688,13 @@ async function deployCallbackContract(
   shouldConsumeTonsOfGas: boolean,
   shouldReturnBomb: boolean,
 ): Promise<TestLiquidationCallback> {
-  const liquidContract = await deployContract(
-    dolomiteMargin,
-    TestLiquidationCallbackJSON,
-    [
-      dolomiteMargin.address,
-      shouldRevert,
-      shouldRevertWithMessage,
-      shouldConsumeTonsOfGas,
-      shouldReturnBomb,
-    ],
-  ) as TestLiquidationCallback;
+  const liquidContract = (await deployContract(dolomiteMargin, TestLiquidationCallbackJSON, [
+    dolomiteMargin.address,
+    shouldRevert,
+    shouldRevertWithMessage,
+    shouldConsumeTonsOfGas,
+    shouldReturnBomb,
+  ])) as TestLiquidationCallback;
   liquidContract.options.from = accounts[0];
   return liquidContract;
 }
@@ -698,10 +706,7 @@ async function expectLiquidationFlagSet(liquidAddress: address = liquidOwner) {
 
 async function expectLiquidateOkay(glob: Object, options?: Object) {
   const combinedGlob = { ...defaultGlob, ...glob };
-  const txResult = await dolomiteMargin.operation
-    .initiate()
-    .liquidate(combinedGlob)
-    .commit(options);
+  const txResult = await dolomiteMargin.operation.initiate().liquidate(combinedGlob).commit(options);
   await expectLiquidationFlagSet(combinedGlob.liquidAccountOwner);
   return txResult;
 }

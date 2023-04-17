@@ -1,9 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { AccountStatus, address, AmountDenomination, AmountReference, Deposit, Integer, INTEGERS } from '../../src';
-import { expectThrow } from '../helpers/Expect';
 import { getDolomiteMargin } from '../helpers/DolomiteMargin';
 import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
 import { resetEVM, snapshot } from '../helpers/EVM';
+import { expectThrow } from '../helpers/Expect';
 import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 
 let who: address;
@@ -93,7 +93,7 @@ describe('Deposit', () => {
     ]);
 
     const logs = dolomiteMargin.logs.parseLogs(txResult);
-    expect(logs.length).to.eql(6);
+    expect(logs.length).to.eql(8);
 
     const operationLog = logs[0];
     expect(operationLog.name).to.eql('LogOperation');
@@ -129,6 +129,21 @@ describe('Deposit', () => {
       deltaWei: wei,
     });
     expect(depositLog.args.from).to.eql(operator);
+
+    // interest rates are sorted by marketId, asc
+    const interestRateLog = logs[6];
+    expect(interestRateLog.name).to.eql('LogInterestRate');
+    expect(interestRateLog.args.market).to.eql(market);
+    expect(interestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market),
+    );
+
+    const collateralInterestRateLog = logs[7];
+    expect(collateralInterestRateLog.name).to.eql('LogInterestRate');
+    expect(collateralInterestRateLog.args.market).to.eql(collateralMarket);
+    expect(collateralInterestRateLog.args.rate).to.eql(
+      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(collateralMarket),
+    );
   });
 
   it('Succeeds for positive delta par/wei', async () => {
@@ -546,10 +561,7 @@ async function expectBalances(
 
 async function expectDepositOkay(glob: Object, options?: Object) {
   const combinedGlob = { ...defaultGlob, ...glob };
-  return dolomiteMargin.operation
-    .initiate()
-    .deposit(combinedGlob)
-    .commit(options);
+  return dolomiteMargin.operation.initiate().deposit(combinedGlob).commit(options);
 }
 
 async function expectDepositRevert(glob: Object, reason?: string, options?: Object) {

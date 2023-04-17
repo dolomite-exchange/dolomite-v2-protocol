@@ -24,6 +24,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 
 import { AdminImpl } from "./impl/AdminImpl.sol";
@@ -50,12 +51,6 @@ contract Admin is
 {
     // ============ Token Functions ============
 
-    /**
-     * Withdraw an ERC20 token for which there is an associated market. Only excess tokens can be withdrawn. The number
-     * of excess tokens is calculated by taking the current number of tokens held in DolomiteMargin, adding the number
-     * of tokens owed to DolomiteMargin by borrowers, and subtracting the number of tokens owed to suppliers by
-     * DolomiteMargin.
-     */
     function ownerWithdrawExcessTokens(
         uint256 marketId,
         address recipient
@@ -72,9 +67,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Withdraw an ERC20 token for which there is no associated market.
-     */
     function ownerWithdrawUnsupportedTokens(
         address token,
         address recipient
@@ -93,9 +85,6 @@ contract Admin is
 
     // ============ Market Functions ============
 
-    /**
-     * Add a new market to DolomiteMargin. Must be for a previously-unsupported ERC20 token.
-     */
     function ownerAddMarket(
         address token,
         IPriceOracle priceOracle,
@@ -125,10 +114,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set (or unset) the status of a market to "closing". The borrowedValue of a market cannot increase while its
-     * status is "closing".
-     */
     function ownerSetIsClosing(
         uint256 marketId,
         bool isClosing
@@ -144,9 +129,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set the price oracle for a market.
-     */
     function ownerSetPriceOracle(
         uint256 marketId,
         IPriceOracle priceOracle
@@ -162,9 +144,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set the interest-setter for a market.
-     */
     function ownerSetInterestSetter(
         uint256 marketId,
         IInterestSetter interestSetter
@@ -180,10 +159,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set a premium on the minimum margin-ratio for a market. This makes it so that any positions that include this
-     * market require a higher collateralization to avoid being liquidated.
-     */
     function ownerSetMarginPremium(
         uint256 marketId,
         Decimal.D256 memory marginPremium
@@ -244,10 +219,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set a premium on the liquidation spread for a market. This makes it so that any liquidations that include this
-     * market have a higher spread than the global default.
-     */
     function ownerSetLiquidationSpreadPremium(
         uint256 marketId,
         Decimal.D256 memory liquidationSpreadPremium
@@ -265,9 +236,6 @@ contract Admin is
 
     // ============ Risk Functions ============
 
-    /**
-     * Set the global minimum margin-ratio that every position must maintain to prevent being liquidated.
-     */
     function ownerSetMarginRatio(
         Decimal.D256 memory ratio
     )
@@ -281,10 +249,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set the global liquidation spread. This is the spread between oracle prices that incentivizes the liquidation of
-     * risky positions.
-     */
     function ownerSetLiquidationSpread(
         Decimal.D256 memory spread
     )
@@ -298,10 +262,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set the global earnings-rate variable that determines what percentage of the interest paid by borrowers gets
-     * passed-on to suppliers.
-     */
     function ownerSetEarningsRate(
         Decimal.D256 memory earningsRate
     )
@@ -315,9 +275,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Set the global minimum-borrow value which is the minimum value of any new borrow on DolomiteMargin.
-     */
     function ownerSetMinBorrowedValue(
         Monetary.Value memory minBorrowedValue
     )
@@ -331,17 +288,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Sets the number of non-zero balances an account may have within the same `accountIndex`. This ensures a user
-     * cannot DOS the system by filling their account with non-zero balances (which linearly increases gas costs when
-     * checking collateralization) and disallowing themselves to close the position, because the number of gas units
-     * needed to process their transaction exceed the block's gas limit. In turn, this would  prevent the user from also
-     * being liquidated, causing the all of the capital to be "stuck" in the position.
-     *
-     * Lowering this number does not "freeze" user accounts that have more than the new limit of balances, because this
-     * variable is enforced by checking the users number of non-zero balances against the max or if it sizes down before
-     * each transaction finishes.
-     */
     function ownerSetAccountMaxNumberOfMarketsWithBalances(
         uint256 accountMaxNumberOfMarketsWithBalances
     )
@@ -355,10 +301,16 @@ contract Admin is
         );
     }
 
-    /**
-     * Sets the risk overrides for the provided account. This allows addresses that are in isolation mode to implement
-     * a version of e-mode that lets them borrow correlated assets more efficiently.
-     */
+    function ownerSetOracleSentinel(
+        IOracleSentinel oracleSentinel
+    )
+    public
+    onlyOwner
+    nonReentrant
+    {
+        AdminImpl.ownerSetOracleSentinel(g_state, oracleSentinel);
+    }
+
     function ownerSetAccountRiskOverride(
         address accountOwner,
         Decimal.D256 memory marginRatio,
@@ -378,10 +330,6 @@ contract Admin is
 
     // ============ Global Operator Functions ============
 
-    /**
-     * Approve (or disapprove) an address that is permissioned to be an operator for all accounts in DolomiteMargin.
-     * Intended only to approve smart-contracts.
-     */
     function ownerSetGlobalOperator(
         address operator,
         bool approved
@@ -397,9 +345,6 @@ contract Admin is
         );
     }
 
-    /**
-     * Approve (or disapprove) an auto trader that can only be called by a global operator. IE for expirations
-     */
     function ownerSetAutoTraderSpecial(
         address autoTrader,
         bool special
