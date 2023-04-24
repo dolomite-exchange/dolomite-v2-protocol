@@ -419,7 +419,7 @@ library LiquidateOrVaporizeImpl {
     )
     {
         uint256 owedPrice = cache.get(owedMarketId).price.value;
-        Decimal.D256 memory spread = state.getLiquidationSpreadForPair(
+        Decimal.D256 memory spread = state.getLiquidationSpreadForAccountAndPair(
             liquidAccountOwner,
             heldMarketId,
             owedMarketId

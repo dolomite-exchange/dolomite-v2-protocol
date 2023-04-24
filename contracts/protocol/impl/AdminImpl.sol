@@ -20,6 +20,7 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
+import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -131,10 +132,9 @@ library AdminImpl {
         IOracleSentinel oracleSentinel
     );
 
-    event LogSetAccountRiskOverride(
+    event LogSetAccountRiskOverrideGetter(
         address accountOwner,
-        Decimal.D256 marginRatioOverride,
-        Decimal.D256 liquidationSpreadOverride
+        IAccountRiskOverrideGetter accountRiskOverrideGetter
     );
 
     event LogSetGlobalOperator(
@@ -429,42 +429,17 @@ library AdminImpl {
     function ownerSetAccountRiskOverride(
         Storage.State storage state,
         address accountOwner,
-        Decimal.D256 memory marginRatio,
-        Decimal.D256 memory liquidationSpread
+        IAccountRiskOverrideGetter accountRiskOverrideGetter
     ) public {
-        Require.that(
-            marginRatio.value <= state.riskLimits.marginRatioMax,
-            FILE,
-            "Ratio too high"
-        );
-        Require.that(
-            liquidationSpread.value <= state.riskLimits.liquidationSpreadMax,
-            FILE,
-            "Spread too high"
-        );
-        if (marginRatio.value > 0 && liquidationSpread.value > 0) {
-            Require.that(
-                liquidationSpread.value < marginRatio.value,
-                FILE,
-                "Spread cannot be >= ratio"
-            );
-        } else {
-            Require.that(
-                liquidationSpread.value == 0 && marginRatio.value == 0,
-                FILE,
-                "Spread and ratio must both be 0"
-            );
-        }
-        Require.that(
-            (marginRatio.value == 0 && liquidationSpread.value == 0)
-                || (marginRatio.value > 0 && liquidationSpread.value > 0),
-            FILE,
-            "Invalid ratio/spread combination"
-        );
+        (
+            Decimal.D256 memory marginRatio,
+            Decimal.D256 memory liquidationSpread
+        ) = accountRiskOverrideGetter.getAccountRiskOverride(accountOwner);
 
-        state.riskParams.marginRatioOverrideMap[accountOwner] = marginRatio;
-        state.riskParams.liquidationSpreadOverrideMap[accountOwner] = liquidationSpread;
-        emit LogSetAccountRiskOverride(accountOwner, marginRatio, liquidationSpread);
+        state.validateAccountRiskOverrideValues(marginRatio, liquidationSpread);
+
+        state.riskParams.accountRiskOverrideGetterMap[accountOwner] = accountRiskOverrideGetter;
+        emit LogSetAccountRiskOverrideGetter(accountOwner, accountRiskOverrideGetter);
     }
 
     // ============ Global Operator Functions ============

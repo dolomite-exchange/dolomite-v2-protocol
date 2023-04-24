@@ -784,7 +784,7 @@ async function liquidate(
   const rawHeldAmount = (await dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, heldMarket)).abs();
   const owedPrice = await dolomiteMargin.getters.getMarketPrice(owedMarket);
   const liquidationRewardAdditive = INTEGERS.ONE.plus(
-    await dolomiteMargin.getters.getLiquidationSpreadForPair(liquidOwner, heldMarket, owedMarket)
+    await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(liquidOwner, heldMarket, owedMarket)
   );
 
   let owedAmount: BigNumber;

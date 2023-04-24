@@ -19,6 +19,7 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
+import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -488,7 +489,7 @@ interface IDolomiteMargin {
      * @param  owedMarketId         The market for which the account has borrowed tokens
      * @return                      The adjusted liquidation spread
      */
-    function getLiquidationSpreadForPair(
+    function getLiquidationSpreadForAccountAndPair(
         address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId
@@ -515,6 +516,33 @@ interface IDolomiteMargin {
      * @return  The maximum number of assets an account owner can hold in an account number.
      */
     function getAccountMaxNumberOfMarketsWithBalances() external view returns (uint256);
+
+    /**
+     * Get the account risk override getter for an account owner. This contract enables e-mode for certain isolation
+     * mode vaults.
+     *
+     * @param accountOwner  The address of the account to check if there is a margin ratio override.
+     * @return  The margin ratio override for an account owner. Defaults to 0 if there's no override in place.
+     */
+    function getAccountRiskOverrideGetterByAccountOwner(
+        address accountOwner
+    ) external view returns (IAccountRiskOverrideGetter);
+
+    /**
+     * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.
+     *
+     * @param accountOwner                  The address of the account to check if there is a risk override.
+     * @return marginRatioOverride          The margin ratio override for an account owner. Defaults to 0 if there's no
+     *                                      override in place.
+     * @return liquidationSpreadOverride    The margin ratio override for an account owner. Defaults to 0 if there's no
+     *                                      override in place.
+     */
+    function getAccountRiskOverrideByAccountOwner(
+        address accountOwner
+    )
+    external
+    view
+    returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride);
 
     /**
      * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.

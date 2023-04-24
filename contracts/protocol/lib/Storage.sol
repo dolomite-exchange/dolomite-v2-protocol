@@ -20,6 +20,7 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+
 import { Account } from "./Account.sol";
 import { Bits } from "./Bits.sol";
 import { Cache } from "./Cache.sol";
@@ -32,6 +33,8 @@ import { Require } from "./Require.sol";
 import { Time } from "./Time.sol";
 import { Token } from "./Token.sol";
 import { Types } from "./Types.sol";
+
+import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
@@ -131,9 +134,7 @@ library Storage {
 
         // Certain addresses are allowed to borrow with different LTV requirements. When an account's risk is overrode,
         // the global risk parameters are ignored and the account's risk parameters are used instead.
-        mapping(address => Decimal.D256) marginRatioOverrideMap;
-
-        mapping(address => Decimal.D256) liquidationSpreadOverrideMap;
+        mapping(address => IAccountRiskOverrideGetter) accountRiskOverrideGetterMap;
     }
 
     // The maximum RiskParam values that can be set
@@ -376,7 +377,7 @@ library Storage {
         return state.accounts[account.owner][account.number].numberOfMarketsWithDebt;
     }
 
-    function getLiquidationSpreadForPair(
+    function getLiquidationSpreadForAccountAndPair(
         Storage.State storage state,
         address liquidAccountOwner,
         uint256 heldMarketId,
@@ -386,14 +387,12 @@ library Storage {
         view
         returns (Decimal.D256 memory)
     {
-        uint256 result = state.riskParams.liquidationSpreadOverrideMap[liquidAccountOwner].value;
-        if (result != 0) {
-            return Decimal.D256({
-                value: result
-            });
+        (, Decimal.D256 memory liquidationSpreadOverride) = getAccountRiskOverride(state, liquidAccountOwner);
+        if (liquidationSpreadOverride.value != 0) {
+            return liquidationSpreadOverride;
         }
 
-        result = state.riskParams.liquidationSpread.value;
+        uint256 result = state.riskParams.liquidationSpread.value;
         result = Decimal.mul(result, Decimal.onePlus(state.markets[heldMarketId].liquidationSpreadPremium));
         result = Decimal.mul(result, Decimal.onePlus(state.markets[owedMarketId].liquidationSpreadPremium));
         return Decimal.D256({
@@ -487,7 +486,7 @@ library Storage {
     {
         Monetary.Value memory supplyValue;
         Monetary.Value memory borrowValue;
-        Decimal.D256 memory marginRatioOverride = state.riskParams.marginRatioOverrideMap[account.owner];
+        IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[account.owner];
 
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
@@ -498,7 +497,7 @@ library Storage {
             }
 
             Decimal.D256 memory adjust = Decimal.one();
-            if (adjustForLiquidity && marginRatioOverride.value == 0) {
+            if (adjustForLiquidity && address(riskOverrideGetter) == address(0)) {
                 // Only adjust for liquidity if prompted AND if there is no override
                 adjust = Decimal.onePlus(state.markets[cache.getAtIndex(i).marketId].marginPremium);
             }
@@ -529,13 +528,17 @@ library Storage {
             return true;
         }
 
-        Decimal.D256 memory marginRatioOverride = state.riskParams.marginRatioOverrideMap[account.owner];
+        IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[account.owner];
 
         // get account values (adjusted for liquidity, if there isn't a margin ratio override)
         (
             Monetary.Value memory supplyValue,
             Monetary.Value memory borrowValue
-        ) = state.getAccountValues(account, cache, /* adjustForLiquidity = */ marginRatioOverride.value == 0);
+        ) = state.getAccountValues(
+            account,
+            cache,
+            /* adjustForLiquidity = */ address(riskOverrideGetter) == address(0)
+        );
 
         if (requireMinBorrow) {
             Require.that(
@@ -547,10 +550,13 @@ library Storage {
             );
         }
 
-        if (marginRatioOverride.value == 0) {
-            marginRatioOverride = state.riskParams.marginRatio;
+        Decimal.D256 memory marginRatio;
+        if (address(riskOverrideGetter) == address(0)) {
+            marginRatio = state.riskParams.marginRatio;
+        } else {
+            (marginRatio,) = riskOverrideGetter.getAccountRiskOverride(account.owner);
         }
-        uint256 requiredMargin = Decimal.mul(borrowValue.value, marginRatioOverride);
+        uint256 requiredMargin = Decimal.mul(borrowValue.value, marginRatio);
 
         return supplyValue.value >= borrowValue.value.add(requiredMargin);
     }
@@ -625,6 +631,25 @@ library Storage {
             "Unpermissioned operator",
             operator
         );
+    }
+
+    function getAccountRiskOverride(
+        Storage.State storage state,
+        address accountOwner
+    )
+        internal
+        view
+        returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
+    {
+        IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[accountOwner];
+        if (address(riskOverrideGetter) != address(0)) {
+            (marginRatioOverride, liquidationSpreadOverride) =
+                riskOverrideGetter.getAccountRiskOverride(accountOwner);
+            validateAccountRiskOverrideValues(state, marginRatioOverride, liquidationSpreadOverride);
+        } else {
+            marginRatioOverride = Decimal.zero();
+            liquidationSpreadOverride = Decimal.zero();
+        }
     }
 
     /**
@@ -750,6 +775,44 @@ library Storage {
             }
         }
         return hasNegative;
+    }
+
+    function validateAccountRiskOverrideValues(
+        Storage.State storage state,
+        Decimal.D256 memory marginRatioOverride,
+        Decimal.D256 memory liquidationSpreadOverride
+    ) internal view {
+        Require.that(
+            marginRatioOverride.value <= state.riskLimits.marginRatioMax,
+            FILE,
+            "Ratio too high"
+        );
+        Require.that(
+            liquidationSpreadOverride.value <= state.riskLimits.liquidationSpreadMax,
+            FILE,
+            "Spread too high"
+        );
+
+        if (marginRatioOverride.value > 0 && liquidationSpreadOverride.value > 0) {
+            Require.that(
+                liquidationSpreadOverride.value < marginRatioOverride.value,
+                FILE,
+                "Spread cannot be >= ratio"
+            );
+        } else {
+            Require.that(
+                liquidationSpreadOverride.value == 0 && marginRatioOverride.value == 0,
+                FILE,
+                "Spread and ratio must both be 0"
+            );
+        }
+
+        Require.that(
+            (marginRatioOverride.value == 0 && liquidationSpreadOverride.value == 0)
+            || (marginRatioOverride.value > 0 && liquidationSpreadOverride.value > 0),
+            FILE,
+            "Invalid ratio/spread combination"
+        );
     }
 
     // =============== Setter Functions ===============

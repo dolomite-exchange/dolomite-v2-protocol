@@ -425,7 +425,7 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
 
         uint256 heldPrice = heldMarketInfo.price.value;
         uint256 owedPrice = owedMarketInfo.price.value;
-        Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForPair(
+        Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
             _constants.liquidAccount.owner,
             _heldMarket,
             _owedMarket

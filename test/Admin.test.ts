@@ -797,7 +797,7 @@ describe('Admin', () => {
         dolomiteMargin.admin.setLiquidationSpreadPremium(secondaryMarket, premium2, { from: admin }),
       ]);
 
-      const result = await dolomiteMargin.getters.getLiquidationSpreadForPair(
+      const result = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(
         ADDRESSES.ZERO,
         defaultMarket,
         secondaryMarket,

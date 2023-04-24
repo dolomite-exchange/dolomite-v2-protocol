@@ -19,6 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
+import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -52,7 +53,7 @@ library GettersImpl {
 
     bytes32 constant FILE = "GettersImpl";
 
-    uint256 constant SECONDS_PER_YEAR = 31_536_000;
+    uint256 constant SECONDS_PER_YEAR = 365 days;
 
     // ============ Public Functions ============
 
@@ -74,11 +75,11 @@ library GettersImpl {
         view
         returns (Decimal.D256 memory)
     {
-        Decimal.D256 memory ratio =  state.riskParams.marginRatioOverrideMap[liquidAccountOwner];
-        if (ratio.value == 0) {
-            ratio = state.riskParams.marginRatio;
+        (Decimal.D256 memory marginRatio,) = state.getAccountRiskOverride(liquidAccountOwner);
+        if (marginRatio.value == 0) {
+            marginRatio = state.riskParams.marginRatio;
         }
-        return ratio;
+        return marginRatio;
     }
 
     function getLiquidationSpread(
@@ -151,15 +152,37 @@ library GettersImpl {
         return state.riskParams.oracleSentinel.isLiquidationAllowed();
     }
 
+    function getAccountRiskOverrideGetterByAccountOwner(
+        Storage.State storage state,
+        address accountOwner
+    )
+        public
+        view
+        returns (IAccountRiskOverrideGetter)
+    {
+        return state.riskParams.accountRiskOverrideGetterMap[accountOwner];
+    }
+
+    function getAccountRiskOverrideByAccountOwner(
+        Storage.State storage state,
+        address accountOwner
+    )
+        public
+        view
+        returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
+    {
+        (marginRatioOverride, liquidationSpreadOverride) = state.getAccountRiskOverride(accountOwner);
+    }
+
     function getMarginRatioOverrideByAccountOwner(
         Storage.State storage state,
         address accountOwner
     )
         public
         view
-        returns (Decimal.D256 memory)
+        returns (Decimal.D256 memory marginRatioOverride)
     {
-        return state.riskParams.marginRatioOverrideMap[accountOwner];
+        (marginRatioOverride,) = state.getAccountRiskOverride(accountOwner);
     }
 
     function getLiquidationSpreadOverrideByAccountOwner(
@@ -168,9 +191,9 @@ library GettersImpl {
     )
         public
         view
-        returns (Decimal.D256 memory)
+        returns (Decimal.D256 memory liquidationSpreadOverride)
     {
-        return state.riskParams.liquidationSpreadOverrideMap[accountOwner];
+        (, liquidationSpreadOverride) = state.getAccountRiskOverride(accountOwner);
     }
 
     function getRiskLimits(
@@ -442,7 +465,7 @@ library GettersImpl {
         });
     }
 
-    function getLiquidationSpreadForPair(
+    function getLiquidationSpreadForAccountAndPair(
         Storage.State storage state,
         address liquidAccountOwner,
         uint256 heldMarketId,
@@ -454,7 +477,7 @@ library GettersImpl {
     {
         _requireValidMarket(state, heldMarketId);
         _requireValidMarket(state, owedMarketId);
-        return state.getLiquidationSpreadForPair(liquidAccountOwner, heldMarketId, owedMarketId);
+        return state.getLiquidationSpreadForAccountAndPair(liquidAccountOwner, heldMarketId, owedMarketId);
     }
 
     function getMarket(

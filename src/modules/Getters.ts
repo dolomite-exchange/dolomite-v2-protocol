@@ -85,16 +85,10 @@ export class Getters {
     accountOwner: address,
     options?: ContractConstantCallOptions,
   ): Promise<{ marginRatioOverride: Decimal; liquidationSpreadOverride: Decimal }> {
-    const [marginRatioOverride, liquidationSpreadOverride] = await Promise.all([
-      this.contracts.callConstantContractFunction(
-        this.contracts.dolomiteMargin.methods.getMarginRatioOverrideByAccountOwner(accountOwner),
-        options,
-      ),
-      this.contracts.callConstantContractFunction(
-        this.contracts.dolomiteMargin.methods.getLiquidationSpreadOverrideByAccountOwner(accountOwner),
-        options,
-      ),
-    ]);
+    const { marginRatioOverride, liquidationSpreadOverride } = await this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getAccountRiskOverrideByAccountOwner(accountOwner),
+      options,
+    );
     return {
       marginRatioOverride: stringToDecimal(marginRatioOverride.value),
       liquidationSpreadOverride: stringToDecimal(liquidationSpreadOverride.value),
@@ -448,21 +442,21 @@ export class Getters {
     return stringToDecimal(result.value);
   }
 
-  public async getLiquidationSpreadForPair(
+  public async getLiquidationSpreadForAccountAndPair(
     liquidAccountOwner: address,
     heldMarketId: Integer,
     owedMarketId: Integer,
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
-    const spread = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getLiquidationSpreadForPair(
+    const liquidationSpread = await this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getLiquidationSpreadForAccountAndPair(
         liquidAccountOwner,
         heldMarketId.toFixed(0),
         owedMarketId.toFixed(0),
       ),
       options,
     );
-    return stringToDecimal(spread.value);
+    return stringToDecimal(liquidationSpread.value);
   }
 
   public async getMarket(

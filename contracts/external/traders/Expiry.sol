@@ -259,7 +259,7 @@ contract Expiry is
             Monetary.Price memory
         )
     {
-        Decimal.D256 memory spread = dolomiteMargin.getLiquidationSpreadForPair(
+        Decimal.D256 memory spread = dolomiteMargin.getLiquidationSpreadForAccountAndPair(
             liquidAccountOwner,
             heldMarketId,
             owedMarketId

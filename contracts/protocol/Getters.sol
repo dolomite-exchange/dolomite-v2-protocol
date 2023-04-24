@@ -19,6 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
+import { IAccountRiskOverrideGetter } from "./interfaces/IAccountRiskOverrideGetter.sol";
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
@@ -59,7 +60,7 @@ contract Getters is
     function getMarginRatioForAccount(
         address liquidAccountOwner
     )
-        external
+        public
         view
         returns (Decimal.D256 memory)
     {
@@ -120,6 +121,27 @@ contract Getters is
         returns (bool)
     {
         return GettersImpl.getIsLiquidationAllowed(g_state);
+    }
+
+    function getAccountRiskOverrideGetterByAccountOwner(
+        address accountOwner
+    )
+        public
+        view
+        returns (IAccountRiskOverrideGetter)
+    {
+        return GettersImpl.getAccountRiskOverrideGetterByAccountOwner(g_state, accountOwner);
+    }
+
+    function getAccountRiskOverrideByAccountOwner(
+        address accountOwner
+    )
+        public
+        view
+        returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
+    {
+        (marginRatioOverride, liquidationSpreadOverride) =
+            GettersImpl.getAccountRiskOverrideByAccountOwner(g_state, accountOwner);
     }
 
     function getMarginRatioOverrideByAccountOwner(
@@ -340,7 +362,7 @@ contract Getters is
         return GettersImpl.getMarketSupplyInterestRateApr(g_state, marketId);
     }
 
-    function getLiquidationSpreadForPair(
+    function getLiquidationSpreadForAccountAndPair(
         address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId
@@ -349,7 +371,12 @@ contract Getters is
         view
         returns (Decimal.D256 memory)
     {
-        return GettersImpl.getLiquidationSpreadForPair(g_state, liquidAccountOwner, heldMarketId, owedMarketId);
+        return GettersImpl.getLiquidationSpreadForAccountAndPair(
+            g_state,
+            liquidAccountOwner,
+            heldMarketId,
+            owedMarketId
+        );
     }
 
     function getMarket(

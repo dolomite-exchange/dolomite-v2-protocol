@@ -157,7 +157,7 @@ contract LiquidatorProxyBase {
             );
             owedPriceAdj = owedPricePrice.value;
         } else {
-            Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForPair(
+            Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
                 _constants.liquidAccount.owner,
                 _heldMarket,
                 _owedMarket

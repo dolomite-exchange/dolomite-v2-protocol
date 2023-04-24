@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 import { Ownable } from "@openzeppelin/contracts/ownership/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+import { IAccountRiskOverrideGetter } from "./interfaces/IAccountRiskOverrideGetter.sol";
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
@@ -313,19 +314,13 @@ contract Admin is
 
     function ownerSetAccountRiskOverride(
         address accountOwner,
-        Decimal.D256 memory marginRatio,
-        Decimal.D256 memory liquidationSpread
+        IAccountRiskOverrideGetter accountRiskOverrideGetter
     )
     public
     onlyOwner
     nonReentrant
     {
-        AdminImpl.ownerSetAccountRiskOverride(
-            g_state,
-            accountOwner,
-            marginRatio,
-            liquidationSpread
-        );
+        AdminImpl.ownerSetAccountRiskOverride(g_state, accountOwner, accountRiskOverrideGetter);
     }
 
     // ============ Global Operator Functions ============

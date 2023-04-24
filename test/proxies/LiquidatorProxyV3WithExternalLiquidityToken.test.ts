@@ -883,7 +883,7 @@ async function liquidate(
   const rawOwedAmount = (await dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, owedMarket)).abs();
   const rawHeldAmount = (await dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, heldMarket)).abs();
   const liquidationRewardAdditive = INTEGERS.ONE.plus(
-    await dolomiteMargin.getters.getLiquidationSpreadForPair(liquidOwner, heldMarket, owedMarket)
+    await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(liquidOwner, heldMarket, owedMarket)
   );
 
   let paraswapOutputAmount: Integer;
