@@ -1,10 +1,9 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { BigNumber } from 'bignumber.js';
-import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
-import { IAccountRiskOverrideGetter } from '../../build/wrappers/IAccountRiskOverrideGetter';
+import { IAccountRiskOverrideSetter } from '../../build/wrappers/IAccountRiskOverrideSetter';
 import { Contracts } from '../lib/Contracts';
-import { stringToDecimal, valueToInteger, } from '../lib/Helpers';
+import { stringToDecimal, valueToInteger } from '../lib/Helpers';
 import {
   AccountStatus,
   address,
@@ -15,10 +14,12 @@ import {
   Integer,
   Market,
   MarketWithInfo,
-  RiskLimits, RiskParams,
+  RiskLimits,
+  RiskParams,
   TotalPar,
   Values,
 } from '../types';
+import { OracleSentinel } from './OracleSentinel';
 
 export class Getters {
   private contracts: Contracts;
@@ -29,17 +30,15 @@ export class Getters {
 
   // ============ Getters for Risk ============
 
-  private static parseIndex(
-    {
-      borrow,
-      supply,
-      lastUpdate,
-    }: {
-      borrow: string;
-      supply: string;
-      lastUpdate: string;
-    },
-  ): Index {
+  private static parseIndex({
+    borrow,
+    supply,
+    lastUpdate,
+  }: {
+    borrow: string;
+    supply: string;
+    lastUpdate: string;
+  }): Index {
     return {
       borrow: stringToDecimal(borrow),
       supply: stringToDecimal(supply),
@@ -47,24 +46,14 @@ export class Getters {
     };
   }
 
-  private static parseTotalPar(
-    {
-      supply,
-      borrow,
-    }: {
-      supply: string;
-      borrow: string;
-    },
-  ): TotalPar {
+  private static parseTotalPar({ supply, borrow }: { supply: string; borrow: string }): TotalPar {
     return {
       borrow: new BigNumber(borrow),
       supply: new BigNumber(supply),
     };
   }
 
-  public async getMarginRatio(
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getMarginRatio(options?: ContractConstantCallOptions): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarginRatio(),
       options,
@@ -83,9 +72,7 @@ export class Getters {
     return stringToDecimal(result.value);
   }
 
-  public async getLiquidationSpread(
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getLiquidationSpread(options?: ContractConstantCallOptions): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getLiquidationSpread(),
       options,
@@ -110,9 +97,7 @@ export class Getters {
     return stringToDecimal(liquidationSpread.value);
   }
 
-  public async getEarningsRate(
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getEarningsRate(options?: ContractConstantCallOptions): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getEarningsRate(),
       options,
@@ -120,9 +105,7 @@ export class Getters {
     return stringToDecimal(result.value);
   }
 
-  public async getMinBorrowedValue(
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getMinBorrowedValue(options?: ContractConstantCallOptions): Promise<Integer> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMinBorrowedValue(),
       options,
@@ -130,43 +113,37 @@ export class Getters {
     return new BigNumber(result.value);
   }
 
-  public async getOracleSentinel(
-    options?: ContractConstantCallOptions,
-  ): Promise<IOracleSentinel> {
+  public async getOracleSentinel(options?: ContractConstantCallOptions): Promise<OracleSentinel> {
     const oracleSentinelAddress = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getOracleSentinel(),
       options,
     );
-    return this.contracts.getOracleSentinel(oracleSentinelAddress);
+    return new OracleSentinel(this.contracts, oracleSentinelAddress);
   }
 
-  public async getIsBorrowAllowed(
-    options?: ContractConstantCallOptions,
-  ): Promise<boolean> {
+  public async getIsBorrowAllowed(options?: ContractConstantCallOptions): Promise<boolean> {
     return this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getIsBorrowAllowed(),
       options,
     );
   }
 
-  public async getIsLiquidationAllowed(
-    options?: ContractConstantCallOptions,
-  ): Promise<boolean> {
+  public async getIsLiquidationAllowed(options?: ContractConstantCallOptions): Promise<boolean> {
     return this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getIsLiquidationAllowed(),
       options,
     );
   }
 
-  public async getAccountRiskOverrideGetterByAccountOwner(
+  public async getAccountRiskOverrideSetterByAccountOwner(
     accountOwner: address,
     options?: ContractConstantCallOptions,
-  ): Promise<IAccountRiskOverrideGetter> {
-    const accountRiskOverrideGetterAddress = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getAccountRiskOverrideGetterByAccountOwner(accountOwner),
+  ): Promise<IAccountRiskOverrideSetter> {
+    const accountRiskOverrideSetterAddress = await this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getAccountRiskOverrideSetterByAccountOwner(accountOwner),
       options,
     );
-    return this.contracts.getAccountRiskOverrideGetter(accountRiskOverrideGetterAddress);
+    return this.contracts.getAccountRiskOverrideSetter(accountRiskOverrideSetterAddress);
   }
 
   public async getAccountRiskForOverrideByAccountOwner(
@@ -205,9 +182,7 @@ export class Getters {
     return stringToDecimal(liquidationSpreadOverride.value);
   }
 
-  public async getRiskLimits(
-    options?: ContractConstantCallOptions,
-  ): Promise<RiskLimits> {
+  public async getRiskLimits(options?: ContractConstantCallOptions): Promise<RiskLimits> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getRiskLimits(),
       options,
@@ -223,9 +198,7 @@ export class Getters {
     };
   }
 
-  public async getRiskParams(
-    options?: ContractConstantCallOptions,
-  ): Promise<RiskParams> {
+  public async getRiskParams(options?: ContractConstantCallOptions): Promise<RiskParams> {
     const result = await Promise.all([
       this.getMarginRatio(options),
       this.getLiquidationSpread(options),
@@ -246,9 +219,7 @@ export class Getters {
 
   // ============ Getters for Markets ============
 
-  public async getAccountMaxNumberOfMarketsWithBalances(
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getAccountMaxNumberOfMarketsWithBalances(options?: ContractConstantCallOptions): Promise<Integer> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getAccountMaxNumberOfMarketsWithBalances(),
       options,
@@ -256,9 +227,7 @@ export class Getters {
     return new BigNumber(result);
   }
 
-  public async getNumMarkets(
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getNumMarkets(options?: ContractConstantCallOptions): Promise<Integer> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getNumMarkets(),
       options,
@@ -266,10 +235,7 @@ export class Getters {
     return new BigNumber(result);
   }
 
-  public async getMarketIdByTokenAddress(
-    token: address,
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getMarketIdByTokenAddress(token: address, options?: ContractConstantCallOptions): Promise<Integer> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketIdByTokenAddress(token),
       options,
@@ -277,32 +243,21 @@ export class Getters {
     return new BigNumber(result);
   }
 
-  public async getMarketTokenAddress(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
+  public async getMarketTokenAddress(marketId: Integer, options?: ContractConstantCallOptions): Promise<address> {
     return this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketTokenAddress(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketTokenAddress(marketId.toFixed(0)),
       options,
     );
   }
 
-  public async getMarketIsClosing(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<boolean> {
+  public async getMarketIsClosing(marketId: Integer, options?: ContractConstantCallOptions): Promise<boolean> {
     return this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketIsClosing(marketId.toFixed(0)),
       options,
     );
   }
 
-  public async getMarketPrice(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getMarketPrice(marketId: Integer, options?: ContractConstantCallOptions): Promise<Integer> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketPrice(marketId.toFixed(0)),
       options,
@@ -310,10 +265,7 @@ export class Getters {
     return new BigNumber(result.value);
   }
 
-  public async getMarketTotalPar(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<TotalPar> {
+  public async getMarketTotalPar(marketId: Integer, options?: ContractConstantCallOptions): Promise<TotalPar> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketTotalPar(marketId.toFixed(0)),
       options,
@@ -324,10 +276,7 @@ export class Getters {
     };
   }
 
-  public async getMarketTotalWei(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<TotalPar> {
+  public async getMarketTotalWei(marketId: Integer, options?: ContractConstantCallOptions): Promise<TotalPar> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketTotalWei(marketId.toFixed(0)),
       options,
@@ -338,64 +287,39 @@ export class Getters {
     };
   }
 
-  public async getMarketCachedIndex(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Index> {
+  public async getMarketCachedIndex(marketId: Integer, options?: ContractConstantCallOptions): Promise<Index> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketCachedIndex(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketCachedIndex(marketId.toFixed(0)),
       options,
     );
     return Getters.parseIndex(result);
   }
 
-  public async getMarketCurrentIndex(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Index> {
+  public async getMarketCurrentIndex(marketId: Integer, options?: ContractConstantCallOptions): Promise<Index> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketCurrentIndex(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketCurrentIndex(marketId.toFixed(0)),
       options,
     );
     return Getters.parseIndex(result);
   }
 
-  public async getMarketPriceOracle(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
+  public async getMarketPriceOracle(marketId: Integer, options?: ContractConstantCallOptions): Promise<address> {
     return this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketPriceOracle(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketPriceOracle(marketId.toFixed(0)),
       options,
     );
   }
 
-  public async getMarketInterestSetter(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
+  public async getMarketInterestSetter(marketId: Integer, options?: ContractConstantCallOptions): Promise<address> {
     return this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketInterestSetter(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketInterestSetter(marketId.toFixed(0)),
       options,
     );
   }
 
-  public async getMarketMarginPremium(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getMarketMarginPremium(marketId: Integer, options?: ContractConstantCallOptions): Promise<Decimal> {
     const marginPremium = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketMarginPremium(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketMarginPremium(marketId.toFixed(0)),
       options,
     );
     return stringToDecimal(marginPremium.value);
@@ -406,35 +330,23 @@ export class Getters {
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
     const spreadPremium = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketLiquidationSpreadPremium(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketLiquidationSpreadPremium(marketId.toFixed(0)),
       options,
     );
     return stringToDecimal(spreadPremium.value);
   }
 
-  public async getMarketMaxSupplyWei(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getMarketMaxSupplyWei(marketId: Integer, options?: ContractConstantCallOptions): Promise<Integer> {
     const maxSupplyWei = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketMaxSupplyWei(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketMaxSupplyWei(marketId.toFixed(0)),
       options,
     );
     return valueToInteger(maxSupplyWei);
   }
 
-  public async getMarketMaxBorrowWei(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getMarketMaxBorrowWei(marketId: Integer, options?: ContractConstantCallOptions): Promise<Integer> {
     const maxBorrowWei = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketMaxBorrowWei(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketMaxBorrowWei(marketId.toFixed(0)),
       options,
     );
     return valueToInteger(maxBorrowWei);
@@ -445,25 +357,16 @@ export class Getters {
     options?: ContractConstantCallOptions,
   ): Promise<Integer> {
     const earningsRateOverride = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketEarningsRateOverride(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketEarningsRateOverride(marketId.toFixed(0)),
       options,
     );
     return stringToDecimal(earningsRateOverride.value);
   }
 
-  public async getMarketUtilization(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getMarketUtilization(marketId: Integer, options?: ContractConstantCallOptions): Promise<Decimal> {
     const market = await this.getMarket(marketId, options);
-    const totalSupply: Decimal = market.totalPar.supply.times(
-      market.index.supply,
-    );
-    const totalBorrow: Decimal = market.totalPar.borrow.times(
-      market.index.borrow,
-    );
+    const totalSupply: Decimal = market.totalPar.supply.times(market.index.supply);
+    const totalBorrow: Decimal = market.totalPar.borrow.times(market.index.borrow);
     return totalBorrow.div(totalSupply);
   }
 
@@ -472,9 +375,7 @@ export class Getters {
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketBorrowInterestRatePerSecond(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketBorrowInterestRatePerSecond(marketId.toFixed(0)),
       options,
     );
     return stringToDecimal(result.value);
@@ -485,9 +386,7 @@ export class Getters {
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketBorrowInterestRateApr(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketBorrowInterestRateApr(marketId.toFixed(0)),
       options,
     );
     return stringToDecimal(result.value);
@@ -498,18 +397,13 @@ export class Getters {
     options?: ContractConstantCallOptions,
   ): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getMarketSupplyInterestRateApr(
-        marketId.toFixed(0),
-      ),
+      this.contracts.dolomiteMargin.methods.getMarketSupplyInterestRateApr(marketId.toFixed(0)),
       options,
     );
     return stringToDecimal(result.value);
   }
 
-  public async getMarket(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Market> {
+  public async getMarket(marketId: Integer, options?: ContractConstantCallOptions): Promise<Market> {
     const market = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarket(marketId.toFixed(0)),
       options,
@@ -526,10 +420,7 @@ export class Getters {
     };
   }
 
-  public async getMarketWithInfo(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<MarketWithInfo> {
+  public async getMarketWithInfo(marketId: Integer, options?: ContractConstantCallOptions): Promise<MarketWithInfo> {
     const marketWithInfo = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketWithInfo(marketId.toFixed(0)),
       options,
@@ -556,10 +447,7 @@ export class Getters {
     };
   }
 
-  public async getNumExcessTokens(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getNumExcessTokens(marketId: Integer, options?: ContractConstantCallOptions): Promise<Integer> {
     const numExcessTokens = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getNumExcessTokens(marketId.toFixed(0)),
       options,
@@ -673,7 +561,7 @@ export class Getters {
           owner: accountOwner,
           number: accountNumber.toFixed(0),
         },
-        index.toFixed()
+        index.toFixed(),
       ),
       options,
     );
@@ -772,11 +660,7 @@ export class Getters {
     ]);
 
     // return true if account has been partially liquidated
-    if (
-      accountValues.borrow.gt(0) &&
-      accountValues.supply.gt(0) &&
-      accountStatus === AccountStatus.Liquidating
-    ) {
+    if (accountValues.borrow.gt(0) && accountValues.supply.gt(0) && accountStatus === AccountStatus.Liquidating) {
       return true;
     }
 
@@ -803,20 +687,14 @@ export class Getters {
     );
   }
 
-  public async getIsGlobalOperator(
-    operator: address,
-    options?: ContractConstantCallOptions,
-  ): Promise<boolean> {
+  public async getIsGlobalOperator(operator: address, options?: ContractConstantCallOptions): Promise<boolean> {
     return this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getIsGlobalOperator(operator),
       options,
     );
   }
 
-  public async getIsAutoTraderSpecial(
-    autoTrader: address,
-    options?: ContractConstantCallOptions,
-  ): Promise<boolean> {
+  public async getIsAutoTraderSpecial(autoTrader: address, options?: ContractConstantCallOptions): Promise<boolean> {
     return this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getIsAutoTraderSpecial(autoTrader),
       options,
@@ -825,22 +703,12 @@ export class Getters {
 
   // ============ Getters for Admin ============
 
-  public async getAdmin(
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
-    return this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.owner(),
-      options,
-    );
+  public async getAdmin(options?: ContractConstantCallOptions): Promise<address> {
+    return this.contracts.callConstantContractFunction(this.contracts.dolomiteMargin.methods.owner(), options);
   }
 
-  public async getExpiryAdmin(
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
-    return this.contracts.callConstantContractFunction(
-      this.contracts.expiry.methods.owner(),
-      options,
-    );
+  public async getExpiryAdmin(options?: ContractConstantCallOptions): Promise<address> {
+    return this.contracts.callConstantContractFunction(this.contracts.expiry.methods.owner(), options);
   }
 
   public async getExpiry(
@@ -887,9 +755,7 @@ export class Getters {
     };
   }
 
-  public async getExpiryRampTime(
-    options?: ContractConstantCallOptions,
-  ): Promise<Integer> {
+  public async getExpiryRampTime(options?: ContractConstantCallOptions): Promise<Integer> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.expiry.methods.g_expiryRampTime(),
       options,

@@ -19,7 +19,7 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
-import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
+import { IAccountRiskOverrideSetter } from "../interfaces/IAccountRiskOverrideSetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -127,9 +127,9 @@ interface IDolomiteMargin {
      * @param accountOwner  The address of the account to check if there is a margin ratio override.
      * @return  The margin ratio override for an account owner. Defaults to 0 if there's no override in place.
      */
-    function getAccountRiskOverrideGetterByAccountOwner(
+    function getAccountRiskOverrideSetterByAccountOwner(
         address accountOwner
-    ) external view returns (IAccountRiskOverrideGetter);
+    ) external view returns (IAccountRiskOverrideSetter);
 
     /**
      * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.
@@ -805,7 +805,7 @@ interface IDolomiteMargin {
 
     function ownerSetAccountRiskOverride(
         address accountOwner,
-        IAccountRiskOverrideGetter accountRiskOverrideGetter
+        IAccountRiskOverrideSetter accountRiskOverrideSetter
     )
     external;
 

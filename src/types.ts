@@ -18,12 +18,8 @@
 
 import BigNumber from 'bignumber.js';
 import { Tx } from 'web3/eth/types';
-import {
-  EventLog,
-  Log,
-  TransactionReceipt,
-} from 'web3/types';
-import { IOracleSentinel } from '../build/wrappers/IOracleSentinel';
+import { EventLog, Log, TransactionReceipt } from 'web3/types';
+import { OracleSentinel } from './modules/OracleSentinel';
 
 export type address = string;
 export type Integer = BigNumber;
@@ -206,8 +202,7 @@ export interface Transfer extends AccountAction {
   amount: Amount;
 }
 
-export enum OrderType {
-}
+export enum OrderType {}
 
 export interface Order {
   type: OrderType | string; // the "| string" needs to be here to allow it to be overridden in the Test module
@@ -221,11 +216,9 @@ export interface Exchange extends AccountAction {
   amount: Amount;
 }
 
-export interface Buy extends Exchange {
-}
+export interface Buy extends Exchange {}
 
-export interface Sell extends Exchange {
-}
+export interface Sell extends Exchange {}
 
 export interface Trade extends AccountAction {
   autoTrader: address;
@@ -339,7 +332,7 @@ export interface RiskParams {
   earningsRate: Decimal;
   minBorrowedValue: Integer;
   accountMaxNumberOfMarketsWithBalances: Integer;
-  oracleSentinel: IOracleSentinel;
+  oracleSentinel: OracleSentinel;
 }
 
 export interface Balance {

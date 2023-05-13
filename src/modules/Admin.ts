@@ -211,11 +211,11 @@ export class Admin {
 
   public async setAccountRiskOverride(
     accountOwner: address,
-    accountRiskOverrideGetter: address,
+    accountRiskOverrideSetter: address,
     options?: ContractCallOptions,
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.dolomiteMargin.methods.ownerSetAccountRiskOverride(accountOwner, accountRiskOverrideGetter),
+      this.contracts.dolomiteMargin.methods.ownerSetAccountRiskOverride(accountOwner, accountRiskOverrideSetter),
       options,
     );
   }

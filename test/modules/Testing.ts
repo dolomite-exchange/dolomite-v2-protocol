@@ -2,7 +2,6 @@ import BigNumber from 'bignumber.js';
 import { Provider } from 'web3/providers';
 import { TestContracts } from './TestContracts';
 import { EVM } from './EVM';
-import { TestSimpleOracleSentinel } from './TestSimpleOracleSentinel';
 import { TestToken } from './TestToken';
 import { Token } from '../../src/modules/Token';
 import { TestAutoTrader } from './TestAutoTrader';
@@ -43,7 +42,6 @@ export class Testing {
   public interestSetter: TestInterestSetter;
   public uniswapV2Factory: UniswapV2Factory;
   public uniswapV2Router: UniswapV2Router;
-  public oracleSentinel: TestSimpleOracleSentinel;
   private contracts: TestContracts;
 
   constructor(provider: Provider, contracts: TestContracts, token: Token) {
@@ -71,7 +69,6 @@ export class Testing {
     this.interestSetter = new TestInterestSetter(contracts);
     this.uniswapV2Factory = new UniswapV2Factory(contracts);
     this.uniswapV2Router = new UniswapV2Router(contracts);
-    this.oracleSentinel = new TestSimpleOracleSentinel(contracts);
   }
 
   public setProvider(provider: Provider): void {

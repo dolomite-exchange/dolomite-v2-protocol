@@ -60,13 +60,13 @@ export class LiquidatorProxyV3WithLiquidityToken {
     );
   }
 
-  public async setMarketIdToTokenUnwrapperForLiquidationMap(
+  public async setMarketIdToTokenUnwrapperTrader(
     marketId: Integer,
     tokenUnwrapper: address,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.liquidatorProxyV3WithLiquidityToken.methods.setMarketIdToTokenUnwrapperForLiquidationMap(
+      this.contracts.liquidatorProxyV3WithLiquidityToken.methods.ownerSetMarketIdToTokenUnwrapperTrader(
         marketId.toFixed(0),
         tokenUnwrapper,
       ),

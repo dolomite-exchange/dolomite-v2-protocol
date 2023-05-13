@@ -11,6 +11,7 @@ import ArbitrumMultiCall from '../build/contracts/ArbitrumMultiCall.json';
 import BorrowPositionProxyV1 from '../build/contracts/BorrowPositionProxyV1.json';
 import BorrowPositionProxyV2 from '../build/contracts/BorrowPositionProxyV2.json';
 import CallImpl from '../build/contracts/CallImpl.json';
+import ChainlinkOracleSentinel from '../build/contracts/ChainlinkOracleSentinel.json';
 import ChainlinkPriceOracleV1 from '../build/contracts/ChainlinkPriceOracleV1.json';
 import DepositImpl from '../build/contracts/DepositImpl.json';
 import DepositWithdrawalProxy from '../build/contracts/DepositWithdrawalProxy.json';
@@ -25,7 +26,7 @@ import GettersImpl from '../build/contracts/GettersImpl.json';
 import LiquidateOrVaporizeImpl from '../build/contracts/LiquidateOrVaporizeImpl.json';
 import IArbitrumGasInfo from '../build/contracts/IArbitrumGasInfo.json';
 import IERC20 from '../build/contracts/IERC20.json';
-import IAccountRiskOverrideGetter from '../build/contracts/IAccountRiskOverrideGetter.json';
+import IAccountRiskOverrideSetter from '../build/contracts/IAccountRiskOverrideSetter.json';
 import IInterestSetter from '../build/contracts/IInterestSetter.json';
 import ILiquidityTokenUnwrapperTrader from '../build/contracts/ILiquidityTokenUnwrapperTrader.json';
 import IOracleSentinel from '../build/contracts/IOracleSentinel.json';
@@ -47,7 +48,7 @@ import TestUniswapAmmRebalancerProxy from '../build/contracts/TestUniswapAmmReba
 import TradeImpl from '../build/contracts/TradeImpl.json';
 import TransferImpl from '../build/contracts/TransferImpl.json';
 import TransferProxy from '../build/contracts/TransferProxy.json';
-import Weth from '../build/contracts/Weth.json';
+import WETH from '../build/contracts/IWETH.json';
 import WithdrawalImpl from '../build/contracts/WithdrawalImpl.json';
 
 export default {
@@ -60,6 +61,7 @@ export default {
   BorrowPositionProxyV1,
   BorrowPositionProxyV2,
   CallImpl,
+  ChainlinkOracleSentinel,
   ChainlinkPriceOracleV1,
   DepositImpl,
   DepositWithdrawalProxy,
@@ -72,9 +74,9 @@ export default {
   Expiry,
   GettersImpl,
   LiquidateOrVaporizeImpl,
+  IAccountRiskOverrideSetter,
   IArbitrumGasInfo,
   IERC20,
-  IAccountRiskOverrideGetter,
   IInterestSetter,
   ILiquidityTokenUnwrapperTrader,
   IOracleSentinel,
@@ -96,6 +98,6 @@ export default {
   TradeImpl,
   TransferImpl,
   TransferProxy,
-  Weth,
+  WETH,
   WithdrawalImpl,
 };

@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
+import { IAccountRiskOverrideSetter } from "../interfaces/IAccountRiskOverrideSetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -69,7 +69,7 @@ library GettersImpl {
 
     function getMarginRatioForAccount(
         Storage.State storage state,
-        address asccountOwner
+        address accountOwner
     )
         public
         view
@@ -152,15 +152,15 @@ library GettersImpl {
         return state.riskParams.oracleSentinel.isLiquidationAllowed();
     }
 
-    function getAccountRiskOverrideGetterByAccountOwner(
+    function getAccountRiskOverrideSetterByAccountOwner(
         Storage.State storage state,
         address accountOwner
     )
         public
         view
-        returns (IAccountRiskOverrideGetter)
+        returns (IAccountRiskOverrideSetter)
     {
-        return state.riskParams.accountRiskOverrideGetterMap[accountOwner];
+        return state.riskParams.accountRiskOverrideSetterMap[accountOwner];
     }
 
     function getAccountRiskOverrideByAccountOwner(

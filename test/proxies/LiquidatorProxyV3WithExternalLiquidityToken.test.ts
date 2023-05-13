@@ -9,10 +9,10 @@ import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 import { toBytesNoPadding } from '../../src/lib/BytesHelper';
 import { deployContract } from '../helpers/Deploy';
 import {
-  TestLiquidityTokenUnwrapperForLiquidation
-} from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperForLiquidation';
-import * as testLiquidityTokenUnwrapperForLiquidationJson
-  from '../../build/contracts/TestLiquidityTokenUnwrapperForLiquidation.json';
+  TestLiquidityTokenUnwrapperTrader
+} from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
+import * as testLiquidityTokenUnwrapperTraderJson
+  from '../../build/contracts/TestLiquidityTokenUnwrapperTrader.json';
 
 enum FailureType {
   None,
@@ -32,7 +32,7 @@ let token1: address;
 let token2: address;
 let token3: address;
 let token4: address;
-let testLiquidityUnwrapper: TestLiquidityTokenUnwrapperForLiquidation;
+let testLiquidityUnwrapper: TestLiquidityTokenUnwrapperTrader;
 let tokenForUnwrapper: address;
 let outputTokenForUnwrapper: address;
 
@@ -107,12 +107,12 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
     marketIdToTokenMap[market3.toFixed()] = token3;
     marketIdToTokenMap[market4.toFixed()] = token4;
 
-    testLiquidityUnwrapper = await deployContract<TestLiquidityTokenUnwrapperForLiquidation>(
+    testLiquidityUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
       dolomiteMargin,
-      testLiquidityTokenUnwrapperForLiquidationJson,
+      testLiquidityTokenUnwrapperTraderJson,
       [token1, token2, dolomiteMargin.address],
     );
-    await dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperForLiquidationMap(
+    await dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperTrader(
       market1,
       testLiquidityUnwrapper.options.address,
       { from: admin },
@@ -147,10 +147,10 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
     });
   });
 
-  describe('#setMarketIdToTokenUnwrapperForLiquidationMap', () => {
+  describe('#setMarketIdToTokenUnwrapperTraderMap', () => {
     describe('Success cases', () => {
       it('should work normally', async () => {
-        await dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperForLiquidationMap(
+        await dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperTrader(
           market1,
           ADDRESSES.ZERO,
           { from: admin },
@@ -163,7 +163,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
     describe('Failure cases', () => {
       it('should fail when admin is not the caller', async () => {
         await expectThrow(
-          dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperForLiquidationMap(
+          dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperTrader(
             market1,
             testLiquidityUnwrapper.options.address,
             { from: solidOwner },

@@ -20,7 +20,7 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
-import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
+import { IAccountRiskOverrideSetter } from "../interfaces/IAccountRiskOverrideSetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -132,9 +132,9 @@ library AdminImpl {
         IOracleSentinel oracleSentinel
     );
 
-    event LogSetAccountRiskOverrideGetter(
+    event LogSetAccountRiskOverrideSetter(
         address accountOwner,
-        IAccountRiskOverrideGetter accountRiskOverrideGetter
+        IAccountRiskOverrideSetter accountRiskOverrideSetter
     );
 
     event LogSetGlobalOperator(
@@ -429,17 +429,17 @@ library AdminImpl {
     function ownerSetAccountRiskOverride(
         Storage.State storage state,
         address accountOwner,
-        IAccountRiskOverrideGetter accountRiskOverrideGetter
+        IAccountRiskOverrideSetter accountRiskOverrideSetter
     ) public {
         (
             Decimal.D256 memory marginRatio,
             Decimal.D256 memory liquidationSpread
-        ) = accountRiskOverrideGetter.getAccountRiskOverride(accountOwner);
+        ) = accountRiskOverrideSetter.getAccountRiskOverride(accountOwner);
 
         state.validateAccountRiskOverrideValues(marginRatio, liquidationSpread);
 
-        state.riskParams.accountRiskOverrideGetterMap[accountOwner] = accountRiskOverrideGetter;
-        emit LogSetAccountRiskOverrideGetter(accountOwner, accountRiskOverrideGetter);
+        state.riskParams.accountRiskOverrideSetterMap[accountOwner] = accountRiskOverrideSetter;
+        emit LogSetAccountRiskOverrideSetter(accountOwner, accountRiskOverrideSetter);
     }
 
     // ============ Global Operator Functions ============

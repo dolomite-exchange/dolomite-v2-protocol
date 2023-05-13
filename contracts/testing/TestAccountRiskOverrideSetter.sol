@@ -19,28 +19,28 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IAccountRiskOverrideGetter } from "../protocol/interfaces/IAccountRiskOverrideGetter.sol";
+import { IAccountRiskOverrideSetter } from "../protocol/interfaces/IAccountRiskOverrideSetter.sol";
 
 import { Decimal } from "../protocol/lib/Decimal.sol";
 
 
 /**
- * @title TestAccountRiskOverrideGetter
+ * @title TestAccountRiskOverrideSetter
  * @author Dolomite
  *
  * Account risk override for testing
  */
-contract TestAccountRiskOverrideGetter is IAccountRiskOverrideGetter {
+contract TestAccountRiskOverrideSetter is IAccountRiskOverrideSetter {
 
     mapping (address => Decimal.D256) public g_marginRatioOverrides;
     mapping (address => Decimal.D256) public g_liquidationSpreadOverrides;
 
     function setAccountRiskOverride(
         address _accountOwner,
-        Decimal.D256 _marginRatioOverride,
-        Decimal.D256 _liquidationSpreadOverride
+        Decimal.D256 memory _marginRatioOverride,
+        Decimal.D256 memory _liquidationSpreadOverride
     )
-        external
+        public
     {
         g_marginRatioOverrides[_accountOwner] = _marginRatioOverride;
         g_liquidationSpreadOverrides[_accountOwner] = _liquidationSpreadOverride;
@@ -49,7 +49,7 @@ contract TestAccountRiskOverrideGetter is IAccountRiskOverrideGetter {
     function getAccountRiskOverride(
         address _accountOwner
     )
-        external
+        public
         view
         returns
         (

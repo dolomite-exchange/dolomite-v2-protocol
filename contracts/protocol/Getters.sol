@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IAccountRiskOverrideGetter } from "./interfaces/IAccountRiskOverrideGetter.sol";
+import { IAccountRiskOverrideSetter } from "./interfaces/IAccountRiskOverrideSetter.sol";
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
@@ -140,14 +140,14 @@ contract Getters is
         return GettersImpl.getIsLiquidationAllowed(g_state);
     }
 
-    function getAccountRiskOverrideGetterByAccountOwner(
+    function getAccountRiskOverrideSetterByAccountOwner(
         address accountOwner
     )
         public
         view
-        returns (IAccountRiskOverrideGetter)
+        returns (IAccountRiskOverrideSetter)
     {
-        return GettersImpl.getAccountRiskOverrideGetterByAccountOwner(g_state, accountOwner);
+        return GettersImpl.getAccountRiskOverrideSetterByAccountOwner(g_state, accountOwner);
     }
 
     function getAccountRiskOverrideByAccountOwner(

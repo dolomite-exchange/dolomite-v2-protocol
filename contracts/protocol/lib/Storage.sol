@@ -34,7 +34,7 @@ import { Time } from "./Time.sol";
 import { Token } from "./Token.sol";
 import { Types } from "./Types.sol";
 
-import { IAccountRiskOverrideGetter } from "../interfaces/IAccountRiskOverrideGetter.sol";
+import { IAccountRiskOverrideSetter } from "../interfaces/IAccountRiskOverrideSetter.sol";
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
@@ -134,7 +134,7 @@ library Storage {
 
         // Certain addresses are allowed to borrow with different LTV requirements. When an account's risk is overrode,
         // the global risk parameters are ignored and the account's risk parameters are used instead.
-        mapping(address => IAccountRiskOverrideGetter) accountRiskOverrideGetterMap;
+        mapping(address => IAccountRiskOverrideSetter) accountRiskOverrideSetterMap;
     }
 
     // The maximum RiskParam values that can be set
@@ -486,10 +486,10 @@ library Storage {
     {
         Monetary.Value memory supplyValue;
         Monetary.Value memory borrowValue;
-        IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[account.owner];
+        IAccountRiskOverrideSetter riskOverrideSetter = state.riskParams.accountRiskOverrideSetterMap[account.owner];
 
         // Only adjust for liquidity if prompted AND if there is no override
-        adjustForLiquidity = adjustForLiquidity && address(riskOverrideGetter) == address(0);
+        adjustForLiquidity = adjustForLiquidity && address(riskOverrideSetter) == address(0);
 
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
@@ -530,16 +530,15 @@ library Storage {
             return true;
         }
 
-        IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[account.owner];
-
         // get account values (adjusted for liquidity, if there isn't a margin ratio override)
+        (Decimal.D256 memory marginRatio,) = getAccountRiskOverride(state, account.owner);
         (
             Monetary.Value memory supplyValue,
             Monetary.Value memory borrowValue
         ) = state.getAccountValues(
             account,
             cache,
-            /* adjustForLiquidity = */ address(riskOverrideGetter) == address(0)
+            /* adjustForLiquidity = */ marginRatio.value == 0
         );
 
         if (requireMinBorrow) {
@@ -552,12 +551,10 @@ library Storage {
             );
         }
 
-        Decimal.D256 memory marginRatio;
-        if (address(riskOverrideGetter) == address(0)) {
+        if (marginRatio.value == 0) {
             marginRatio = state.riskParams.marginRatio;
-        } else {
-            (marginRatio,) = riskOverrideGetter.getAccountRiskOverride(account.owner);
         }
+
         uint256 requiredMargin = Decimal.mul(borrowValue.value, marginRatio);
 
         return supplyValue.value >= borrowValue.value.add(requiredMargin);
@@ -643,10 +640,10 @@ library Storage {
         view
         returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
     {
-        IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[accountOwner];
-        if (address(riskOverrideGetter) != address(0)) {
+        IAccountRiskOverrideSetter riskOverrideSetter = state.riskParams.accountRiskOverrideSetterMap[accountOwner];
+        if (address(riskOverrideSetter) != address(0)) {
             (marginRatioOverride, liquidationSpreadOverride) =
-                riskOverrideGetter.getAccountRiskOverride(accountOwner);
+                riskOverrideSetter.getAccountRiskOverride(accountOwner);
             validateAccountRiskOverrideValues(state, marginRatioOverride, liquidationSpreadOverride);
         } else {
             marginRatioOverride = Decimal.zero();

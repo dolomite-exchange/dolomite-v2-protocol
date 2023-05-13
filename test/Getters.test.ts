@@ -5,6 +5,7 @@ import { setupMarkets } from './helpers/DolomiteMarginHelpers';
 import { fastForward, mineAvgBlock, resetEVM, snapshot } from './helpers/EVM';
 import { expectThrow } from './helpers/Expect';
 import { TestDolomiteMargin } from './modules/TestDolomiteMargin';
+import { OracleSentinel } from '../src/modules/OracleSentinel';
 
 let dolomiteMargin: TestDolomiteMargin;
 let accounts: address[];
@@ -53,7 +54,7 @@ describe('Getters', () => {
     liquidationSpread: Decimal;
     minBorrowedValue: Integer;
     accountMaxNumberOfMarketsWithBalances: Integer;
-    oracleSentinel: address;
+    oracleSentinel: OracleSentinel;
   };
   let defaultLimits: {
     marginRatioMax: Decimal;
@@ -112,7 +113,7 @@ describe('Getters', () => {
       liquidationSpread: new BigNumber('0.05'),
       minBorrowedValue: new BigNumber('5e16'),
       accountMaxNumberOfMarketsWithBalances: new BigNumber(32),
-      oracleSentinel: dolomiteMargin.testing.oracleSentinel.address,
+      oracleSentinel: await dolomiteMargin.getters.getOracleSentinel(),
     };
     defaultLimits = {
       marginRatioMax: new BigNumber('2.0'),
@@ -193,7 +194,7 @@ describe('Getters', () => {
 
     describe('#getOracleSentinel', () => {
       it('Succeeds', async () => {
-        expect(await dolomiteMargin.getters.getOracleSentinel()).to.eql(defaultParams.oracleSentinel);
+        expect((await dolomiteMargin.getters.getOracleSentinel()).address).to.eql(defaultParams.oracleSentinel.address);
       });
     });
 
@@ -201,7 +202,9 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
 
-        await dolomiteMargin.testing.oracleSentinel.setIsBorrowAllowed(false);
+        await dolomiteMargin.contracts.callContractFunction(
+          dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true)
+        );
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       });
     });
@@ -210,7 +213,9 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
 
-        await dolomiteMargin.testing.oracleSentinel.setIsLiquidationAllowed(false);
+        await dolomiteMargin.contracts.callContractFunction(
+          dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true)
+        );
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
       });
     });

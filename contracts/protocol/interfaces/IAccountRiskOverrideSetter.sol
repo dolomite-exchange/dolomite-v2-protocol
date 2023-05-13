@@ -23,12 +23,12 @@ import { Decimal } from "../lib/Decimal.sol";
 
 
 /**
- * @title IAccountRiskOverrideGetter
+ * @title IAccountRiskOverrideSetter
  * @author Dolomite
  *
  * @notice Interface that can be implemented by any contract that needs to implement risk overrides for an account.
  */
-interface IAccountRiskOverrideGetter {
+interface IAccountRiskOverrideSetter {
 
     /**
      * @notice  Gets the risk overrides for a given account owner.

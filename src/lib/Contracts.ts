@@ -35,64 +35,71 @@ import dolomiteAmmPairJson from '../../build/published_contracts/DolomiteAmmPair
 import dolomiteAmmRouterProxyJson from '../../build/published_contracts/DolomiteAmmRouterProxy.json';
 
 // JSON
-import dolomiteMarginJson from '../../build/published_contracts/DolomiteMargin.json';
-import doubleExponentInterestSetterJson from '../../build/published_contracts/DoubleExponentInterestSetter.json';
 import aaveCopyCatAltCoinInterestSetterJson from '../../build/published_contracts/AAVECopyCatAltCoinInterestSetter.json';
 import aaveCopyCatStableCoinInterestSetterJson from '../../build/published_contracts/AAVECopyCatStableCoinInterestSetter.json';
+import accountOverrideSetterJson from '../../build/published_contracts/IAccountRiskOverrideSetter.json';
+import arbitrumMultiCallJson from '../../build/published_contracts/ArbitrumMultiCall.json';
+import borrowPositionProxyV1Json from '../../build/published_contracts/BorrowPositionProxyV1.json';
+import borrowPositionProxyV2Json from '../../build/published_contracts/BorrowPositionProxyV2.json';
+import depositProxyJson from '../../build/published_contracts/DepositWithdrawalProxy.json';
+import dolomiteMarginJson from '../../build/published_contracts/DolomiteMargin.json';
+import doubleExponentInterestSetterJson from '../../build/published_contracts/DoubleExponentInterestSetter.json';
 import expiryJson from '../../build/published_contracts/Expiry.json';
 import erc20Json from '../../build/published_contracts/IERC20.json';
 import interestSetterJson from '../../build/published_contracts/IInterestSetter.json';
-import priceOracleJson from '../../build/published_contracts/IPriceOracle.json';
 import liquidatorAssetRegistryJson from '../../build/published_contracts/LiquidatorAssetRegistry.json';
 import liquidatorProxyV1Json from '../../build/published_contracts/LiquidatorProxyV1.json';
 import liquidatorProxyV1WithAmmJson from '../../build/published_contracts/LiquidatorProxyV1WithAmm.json';
 import liquidatorProxyV2WithExternalLiquidityJson from '../../build/published_contracts/LiquidatorProxyV2WithExternalLiquidity.json';
 import liquidatorProxyV3WithLiquidityTokenJson from '../../build/published_contracts/LiquidatorProxyV3WithLiquidityToken.json';
+import liquidityTokenUnwrapperJson from '../../build/published_contracts/ILiquidityTokenUnwrapperTrader.json';
+import multiCallJson from '../../build/published_contracts/MultiCall.json';
+import oracleSentinelJson from '../../build/published_contracts/IOracleSentinel.json';
 import payableProxyJson from '../../build/published_contracts/PayableProxy.json';
 import polynomialInterestSetterJson from '../../build/published_contracts/PolynomialInterestSetter.json';
+import priceOracleJson from '../../build/published_contracts/IPriceOracle.json';
 import signedOperationProxyJson from '../../build/published_contracts/SignedOperationProxy.json';
 import simpleFeeOwnerJson from '../../build/published_contracts/SimpleFeeOwner.json';
-import transferProxyJson from '../../build/published_contracts/TransferProxy.json';
-import borrowPositionProxyV1Json from '../../build/published_contracts/BorrowPositionProxyV1.json';
-import borrowPositionProxyV2Json from '../../build/published_contracts/BorrowPositionProxyV2.json';
-import depositProxyJson from '../../build/published_contracts/DepositWithdrawalProxy.json';
-import multiCallJson from '../../build/published_contracts/MultiCall.json';
-import arbitrumMultiCallJson from '../../build/published_contracts/ArbitrumMultiCall.json';
-import wethJson from '../../build/published_contracts/Weth.json';
 import testUniswapAmmRebalancerJson from '../../build/published_contracts/TestUniswapAmmRebalancerProxy.json';
-import liquidityTokenUnwrapperJson
-  from '../../build/published_contracts/ILiquidityTokenUnwrapperForLiquidation.json';
-import oracleSentinelJson from '../../build/published_contracts/IOracleSentinel.json';
-import accountOverrideGetterJson from '../../build/published_contracts/IAccountRiskOverrideGetter.json';
+import transferProxyJson from '../../build/published_contracts/TransferProxy.json';
+import wethJson from '../../build/published_contracts/WETH.json';
 
 // Contracts
 import { AmmRebalancerProxyV1 } from '../../build/wrappers/AmmRebalancerProxyV1';
+import { AmmRebalancerProxyV2 } from '../../build/wrappers/AmmRebalancerProxyV2';
+import { AAVECopyCatAltCoinInterestSetter } from '../../build/wrappers/AAVECopyCatAltCoinInterestSetter';
+import { AAVECopyCatStableCoinInterestSetter } from '../../build/wrappers/AAVECopyCatStableCoinInterestSetter';
+import { ArbitrumMultiCall } from '../../build/wrappers/ArbitrumMultiCall';
+import { BorrowPositionProxyV1 } from '../../build/wrappers/BorrowPositionProxyV1';
+import { BorrowPositionProxyV2 } from '../../build/wrappers/BorrowPositionProxyV2';
 import { ChainlinkPriceOracleV1 } from '../../build/wrappers/ChainlinkPriceOracleV1';
+import { DepositWithdrawalProxy } from '../../build/wrappers/DepositWithdrawalProxy';
 import { DolomiteAmmFactory } from '../../build/wrappers/DolomiteAmmFactory';
 import { DolomiteAmmPair } from '../../build/wrappers/DolomiteAmmPair';
 import { DolomiteAmmRouterProxy } from '../../build/wrappers/DolomiteAmmRouterProxy';
 import { DolomiteMargin } from '../../build/wrappers/DolomiteMargin';
 import { DoubleExponentInterestSetter } from '../../build/wrappers/DoubleExponentInterestSetter';
 import { Expiry } from '../../build/wrappers/Expiry';
+import { IAccountRiskOverrideSetter } from '../../build/wrappers/IAccountRiskOverrideSetter';
+import { IArbitrumGasInfo } from '../../build/wrappers/IArbitrumGasInfo';
 import { IERC20 as ERC20 } from '../../build/wrappers/IERC20';
+import { ILiquidityTokenUnwrapperTrader } from '../../build/wrappers/ILiquidityTokenUnwrapperTrader';
+import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
 import { IInterestSetter as InterestSetter } from '../../build/wrappers/IInterestSetter';
 import { IPriceOracle as PriceOracle } from '../../build/wrappers/IPriceOracle';
+import { LiquidatorAssetRegistry } from '../../build/wrappers/LiquidatorAssetRegistry';
 import { LiquidatorProxyV1 } from '../../build/wrappers/LiquidatorProxyV1';
 import { LiquidatorProxyV1WithAmm } from '../../build/wrappers/LiquidatorProxyV1WithAmm';
 import { LiquidatorProxyV2WithExternalLiquidity } from '../../build/wrappers/LiquidatorProxyV2WithExternalLiquidity';
 import { LiquidatorProxyV3WithLiquidityToken } from '../../build/wrappers/LiquidatorProxyV3WithLiquidityToken';
 import { MultiCall } from '../../build/wrappers/MultiCall';
-import { ArbitrumMultiCall } from '../../build/wrappers/ArbitrumMultiCall';
 import { PayableProxy as PayableProxy } from '../../build/wrappers/PayableProxy';
 import { PolynomialInterestSetter } from '../../build/wrappers/PolynomialInterestSetter';
 import { SignedOperationProxy } from '../../build/wrappers/SignedOperationProxy';
 import { SimpleFeeOwner } from '../../build/wrappers/SimpleFeeOwner';
-import { DepositWithdrawalProxy } from '../../build/wrappers/DepositWithdrawalProxy';
-import { TransferProxy } from '../../build/wrappers/TransferProxy';
-import { BorrowPositionProxyV1 } from '../../build/wrappers/BorrowPositionProxyV1';
-import { BorrowPositionProxyV2 } from '../../build/wrappers/BorrowPositionProxyV2';
-import { Weth } from '../../build/wrappers/Weth';
 import { TestUniswapAmmRebalancerProxy } from '../../build/wrappers/TestUniswapAmmRebalancerProxy';
+import { TransferProxy } from '../../build/wrappers/TransferProxy';
+import { WETH } from '../../build/wrappers/WETH';
 import {
   address,
   ConfirmationType,
@@ -105,14 +112,6 @@ import {
 import {
   SUBTRACT_GAS_LIMIT,
 } from './Constants';
-import { AmmRebalancerProxyV2 } from '../../build/wrappers/AmmRebalancerProxyV2';
-import { IArbitrumGasInfo } from '../../build/wrappers/IArbitrumGasInfo';
-import { AAVECopyCatAltCoinInterestSetter } from '../../build/wrappers/AAVECopyCatAltCoinInterestSetter';
-import { AAVECopyCatStableCoinInterestSetter } from '../../build/wrappers/AAVECopyCatStableCoinInterestSetter';
-import { LiquidatorAssetRegistry } from '../../build/wrappers/LiquidatorAssetRegistry';
-import { ILiquidityTokenUnwrapperForLiquidation } from '../../build/wrappers/ILiquidityTokenUnwrapperForLiquidation';
-import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
-import { IAccountRiskOverrideGetter } from '../../build/wrappers/IAccountRiskOverrideGetter';
 
 interface CallableTransactionObject<T> {
   call(tx?: Tx, blockNumber?: number): Promise<T>;
@@ -149,7 +148,7 @@ export class Contracts {
   public depositProxy: DepositWithdrawalProxy;
   public multiCall: MultiCall;
   public arbitrumMultiCall: ArbitrumMultiCall;
-  public weth: Weth;
+  public weth: WETH;
   public testUniswapAmmRebalancer: TestUniswapAmmRebalancerProxy;
   protected provider: Provider;
   protected web3: Web3;
@@ -247,7 +246,7 @@ export class Contracts {
     this.depositProxy = new this.web3.eth.Contract(depositProxyJson.abi) as DepositWithdrawalProxy;
     this.multiCall = new this.web3.eth.Contract(multiCallJson.abi) as MultiCall;
     this.arbitrumMultiCall = new this.web3.eth.Contract(arbitrumMultiCallJson.abi) as ArbitrumMultiCall;
-    this.weth = new this.web3.eth.Contract(wethJson.abi) as Weth;
+    this.weth = new this.web3.eth.Contract(wethJson.abi) as WETH;
     this.testUniswapAmmRebalancer = new this.web3.eth.Contract(
       testUniswapAmmRebalancerJson.abi,
     ) as TestUniswapAmmRebalancerProxy;
@@ -282,11 +281,11 @@ export class Contracts {
     return pair;
   }
 
-  public getTokenUnwrapper(contractAddress: address): ILiquidityTokenUnwrapperForLiquidation {
+  public getTokenUnwrapper(contractAddress: address): ILiquidityTokenUnwrapperTrader {
     const unwrapper = new this.web3.eth.Contract(
       liquidityTokenUnwrapperJson.abi,
       contractAddress,
-    ) as ILiquidityTokenUnwrapperForLiquidation;
+    ) as ILiquidityTokenUnwrapperTrader;
     unwrapper.setProvider(this.provider);
     unwrapper.options.from = this.dolomiteMargin.options.from;
     return unwrapper;
@@ -302,14 +301,14 @@ export class Contracts {
     return oracleSentinel;
   }
 
-  public getAccountRiskOverrideGetter(contractAddress: address): IAccountRiskOverrideGetter {
-    const accountRiskOverrideGetter = new this.web3.eth.Contract(
-      accountOverrideGetterJson.abi,
+  public getAccountRiskOverrideSetter(contractAddress: address): IAccountRiskOverrideSetter {
+    const accountRiskOverrideSetter = new this.web3.eth.Contract(
+      accountOverrideSetterJson.abi,
       contractAddress,
-    ) as IAccountRiskOverrideGetter;
-    accountRiskOverrideGetter.setProvider(this.provider);
-    accountRiskOverrideGetter.options.from = this.dolomiteMargin.options.from;
-    return accountRiskOverrideGetter;
+    ) as IAccountRiskOverrideSetter;
+    accountRiskOverrideSetter.setProvider(this.provider);
+    accountRiskOverrideSetter.options.from = this.dolomiteMargin.options.from;
+    return accountRiskOverrideSetter;
   }
 
   public setProvider(provider: Provider, networkId: number): void {

@@ -1,16 +1,16 @@
 import { Contracts } from '../lib/Contracts';
 import { ActionArgs, address, Integer } from '../types';
 import { hexStringToBytes } from '../lib/BytesHelper';
-import { ILiquidityTokenUnwrapperForLiquidation } from '../../build/wrappers/ILiquidityTokenUnwrapperForLiquidation';
+import { ILiquidityTokenUnwrapperTrader } from '../../build/wrappers/ILiquidityTokenUnwrapperTrader';
 import BigNumber from 'bignumber.js';
 
 export class LiquidityTokenUnwrapper {
   private contracts: Contracts;
-  public unwrapperContract: ILiquidityTokenUnwrapperForLiquidation;
+  public unwrapperContract: ILiquidityTokenUnwrapperTrader;
 
   constructor(
     contracts: Contracts,
-    unwrapperContract: ILiquidityTokenUnwrapperForLiquidation,
+    unwrapperContract: ILiquidityTokenUnwrapperTrader,
   ) {
     this.contracts = contracts;
     this.unwrapperContract = unwrapperContract;

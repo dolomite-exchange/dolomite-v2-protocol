@@ -83,7 +83,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
     )
     {}
 
-    function setMarketIdToTokenUnwrapperForLiquidationMap(
+    function ownerSetMarketIdToTokenUnwrapperTrader(
         uint256 _marketId,
         address _tokenUnwrapper
     ) external {

@@ -2,7 +2,7 @@ import CustomTestToken from '../build/contracts/CustomTestToken.json';
 import ErroringToken from '../build/contracts/ErroringToken.json';
 import MalformedToken from '../build/contracts/MalformedToken.json';
 import OmiseToken from '../build/contracts/OmiseToken.json';
-import TestAccountRiskOverrideGetter from '../build/contracts/TestAccountRiskOverrideGetter.json';
+import TestAccountRiskOverrideSetter from '../build/contracts/TestAccountRiskOverrideSetter.json';
 import TestAmmRebalancerProxy from '../build/contracts/TestAmmRebalancerProxy.json';
 import TestAutoTrader from '../build/contracts/TestAutoTrader.json';
 import TestCallee from '../build/contracts/TestCallee.json';
@@ -38,7 +38,7 @@ export default {
   ErroringToken,
   MalformedToken,
   OmiseToken,
-  TestAccountRiskOverrideGetter,
+  TestAccountRiskOverrideSetter,
   TestAmmRebalancerProxy,
   TestAutoTrader,
   TestCallee,
