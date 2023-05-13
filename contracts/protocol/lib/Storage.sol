@@ -488,6 +488,9 @@ library Storage {
         Monetary.Value memory borrowValue;
         IAccountRiskOverrideGetter riskOverrideGetter = state.riskParams.accountRiskOverrideGetterMap[account.owner];
 
+        // Only adjust for liquidity if prompted AND if there is no override
+        adjustForLiquidity = adjustForLiquidity && address(riskOverrideGetter) == address(0);
+
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
             Types.Wei memory userWei = state.getWei(account, cache.getAtIndex(i).marketId, cache.getAtIndex(i).index);
@@ -497,8 +500,7 @@ library Storage {
             }
 
             Decimal.D256 memory adjust = Decimal.one();
-            if (adjustForLiquidity && address(riskOverrideGetter) == address(0)) {
-                // Only adjust for liquidity if prompted AND if there is no override
+            if (adjustForLiquidity) {
                 adjust = Decimal.onePlus(state.markets[cache.getAtIndex(i).marketId].marginPremium);
             }
 

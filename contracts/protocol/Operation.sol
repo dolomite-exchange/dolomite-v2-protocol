@@ -20,10 +20,13 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { State } from "./State.sol";
+
 import { OperationImpl } from "./impl/OperationImpl.sol";
+
 import { Account } from "./lib/Account.sol";
 import { Actions } from "./lib/Actions.sol";
+
+import { HasState } from "./HasState.sol";
 
 
 /**
@@ -33,7 +36,7 @@ import { Actions } from "./lib/Actions.sol";
  * Primary public function for allowing users and contracts to manage accounts within DolomiteMargin
  */
 contract Operation is
-    State,
+    HasState,
     ReentrancyGuard
 {
     // ============ Public Functions ============

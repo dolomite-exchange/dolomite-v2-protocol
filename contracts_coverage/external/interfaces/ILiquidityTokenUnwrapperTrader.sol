@@ -24,7 +24,7 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { IExchangeWrapper } from "../../protocol/interfaces/IExchangeWrapper.sol";
 
 
-contract ILiquidityTokenUnwrapperForLiquidation is IExchangeWrapper {
+contract ILiquidityTokenUnwrapperTrader is IExchangeWrapper {
 
     /**
      * @return The liquidity token that this contract can unwrap

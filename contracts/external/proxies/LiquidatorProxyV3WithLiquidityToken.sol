@@ -26,7 +26,7 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
-import { ILiquidityTokenUnwrapperForLiquidation } from "../interfaces/ILiquidityTokenUnwrapperForLiquidation.sol";
+import { ILiquidityTokenUnwrapperTrader } from "../interfaces/ILiquidityTokenUnwrapperTrader.sol";
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
 import { LiquidatorProxyV2WithExternalLiquidity } from "./LiquidatorProxyV2WithExternalLiquidity.sol";
@@ -52,7 +52,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
         uint256 solidAccountId;
         uint256 liquidAccountId;
         uint256 initialOutputMarket;
-        ILiquidityTokenUnwrapperForLiquidation tokenUnwrapper;
+        ILiquidityTokenUnwrapperTrader tokenUnwrapper;
         Actions.ActionArgs[] actions;
     }
 
@@ -62,7 +62,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
 
     // ============ Storage ============
 
-    mapping(uint256 => ILiquidityTokenUnwrapperForLiquidation) public marketIdToTokenUnwrapperMap;
+    mapping(uint256 => ILiquidityTokenUnwrapperTrader) public marketIdToTokenUnwrapperMap;
 
     // ============ Constructor ============
 
@@ -93,7 +93,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
             "Only owner can call",
             msg.sender
         );
-        marketIdToTokenUnwrapperMap[_marketId] = ILiquidityTokenUnwrapperForLiquidation(_tokenUnwrapper);
+        marketIdToTokenUnwrapperMap[_marketId] = ILiquidityTokenUnwrapperTrader(_tokenUnwrapper);
         emit TokenUnwrapperForLiquidationSet(_marketId, _tokenUnwrapper);
     }
 
@@ -181,7 +181,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
     ) internal view {
         if (address(_v3Cache.tokenUnwrapper) != address(0)) {
             // Get the actions for selling the `_cache.heldMarket` into `outputMarket`
-            ILiquidityTokenUnwrapperForLiquidation tokenUnwrapper = _v3Cache.tokenUnwrapper;
+            ILiquidityTokenUnwrapperTrader tokenUnwrapper = _v3Cache.tokenUnwrapper;
             Actions.ActionArgs[] memory unwrapActions = tokenUnwrapper.createActionsForUnwrappingForLiquidation(
                 _v3Cache.solidAccountId,
                 _v3Cache.liquidAccountId,

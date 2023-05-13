@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 
-import testOracleSentinelJson from '../build/contracts/TestSimpleOracleSentinel.json';
-import { TestSimpleOracleSentinel } from '../build/testing_wrappers/TestSimpleOracleSentinel';
+import chainlinkOracleSentinelJson from '../build/contracts/ChainlinkOracleSentinel.json';
+import { ChainlinkOracleSentinel } from '../build/wrappers/ChainlinkOracleSentinel';
 
 import { address, ADDRESSES, Decimal, Integer, INTEGERS, MarketWithInfo, RiskLimits, RiskParams } from '../src';
 import { stringToDecimal } from '../src/lib/Helpers';
@@ -1005,13 +1005,13 @@ describe('Admin', () => {
       });
       await expectEarningsRateOverride(txr, defaultEarningsRateOverride);
 
-      // set less risky
+      // set lower
       txr = await dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, lowEarningsRateOverride, {
         from: admin,
       });
       await expectEarningsRateOverride(txr, lowEarningsRateOverride);
 
-      // set to risky again
+      // set higher
       txr = await dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, highEarningsRateOverride, {
         from: admin,
       });
@@ -1212,6 +1212,171 @@ describe('Admin', () => {
     }
   });
 
+  describe('#ownerSetEarningsRate', () => {
+    it('Succeeds', async () => {
+      await expectEarningsRate(null, riskParams.earningsRate);
+
+      // keep same
+      txr = await dolomiteMargin.admin.setEarningsRate(riskParams.earningsRate, {
+        from: admin,
+      });
+      await expectEarningsRate(txr, riskParams.earningsRate);
+
+      // set to max
+      txr = await dolomiteMargin.admin.setEarningsRate(riskLimits.earningsRateMax, {
+        from: admin,
+      });
+      await expectEarningsRate(txr, riskLimits.earningsRateMax);
+
+      // set back to original
+      txr = await dolomiteMargin.admin.setEarningsRate(riskParams.earningsRate, {
+        from: admin,
+      });
+      await expectEarningsRate(txr, riskParams.earningsRate);
+    });
+
+    it('Fails for too-high value', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setEarningsRate(riskLimits.earningsRateMax.plus(tenToNeg18), { from: admin }),
+        'AdminImpl: Rate too high',
+      );
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(dolomiteMargin.admin.setEarningsRate(riskParams.earningsRate, { from: nonAdmin }));
+    });
+
+    const tenToNeg18 = '0.000000000000000001';
+
+    async function expectEarningsRate(txResult: any, e: Decimal) {
+      if (txResult) {
+        const logs = dolomiteMargin.logs.parseLogs(txResult);
+        expect(logs.length).to.eql(1);
+        const log = logs[0];
+        expect(log.name).to.eql('LogSetEarningsRate');
+        expect(log.args.earningsRate).to.eql(e);
+      }
+      const result = await dolomiteMargin.getters.getEarningsRate();
+      expect(result).to.eql(e);
+    }
+  });
+
+  describe('#ownerSetMinBorrowedValue', () => {
+    it('Succeeds', async () => {
+      await expectMinBorrowedValue(null, riskParams.minBorrowedValue);
+
+      // keep same
+      txr = await dolomiteMargin.admin.setMinBorrowedValue(riskParams.minBorrowedValue, {
+        from: admin,
+      });
+      await expectMinBorrowedValue(txr, riskParams.minBorrowedValue);
+
+      // set to max
+      txr = await dolomiteMargin.admin.setMinBorrowedValue(riskLimits.minBorrowedValueMax, { from: admin });
+      await expectMinBorrowedValue(txr, riskLimits.minBorrowedValueMax);
+
+      // set back to original
+      txr = await dolomiteMargin.admin.setMinBorrowedValue(riskParams.minBorrowedValue, {
+        from: admin,
+      });
+      await expectMinBorrowedValue(txr, riskParams.minBorrowedValue);
+    });
+
+    it('Fails for too-high value', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setMinBorrowedValue(riskLimits.minBorrowedValueMax.plus(1), {
+          from: admin,
+        }),
+        'AdminImpl: Value too high',
+      );
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setMinBorrowedValue(riskParams.minBorrowedValue, {
+          from: nonAdmin,
+        }),
+      );
+    });
+
+    async function expectMinBorrowedValue(txResult: any, e: Integer) {
+      if (txResult) {
+        const logs = dolomiteMargin.logs.parseLogs(txResult);
+        expect(logs.length).to.eql(1);
+        const log = logs[0];
+        expect(log.name).to.eql('LogSetMinBorrowedValue');
+        expect(log.args.minBorrowedValue).to.eql(e);
+      }
+      const result = await dolomiteMargin.getters.getMinBorrowedValue();
+      expect(result).to.eql(e);
+    }
+  });
+
+  describe('#ownerSetAccountMaxNumberOfMarketsWithBalances', () => {
+    it('Successfully sets value', async () => {
+      const txResult = await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: admin });
+      const logs = dolomiteMargin.logs.parseLogs(txResult);
+      expect(logs.length).to.eql(1);
+      expect(logs[0].name).to.eql('LogSetAccountMaxNumberOfMarketsWithBalances');
+      expect(logs[0].args.accountMaxNumberOfMarketsWithBalances).to.eql(new BigNumber('100'));
+      expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber('100'));
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: nonAdmin }));
+    });
+
+    it('Fails for when too low', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(1, { from: admin }),
+        'AdminImpl: Acct MaxNumberOfMarkets too low',
+      );
+    });
+  });
+
+  describe('#ownerSetOracleSentinel', () => {
+    it('Successfully sets value', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        chainlinkOracleSentinelJson,
+        [dolomiteMargin.contracts.testChainlinkFlags.options.address],
+      )) as ChainlinkOracleSentinel;
+      const txResult = await dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin });
+      const logs = dolomiteMargin.logs.parseLogs(txResult);
+      expect(logs.length).to.eql(1);
+      expect(logs[0].name).to.eql('LogSetOracleSentinel');
+      expect(logs[0].args.oracleSentinel).to.eql(oracleSentinel.options.address);
+      expect(await dolomiteMargin.getters.getOracleSentinel()).to.eql(oracleSentinel.options.address);
+    });
+
+    it('Fails for non-admin', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        chainlinkOracleSentinelJson,
+        [dolomiteMargin.contracts.testChainlinkFlags.options.address],
+      )) as ChainlinkOracleSentinel;
+      await expectThrow(dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: nonAdmin }));
+    });
+
+    it('Fails for when borrowing not allowed or liquidations not allowed', async () => {
+      const oracleSentinel = (await deployContract(
+        dolomiteMargin,
+        chainlinkOracleSentinelJson,
+        [dolomiteMargin.contracts.testChainlinkFlags.options.address],
+      )) as ChainlinkOracleSentinel;
+      await dolomiteMargin.contracts.callContractFunction(
+        dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true),
+      );
+      await dolomiteMargin.contracts.callContractFunction(oracleSentinel.methods.setIsBorrowAllowed(false), {
+        from: admin,
+      });
+      await expectThrow(
+        dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin }),
+        'AdminImpl: Invalid oracle sentinel',
+      );
+    });
+  });
+
   describe('#ownerSetAccountRiskOverride', () => {
     it('Succeeds', async () => {
       await expectAccountRiskOverride(null, accountForOverride, INTEGERS.ZERO, INTEGERS.ZERO);
@@ -1358,187 +1523,10 @@ describe('Admin', () => {
         expect(log.args.marginRatioOverride).to.eql(marginRatio);
         expect(log.args.liquidationSpreadOverride).to.eql(liquidationSpread);
       }
-      const result = await dolomiteMargin.getters.getAccountRiskForOverride(accountOwner);
+      const result = await dolomiteMargin.getters.getAccountRiskForOverrideByAccountOwner(accountOwner);
       expect(result.marginRatioOverride).to.eql(marginRatio);
       expect(result.liquidationSpreadOverride).to.eql(liquidationSpread);
     }
-  });
-
-  describe('#ownerSetEarningsRate', () => {
-    it('Succeeds', async () => {
-      await expectEarningsRate(null, riskParams.earningsRate);
-
-      // keep same
-      txr = await dolomiteMargin.admin.setEarningsRate(riskParams.earningsRate, {
-        from: admin,
-      });
-      await expectEarningsRate(txr, riskParams.earningsRate);
-
-      // set to max
-      txr = await dolomiteMargin.admin.setEarningsRate(riskLimits.earningsRateMax, {
-        from: admin,
-      });
-      await expectEarningsRate(txr, riskLimits.earningsRateMax);
-
-      // set back to original
-      txr = await dolomiteMargin.admin.setEarningsRate(riskParams.earningsRate, {
-        from: admin,
-      });
-      await expectEarningsRate(txr, riskParams.earningsRate);
-    });
-
-    it('Fails for too-high value', async () => {
-      await expectThrow(
-        dolomiteMargin.admin.setEarningsRate(riskLimits.earningsRateMax.plus(tenToNeg18), { from: admin }),
-        'AdminImpl: Rate too high',
-      );
-    });
-
-    it('Fails for non-admin', async () => {
-      await expectThrow(dolomiteMargin.admin.setEarningsRate(riskParams.earningsRate, { from: nonAdmin }));
-    });
-
-    const tenToNeg18 = '0.000000000000000001';
-
-    async function expectEarningsRate(txResult: any, e: Decimal) {
-      if (txResult) {
-        const logs = dolomiteMargin.logs.parseLogs(txResult);
-        expect(logs.length).to.eql(1);
-        const log = logs[0];
-        expect(log.name).to.eql('LogSetEarningsRate');
-        expect(log.args.earningsRate).to.eql(e);
-      }
-      const result = await dolomiteMargin.getters.getEarningsRate();
-      expect(result).to.eql(e);
-    }
-  });
-
-  describe('#ownerSetMinBorrowedValue', () => {
-    it('Succeeds', async () => {
-      await expectMinBorrowedValue(null, riskParams.minBorrowedValue);
-
-      // keep same
-      txr = await dolomiteMargin.admin.setMinBorrowedValue(riskParams.minBorrowedValue, {
-        from: admin,
-      });
-      await expectMinBorrowedValue(txr, riskParams.minBorrowedValue);
-
-      // set to max
-      txr = await dolomiteMargin.admin.setMinBorrowedValue(riskLimits.minBorrowedValueMax, { from: admin });
-      await expectMinBorrowedValue(txr, riskLimits.minBorrowedValueMax);
-
-      // set back to original
-      txr = await dolomiteMargin.admin.setMinBorrowedValue(riskParams.minBorrowedValue, {
-        from: admin,
-      });
-      await expectMinBorrowedValue(txr, riskParams.minBorrowedValue);
-    });
-
-    it('Fails for too-high value', async () => {
-      await expectThrow(
-        dolomiteMargin.admin.setMinBorrowedValue(riskLimits.minBorrowedValueMax.plus(1), {
-          from: admin,
-        }),
-        'AdminImpl: Value too high',
-      );
-    });
-
-    it('Fails for non-admin', async () => {
-      await expectThrow(
-        dolomiteMargin.admin.setMinBorrowedValue(riskParams.minBorrowedValue, {
-          from: nonAdmin,
-        }),
-      );
-    });
-
-    async function expectMinBorrowedValue(txResult: any, e: Integer) {
-      if (txResult) {
-        const logs = dolomiteMargin.logs.parseLogs(txResult);
-        expect(logs.length).to.eql(1);
-        const log = logs[0];
-        expect(log.name).to.eql('LogSetMinBorrowedValue');
-        expect(log.args.minBorrowedValue).to.eql(e);
-      }
-      const result = await dolomiteMargin.getters.getMinBorrowedValue();
-      expect(result).to.eql(e);
-    }
-  });
-
-  describe('#ownerSetAccountMaxNumberOfMarketsWithBalances', () => {
-    it('Successfully sets value', async () => {
-      const txResult = await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: admin });
-      const logs = dolomiteMargin.logs.parseLogs(txResult);
-      expect(logs.length).to.eql(1);
-      expect(logs[0].name).to.eql('LogSetAccountMaxNumberOfMarketsWithBalances');
-      expect(logs[0].args.accountMaxNumberOfMarketsWithBalances).to.eql(new BigNumber('100'));
-      expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber('100'));
-    });
-
-    it('Fails for non-admin', async () => {
-      await expectThrow(dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: nonAdmin }));
-    });
-
-    it('Fails for when too low', async () => {
-      await expectThrow(
-        dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(1, { from: admin }),
-        'AdminImpl: Acct MaxNumberOfMarkets too low',
-      );
-    });
-  });
-
-  describe('#ownerSetOracleSentinel', () => {
-    it('Successfully sets value', async () => {
-      const oracleSentinel = (await deployContract(
-        dolomiteMargin,
-        testOracleSentinelJson,
-        [],
-      )) as TestSimpleOracleSentinel;
-      const txResult = await dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin });
-      const logs = dolomiteMargin.logs.parseLogs(txResult);
-      expect(logs.length).to.eql(1);
-      expect(logs[0].name).to.eql('LogSetOracleSentinel');
-      expect(logs[0].args.oracleSentinel).to.eql(oracleSentinel.options.address);
-      expect(await dolomiteMargin.getters.getOracleSentinel()).to.eql(oracleSentinel.options.address);
-    });
-
-    it('Fails for non-admin', async () => {
-      const oracleSentinel = (await deployContract(
-        dolomiteMargin,
-        testOracleSentinelJson,
-        [],
-      )) as TestSimpleOracleSentinel;
-      await expectThrow(dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: nonAdmin }));
-    });
-
-    it('Fails for when borrow allowed is set to false', async () => {
-      const oracleSentinel = (await deployContract(
-        dolomiteMargin,
-        testOracleSentinelJson,
-        [],
-      )) as TestSimpleOracleSentinel;
-      await dolomiteMargin.contracts.callContractFunction(oracleSentinel.methods.setIsBorrowAllowed(false), {
-        from: admin,
-      });
-      await expectThrow(
-        dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin }),
-        'AdminImpl: Invalid oracle sentinel',
-      );
-    });
-
-    it('Fails for when liquidation allowed is set to false', async () => {
-      const oracleSentinel = (await deployContract(
-        dolomiteMargin,
-        testOracleSentinelJson,
-        [],
-      )) as TestSimpleOracleSentinel;
-      await dolomiteMargin.contracts.callContractFunction(oracleSentinel.methods.setIsLiquidationAllowed(false), {
-        from: admin,
-      });
-      await expectThrow(
-        dolomiteMargin.admin.setOracleSentinel(oracleSentinel.options.address, { from: admin }),
-        'AdminImpl: Invalid oracle sentinel',
-      );
-    });
   });
 
   // ============ Global Operator Functions ============

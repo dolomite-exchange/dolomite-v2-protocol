@@ -40,8 +40,6 @@ contract ChainlinkPriceOracleV1 is IPriceOracle, Ownable {
     using SafeMath for uint;
 
     bytes32 private constant FILE = "ChainlinkPriceOracleV1";
-    // solium-disable-next-line max-len
-    address constant private FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1)));
 
     event TokenInsertedOrUpdated(
         address indexed token,
@@ -147,16 +145,6 @@ contract ChainlinkPriceOracleV1 is IPriceOracle, Ownable {
             "invalid token",
             _token
         );
-        IChainlinkFlags _chainlinkFlags = chainlinkFlags;
-        if (address(_chainlinkFlags) != address(0)) {
-            // https://docs.chain.link/docs/l2-sequencer-flag/
-            bool isFlagRaised = _chainlinkFlags.getFlag(FLAG_ARBITRUM_SEQ_OFFLINE);
-            Require.that(
-                !isFlagRaised,
-                FILE,
-                "Chainlink price oracles offline"
-            );
-        }
 
         uint256 rawChainlinkPrice = uint(tokenToAggregatorMap[_token].latestAnswer());
         address tokenPair = tokenToPairingMap[_token];

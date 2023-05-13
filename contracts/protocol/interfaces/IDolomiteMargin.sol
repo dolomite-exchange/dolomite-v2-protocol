@@ -34,7 +34,154 @@ import { Types } from "../lib/Types.sol";
 
 interface IDolomiteMargin {
 
+    // ============ Getters for Risk Params ============
+
+    /**
+     * Get the global minimum margin-ratio that every position must maintain to prevent being
+     * liquidated.
+     *
+     * @return  The global margin-ratio
+     */
+    function getMarginRatio() external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the global minimum margin-ratio that every position must maintain to prevent being
+     * liquidated.
+     *
+     * @param accountOwner  The account whose margin ratio is being queried. This is used to determine if there is an
+     *                      override that supersedes the global minimum.
+     * @return  The margin ratio for this account
+     */
+    function getMarginRatioForAccount(address accountOwner) external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the global liquidation spread. This is the spread between oracle prices that incentivizes
+     * the liquidation of risky positions.
+     *
+     * @return  The global liquidation spread
+     */
+    function getLiquidationSpread() external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the adjusted liquidation spread for some market pair. This is equal to the global liquidation spread
+     * multiplied by (1 + spreadPremium) for each of the two markets.
+     *
+     * If the pair is in e-mode and has a liquidation spread override, then the override is used instead.
+     *
+     * @param  accountOwner     The account whose liquidation spread is being queried. This is used to determine if
+     *                          there is an override in place.
+     * @param  heldMarketId     The market for which the account has collateral
+     * @param  owedMarketId     The market for which the account has borrowed tokens
+     * @return                  The adjusted liquidation spread
+     */
+    function getLiquidationSpreadForAccountAndPair(
+        address accountOwner,
+        uint256 heldMarketId,
+        uint256 owedMarketId
+    ) external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the global earnings-rate variable that determines what percentage of the interest paid
+     * by borrowers gets passed-on to suppliers.
+     *
+     * @return  The global earnings rate
+     */
+    function getEarningsRate() external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the global minimum-borrow value which is the minimum value of any new borrow on DolomiteMargin.
+     *
+     * @return  The global minimum borrow value
+     */
+    function getMinBorrowedValue() external view returns (Monetary.Value memory);
+
+    /**
+     * Get the maximum number of assets an account owner can hold in an account number.
+     *
+     * @return  The maximum number of assets an account owner can hold in an account number.
+     */
+    function getAccountMaxNumberOfMarketsWithBalances() external view returns (uint256);
+
+    /**
+     * Gets the oracle sentinel, which is responsible for checking if the Blockchain or L2 is alive, if liquidations
+     * should be processed, and if markets should are in size-down only mode.
+     *
+     * @return The oracle sentinel for DolomiteMargin
+     */
+    function getOracleSentinel() external view returns (IOracleSentinel);
+
+    /**
+     * @return True if borrowing is globally allowed according to the Oracle Sentinel or false if it is not
+     */
+    function getIsBorrowAllowed() external view returns (bool);
+
+    /**
+     * @return True if liquidations are globally allowed according to the Oracle Sentinel or false if they are not
+     */
+    function getIsLiquidationAllowed() external view returns (bool);
+
+    /**
+     * Get the account risk override getter for an account owner. This contract enables e-mode for certain isolation
+     * mode vaults.
+     *
+     * @param accountOwner  The address of the account to check if there is a margin ratio override.
+     * @return  The margin ratio override for an account owner. Defaults to 0 if there's no override in place.
+     */
+    function getAccountRiskOverrideGetterByAccountOwner(
+        address accountOwner
+    ) external view returns (IAccountRiskOverrideGetter);
+
+    /**
+     * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.
+     *
+     * @param accountOwner                  The address of the account to check if there is a risk override.
+     * @return marginRatioOverride          The margin ratio override for an account owner. Defaults to 0 if there's no
+     *                                      override in place.
+     * @return liquidationSpreadOverride    The margin ratio override for an account owner. Defaults to 0 if there's no
+     *                                      override in place.
+     */
+    function getAccountRiskOverrideByAccountOwner(
+        address accountOwner
+    )
+    external
+    view
+    returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride);
+
+    /**
+     * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.
+     *
+     * @param accountOwner  The address of the account to check if there is a margin ratio override.
+     * @return  The margin ratio override for an account owner. Defaults to 0 if there's no override in place.
+     */
+    function getMarginRatioOverrideByAccountOwner(address accountOwner) external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the liquidation reward override for an account owner. Used to enable e-mode for certain isolation mode
+     * vaults.
+     *
+     * @param accountOwner  The address of the account to check if there is a liquidation spread override.
+     * @return  The liquidation spread override for an account owner. Defaults to 0 if there's no override in place.
+     */
+    function getLiquidationSpreadOverrideByAccountOwner(
+        address accountOwner
+    ) external view returns (Decimal.D256 memory);
+
+    /**
+     * Get all risk parameter limits in a single struct. These are the maximum limits at which the
+     * risk parameters can be set by the admin of DolomiteMargin.
+     *
+     * @return  All global risk parameter limits
+     */
+    function getRiskLimits() external view returns (Storage.RiskLimits memory);
+
     // ============ Getters for Markets ============
+
+    /**
+     * Get the total number of markets.
+     *
+     * @return  The number of markets
+     */
+    function getNumMarkets() external view returns (uint256);
 
     /**
      * Get the ERC20 token address for a market.
@@ -79,13 +226,6 @@ interface IDolomiteMargin {
     function getMarketPrice(
         uint256 marketId
     ) external view returns (Monetary.Price memory);
-
-    /**
-     * Get the total number of markets.
-     *
-     * @return  The number of markets
-     */
-    function getNumMarkets() external view returns (uint256);
 
     /**
      * Get the total principal amounts (borrowed and supplied) for a market.
@@ -258,7 +398,7 @@ interface IDolomiteMargin {
      *                    - A Storage.Market struct with the current state of the market
      *                    - The current estimated interest index
      *                    - The current token price
-     *                    - The current market interest rate
+     *                    - The current market borrow interest rate per second
      */
     function getMarketWithInfo(
         uint256 marketId
@@ -449,128 +589,6 @@ interface IDolomiteMargin {
      */
     function getIsAutoTraderSpecial(address autoTrader) external view returns (bool);
 
-    // ============ Getters for Risk Params ============
-
-    /**
-     * Get the global minimum margin-ratio that every position must maintain to prevent being
-     * liquidated.
-     *
-     * @return  The global margin-ratio
-     */
-    function getMarginRatio() external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the global minimum margin-ratio that every position must maintain to prevent being
-     * liquidated.
-     *
-     * @param liquidAccountOwner    The account whose margin ratio is being queried. This is used to determine if there
-     *                              is an override that supersedes the global minimum.
-     * @return  The margin ratio for this account
-     */
-    function getMarginRatioForAccount(address liquidAccountOwner) external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the global liquidation spread. This is the spread between oracle prices that incentivizes
-     * the liquidation of risky positions.
-     *
-     * @return  The global liquidation spread
-     */
-    function getLiquidationSpread() external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the adjusted liquidation spread for some market pair. This is equal to the global liquidation spread
-     * multiplied by (1 + spreadPremium) for each of the two markets.
-     *
-     * If the pair is in e-mode and has a liquidation spread override, then the override is used instead.
-     *
-     * @param  liquidAccountOwner   The account whose liquidation spread is being queried. This is used to determine if
-     *                              there is an override in place.
-     * @param  heldMarketId         The market for which the account has collateral
-     * @param  owedMarketId         The market for which the account has borrowed tokens
-     * @return                      The adjusted liquidation spread
-     */
-    function getLiquidationSpreadForAccountAndPair(
-        address liquidAccountOwner,
-        uint256 heldMarketId,
-        uint256 owedMarketId
-    ) external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the global earnings-rate variable that determines what percentage of the interest paid
-     * by borrowers gets passed-on to suppliers.
-     *
-     * @return  The global earnings rate
-     */
-    function getEarningsRate() external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the global minimum-borrow value which is the minimum value of any new borrow on DolomiteMargin.
-     *
-     * @return  The global minimum borrow value
-     */
-    function getMinBorrowedValue() external view returns (Monetary.Value memory);
-
-    /**
-     * Get the maximum number of assets an account owner can hold in an account number.
-     *
-     * @return  The maximum number of assets an account owner can hold in an account number.
-     */
-    function getAccountMaxNumberOfMarketsWithBalances() external view returns (uint256);
-
-    /**
-     * Get the account risk override getter for an account owner. This contract enables e-mode for certain isolation
-     * mode vaults.
-     *
-     * @param accountOwner  The address of the account to check if there is a margin ratio override.
-     * @return  The margin ratio override for an account owner. Defaults to 0 if there's no override in place.
-     */
-    function getAccountRiskOverrideGetterByAccountOwner(
-        address accountOwner
-    ) external view returns (IAccountRiskOverrideGetter);
-
-    /**
-     * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.
-     *
-     * @param accountOwner                  The address of the account to check if there is a risk override.
-     * @return marginRatioOverride          The margin ratio override for an account owner. Defaults to 0 if there's no
-     *                                      override in place.
-     * @return liquidationSpreadOverride    The margin ratio override for an account owner. Defaults to 0 if there's no
-     *                                      override in place.
-     */
-    function getAccountRiskOverrideByAccountOwner(
-        address accountOwner
-    )
-    external
-    view
-    returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride);
-
-    /**
-     * Get the margin ratio override for an account owner. Used to enable e-mode for certain isolation mode vaults.
-     *
-     * @param accountOwner  The address of the account to check if there is a margin ratio override.
-     * @return  The margin ratio override for an account owner. Defaults to 0 if there's no override in place.
-     */
-    function getMarginRatioOverrideByAccountOwner(address accountOwner) external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the liquidation reward override for an account owner. Used to enable e-mode for certain isolation mode
-     * vaults.
-     *
-     * @param accountOwner  The address of the account to check if there is a liquidation spread override.
-     * @return  The liquidation spread override for an account owner. Defaults to 0 if there's no override in place.
-     */
-    function getLiquidationSpreadOverrideByAccountOwner(
-        address accountOwner
-    ) external view returns (Decimal.D256 memory);
-
-    /**
-     * Get all risk parameter limits in a single struct. These are the maximum limits at which the
-     * risk parameters can be set by the admin of DolomiteMargin.
-     *
-     * @return  All global risk parameter limits
-     */
-    function getRiskLimits() external view returns (Storage.RiskLimits memory);
-
     // ============ Write Functions ============
 
     /**
@@ -638,37 +656,6 @@ interface IDolomiteMargin {
     // ============ Market Functions ============
 
     /**
-     * Sets the number of non-zero balances an account may have within the same `accountIndex`. This ensures a user
-     * cannot DOS the system by filling their account with non-zero balances (which linearly increases gas costs when
-     * checking collateralization) and disallowing themselves to close the position, because the number of gas units
-     * needed to process their transaction exceed the block's gas limit. In turn, this would  prevent the user from also
-     * being liquidated, causing the all of the capital to be "stuck" in the position.
-     *
-     * Lowering this number does not "freeze" user accounts that have more than the new limit of balances, because this
-     * variable is enforced by checking the users number of non-zero balances against the max or if it sizes down before
-     * each transaction finishes.
-     */
-    function ownerSetAccountMaxNumberOfMarketsWithBalances(
-        uint256 accountMaxNumberOfMarketsWithBalances
-    )
-    external;
-
-    /**
-     * Sets the current oracle sentinel used to report if borrowing and liquidations are enabled.
-     */
-    function ownerSetOracleSentinel(
-        IOracleSentinel oracleSentinel
-    )
-    external;
-
-    function ownerSetAccountRiskOverride(
-        address accountOwner,
-        Decimal.D256 calldata marginRatio,
-        Decimal.D256 calldata liquidationSpread
-    )
-    external;
-
-    /**
      * Add a new market to DolomiteMargin. Must be for a previously-unsupported ERC20 token.
      */
     function ownerAddMarket(
@@ -723,6 +710,16 @@ interface IDolomiteMargin {
     external;
 
     /**
+     * Set a premium on the liquidation spread for a market. This makes it so that any liquidations that include this
+     * market have a higher spread than the global default.
+     */
+    function ownerSetLiquidationSpreadPremium(
+        uint256 marketId,
+        Decimal.D256 calldata liquidationSpreadPremium
+    )
+    external;
+
+    /**
      * Sets the maximum supply wei for a given `marketId`.
      */
     function ownerSetMaxSupplyWei(
@@ -743,16 +740,6 @@ interface IDolomiteMargin {
     function ownerSetEarningsRateOverride(
         uint256 marketId,
         Decimal.D256 calldata earningsRateOverride
-    )
-    external;
-
-    /**
-     * Set a premium on the liquidation spread for a market. This makes it so that any liquidations that include this
-     * market have a higher spread than the global default.
-     */
-    function ownerSetLiquidationSpreadPremium(
-        uint256 marketId,
-        Decimal.D256 calldata liquidationSpreadPremium
     )
     external;
 
@@ -789,6 +776,36 @@ interface IDolomiteMargin {
      */
     function ownerSetMinBorrowedValue(
         Monetary.Value calldata minBorrowedValue
+    )
+    external;
+
+    /**
+     * Sets the number of non-zero balances an account may have within the same `accountIndex`. This ensures a user
+     * cannot DOS the system by filling their account with non-zero balances (which linearly increases gas costs when
+     * checking collateralization) and disallowing themselves to close the position, because the number of gas units
+     * needed to process their transaction exceed the block's gas limit. In turn, this would  prevent the user from also
+     * being liquidated, causing the all of the capital to be "stuck" in the position.
+     *
+     * Lowering this number does not "freeze" user accounts that have more than the new limit of balances, because this
+     * variable is enforced by checking the users number of non-zero balances against the max or if it sizes down before
+     * each transaction finishes.
+     */
+    function ownerSetAccountMaxNumberOfMarketsWithBalances(
+        uint256 accountMaxNumberOfMarketsWithBalances
+    )
+    external;
+
+    /**
+     * Sets the current oracle sentinel used to report if borrowing and liquidations are enabled.
+     */
+    function ownerSetOracleSentinel(
+        IOracleSentinel oracleSentinel
+    )
+    external;
+
+    function ownerSetAccountRiskOverride(
+        address accountOwner,
+        IAccountRiskOverrideGetter accountRiskOverrideGetter
     )
     external;
 

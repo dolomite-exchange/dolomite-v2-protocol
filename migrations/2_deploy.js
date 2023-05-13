@@ -300,13 +300,13 @@ async function deployBaseProtocol(deployer, network) {
     const riskParams = await getRiskParams(network);
     await deployer.deploy(
       dolomiteMargin,
+      getRiskLimits(),
       riskParams.marginRatio,
       riskParams.liquidationSpread,
       riskParams.earningsRate,
       riskParams.minBorrowedValue,
       riskParams.accountMaxNumberOfMarketsWithBalances,
       oracleSentinel.address,
-      getRiskLimits(),
     );
   } else {
     await deployer.deploy(dolomiteMargin, getNoOverwriteParams());

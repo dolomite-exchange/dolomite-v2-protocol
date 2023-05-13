@@ -35,7 +35,7 @@ import { Interest } from "./lib/Interest.sol";
 import { Monetary } from "./lib/Monetary.sol";
 import { Token } from "./lib/Token.sol";
 
-import { State } from "./State.sol";
+import { HasState } from "./HasState.sol";
 
 
 /**
@@ -46,7 +46,7 @@ import { State } from "./State.sol";
  */
 contract Admin is
     IDolomiteMargin,
-    State,
+    HasState,
     Ownable,
     ReentrancyGuard
 {
@@ -175,6 +175,21 @@ contract Admin is
         );
     }
 
+    function ownerSetLiquidationSpreadPremium(
+        uint256 marketId,
+        Decimal.D256 memory liquidationSpreadPremium
+    )
+        public
+        onlyOwner
+        nonReentrant
+    {
+        AdminImpl.ownerSetLiquidationSpreadPremium(
+            g_state,
+            marketId,
+            liquidationSpreadPremium
+        );
+    }
+
     function ownerSetMaxSupplyWei(
         uint256 marketId,
         uint256 maxSupplyWei
@@ -217,21 +232,6 @@ contract Admin is
             g_state,
             marketId,
             earningsRateOverride
-        );
-    }
-
-    function ownerSetLiquidationSpreadPremium(
-        uint256 marketId,
-        Decimal.D256 memory liquidationSpreadPremium
-    )
-        public
-        onlyOwner
-        nonReentrant
-    {
-        AdminImpl.ownerSetLiquidationSpreadPremium(
-            g_state,
-            marketId,
-            liquidationSpreadPremium
         );
     }
 

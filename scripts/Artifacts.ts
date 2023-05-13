@@ -2,98 +2,100 @@
  * To publish a contract with the published npm package, include it here
  */
 
-import { default as DolomiteMargin } from '../build/contracts/DolomiteMargin.json';
-import { default as IERC20 } from '../build/contracts/IERC20.json';
-import { default as IInterestSetter } from '../build/contracts/IInterestSetter.json';
-import { default as IPriceOracle } from '../build/contracts/IPriceOracle.json';
-import { default as Expiry } from '../build/contracts/Expiry.json';
-import { default as PayableProxy } from '../build/contracts/PayableProxy.json';
-import { default as SignedOperationProxy } from '../build/contracts/SignedOperationProxy.json';
-import { default as LiquidatorProxyV1 } from '../build/contracts/LiquidatorProxyV1.json';
-import { default as LiquidatorProxyV1WithAmm } from '../build/contracts/LiquidatorProxyV1WithAmm.json';
-import { default as LiquidatorProxyV2WithExternalLiquidity } from '../build/contracts/LiquidatorProxyV2WithExternalLiquidity.json';
-import { default as LiquidatorProxyV3WithLiquidityToken } from '../build/contracts/LiquidatorProxyV3WithLiquidityToken.json';
-import { default as DolomiteAmmRouterProxy } from '../build/contracts/DolomiteAmmRouterProxy.json';
-import { default as PolynomialInterestSetter } from '../build/contracts/PolynomialInterestSetter.json';
-import { default as DoubleExponentInterestSetter } from '../build/contracts/DoubleExponentInterestSetter.json';
-import { default as Weth } from '../build/contracts/TestWETH.json';
-import { default as Events } from '../build/contracts/Events.json';
-import { default as AdminImpl } from '../build/contracts/AdminImpl.json';
-import { default as GettersImpl } from '../build/contracts/GettersImpl.json';
-import { default as OperationImpl } from '../build/contracts/OperationImpl.json';
-import { default as DepositImpl } from '../build/contracts/DepositImpl.json';
-import { default as WithdrawalImpl } from '../build/contracts/WithdrawalImpl.json';
-import { default as TransferImpl } from '../build/contracts/TransferImpl.json';
-import { default as TradeImpl } from '../build/contracts/TradeImpl.json';
-import { default as LiquidateOrVaporizeImpl } from '../build/contracts/LiquidateOrVaporizeImpl.json';
-import { default as CallImpl } from '../build/contracts/CallImpl.json';
-import { default as Permission } from '../build/contracts/Permission.json';
-import { default as PartiallyDelayedMultiSig } from '../build/contracts/PartiallyDelayedMultiSig.json';
-import { default as ChainlinkPriceOracleV1 } from '../build/contracts/ChainlinkPriceOracleV1.json';
-import { default as SimpleFeeOwner } from '../build/contracts/SimpleFeeOwner.json';
-import { default as DolomiteAmmFactory } from '../build/contracts/DolomiteAmmFactory.json';
-import { default as DolomiteAmmPair } from '../build/contracts/DolomiteAmmPair.json';
-import { default as TransferProxy } from '../build/contracts/TransferProxy.json';
-import { default as BorrowPositionProxyV1 } from '../build/contracts/BorrowPositionProxyV1.json';
-import { default as BorrowPositionProxyV2 } from '../build/contracts/BorrowPositionProxyV2.json';
-import { default as DepositWithdrawalProxy } from '../build/contracts/DepositWithdrawalProxy.json';
-import { default as AmmRebalancerProxyV1 } from '../build/contracts/AmmRebalancerProxyV1.json';
-import { default as AmmRebalancerProxyV2 } from '../build/contracts/AmmRebalancerProxyV2.json';
-import { default as ArbitrumMultiCall } from '../build/contracts/ArbitrumMultiCall.json';
-import { default as MultiCall } from '../build/contracts/MultiCall.json';
-import { default as IArbitrumGasInfo } from '../build/contracts/IArbitrumGasInfo.json';
-import { default as TestUniswapAmmRebalancerProxy } from '../build/contracts/TestUniswapAmmRebalancerProxy.json';
-import { default as AAVECopyCatAltCoinInterestSetter } from '../build/contracts/AAVECopyCatAltCoinInterestSetter.json';
-import { default as AAVECopyCatStableCoinInterestSetter } from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
-import { default as LiquidatorAssetRegistry } from '../build/contracts/LiquidatorAssetRegistry.json';
-import { default as ILiquidityTokenUnwrapperForLiquidation } from '../build/contracts/ILiquidityTokenUnwrapperForLiquidation.json';
-import { default as IOracleSentinel } from '../build/contracts/IOracleSentinel.json';
+import AAVECopyCatAltCoinInterestSetter from '../build/contracts/AAVECopyCatAltCoinInterestSetter.json';
+import AAVECopyCatStableCoinInterestSetter from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
+import AdminImpl from '../build/contracts/AdminImpl.json';
+import AmmRebalancerProxyV1 from '../build/contracts/AmmRebalancerProxyV1.json';
+import AmmRebalancerProxyV2 from '../build/contracts/AmmRebalancerProxyV2.json';
+import ArbitrumMultiCall from '../build/contracts/ArbitrumMultiCall.json';
+import BorrowPositionProxyV1 from '../build/contracts/BorrowPositionProxyV1.json';
+import BorrowPositionProxyV2 from '../build/contracts/BorrowPositionProxyV2.json';
+import CallImpl from '../build/contracts/CallImpl.json';
+import ChainlinkPriceOracleV1 from '../build/contracts/ChainlinkPriceOracleV1.json';
+import DepositImpl from '../build/contracts/DepositImpl.json';
+import DepositWithdrawalProxy from '../build/contracts/DepositWithdrawalProxy.json';
+import DolomiteAmmFactory from '../build/contracts/DolomiteAmmFactory.json';
+import DolomiteAmmPair from '../build/contracts/DolomiteAmmPair.json';
+import DolomiteAmmRouterProxy from '../build/contracts/DolomiteAmmRouterProxy.json';
+import DolomiteMargin from '../build/contracts/DolomiteMargin.json';
+import DoubleExponentInterestSetter from '../build/contracts/DoubleExponentInterestSetter.json';
+import Events from '../build/contracts/Events.json';
+import Expiry from '../build/contracts/Expiry.json';
+import GettersImpl from '../build/contracts/GettersImpl.json';
+import LiquidateOrVaporizeImpl from '../build/contracts/LiquidateOrVaporizeImpl.json';
+import IArbitrumGasInfo from '../build/contracts/IArbitrumGasInfo.json';
+import IERC20 from '../build/contracts/IERC20.json';
+import IAccountRiskOverrideGetter from '../build/contracts/IAccountRiskOverrideGetter.json';
+import IInterestSetter from '../build/contracts/IInterestSetter.json';
+import ILiquidityTokenUnwrapperTrader from '../build/contracts/ILiquidityTokenUnwrapperTrader.json';
+import IOracleSentinel from '../build/contracts/IOracleSentinel.json';
+import IPriceOracle from '../build/contracts/IPriceOracle.json';
+import LiquidatorAssetRegistry from '../build/contracts/LiquidatorAssetRegistry.json';
+import LiquidatorProxyV1 from '../build/contracts/LiquidatorProxyV1.json';
+import LiquidatorProxyV1WithAmm from '../build/contracts/LiquidatorProxyV1WithAmm.json';
+import LiquidatorProxyV2WithExternalLiquidity from '../build/contracts/LiquidatorProxyV2WithExternalLiquidity.json';
+import LiquidatorProxyV3WithLiquidityToken from '../build/contracts/LiquidatorProxyV3WithLiquidityToken.json';
+import MultiCall from '../build/contracts/MultiCall.json';
+import OperationImpl from '../build/contracts/OperationImpl.json';
+import PartiallyDelayedMultiSig from '../build/contracts/PartiallyDelayedMultiSig.json';
+import PayableProxy from '../build/contracts/PayableProxy.json';
+import Permission from '../build/contracts/Permission.json';
+import PolynomialInterestSetter from '../build/contracts/PolynomialInterestSetter.json';
+import SignedOperationProxy from '../build/contracts/SignedOperationProxy.json';
+import SimpleFeeOwner from '../build/contracts/SimpleFeeOwner.json';
+import TestUniswapAmmRebalancerProxy from '../build/contracts/TestUniswapAmmRebalancerProxy.json';
+import TradeImpl from '../build/contracts/TradeImpl.json';
+import TransferImpl from '../build/contracts/TransferImpl.json';
+import TransferProxy from '../build/contracts/TransferProxy.json';
+import Weth from '../build/contracts/Weth.json';
+import WithdrawalImpl from '../build/contracts/WithdrawalImpl.json';
 
 export default {
-  DepositImpl,
-  WithdrawalImpl,
-  TransferImpl,
-  TradeImpl,
-  LiquidateOrVaporizeImpl,
-  CallImpl,
-  OperationImpl,
+  AAVECopyCatAltCoinInterestSetter,
+  AAVECopyCatStableCoinInterestSetter,
   AdminImpl,
-  GettersImpl,
+  AmmRebalancerProxyV1,
+  AmmRebalancerProxyV2,
+  ArbitrumMultiCall,
+  BorrowPositionProxyV1,
+  BorrowPositionProxyV2,
+  CallImpl,
+  ChainlinkPriceOracleV1,
+  DepositImpl,
+  DepositWithdrawalProxy,
+  DolomiteAmmFactory,
+  DolomiteAmmPair,
+  DolomiteAmmRouterProxy,
   DolomiteMargin,
-  IERC20,
-  IInterestSetter,
-  IPriceOracle,
+  DoubleExponentInterestSetter,
+  Events,
   Expiry,
-  PayableProxy,
-  SignedOperationProxy,
+  GettersImpl,
+  LiquidateOrVaporizeImpl,
+  IArbitrumGasInfo,
+  IERC20,
+  IAccountRiskOverrideGetter,
+  IInterestSetter,
+  ILiquidityTokenUnwrapperTrader,
+  IOracleSentinel,
+  IPriceOracle,
+  LiquidatorAssetRegistry,
   LiquidatorProxyV1,
   LiquidatorProxyV1WithAmm,
   LiquidatorProxyV2WithExternalLiquidity,
   LiquidatorProxyV3WithLiquidityToken,
-  AmmRebalancerProxyV1,
-  AmmRebalancerProxyV2,
-  DolomiteAmmRouterProxy,
-  PolynomialInterestSetter,
-  DoubleExponentInterestSetter,
-  Weth,
-  Events,
-  Permission,
-  PartiallyDelayedMultiSig,
-  ChainlinkPriceOracleV1,
-  DolomiteAmmFactory,
-  DolomiteAmmPair,
-  SimpleFeeOwner,
-  TransferProxy,
-  BorrowPositionProxyV1,
-  BorrowPositionProxyV2,
-  DepositWithdrawalProxy,
-  ArbitrumMultiCall,
   MultiCall,
-  IArbitrumGasInfo,
+  OperationImpl,
+  PartiallyDelayedMultiSig,
+  PayableProxy,
+  Permission,
+  PolynomialInterestSetter,
+  SignedOperationProxy,
+  SimpleFeeOwner,
   TestUniswapAmmRebalancerProxy,
-  AAVECopyCatAltCoinInterestSetter,
-  AAVECopyCatStableCoinInterestSetter,
-  LiquidatorAssetRegistry,
-  ILiquidityTokenUnwrapperForLiquidation,
-  IOracleSentinel,
+  TradeImpl,
+  TransferImpl,
+  TransferProxy,
+  Weth,
+  WithdrawalImpl,
 };

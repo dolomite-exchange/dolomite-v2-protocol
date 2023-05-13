@@ -19,8 +19,9 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { State } from "./State.sol";
 import { Types } from "./lib/Types.sol";
+
+import { HasState } from "./HasState.sol";
 
 
 /**
@@ -30,7 +31,7 @@ import { Types } from "./lib/Types.sol";
  * Public function that allows other addresses to manage accounts
  */
 contract Permission is
-    State
+    HasState
 {
     // ============ Events ============
 

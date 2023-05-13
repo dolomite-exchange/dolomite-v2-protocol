@@ -69,13 +69,13 @@ library GettersImpl {
 
     function getMarginRatioForAccount(
         Storage.State storage state,
-        address liquidAccountOwner
+        address asccountOwner
     )
         public
         view
         returns (Decimal.D256 memory)
     {
-        (Decimal.D256 memory marginRatio,) = state.getAccountRiskOverride(liquidAccountOwner);
+        (Decimal.D256 memory marginRatio,) = state.getAccountRiskOverride(accountOwner);
         if (marginRatio.value == 0) {
             marginRatio = state.riskParams.marginRatio;
         }
@@ -467,7 +467,7 @@ library GettersImpl {
 
     function getLiquidationSpreadForAccountAndPair(
         Storage.State storage state,
-        address liquidAccountOwner,
+        address accountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -477,7 +477,7 @@ library GettersImpl {
     {
         _requireValidMarket(state, heldMarketId);
         _requireValidMarket(state, owedMarketId);
-        return state.getLiquidationSpreadForAccountAndPair(liquidAccountOwner, heldMarketId, owedMarketId);
+        return state.getLiquidationSpreadForAccountAndPair(accountOwner, heldMarketId, owedMarketId);
     }
 
     function getMarket(

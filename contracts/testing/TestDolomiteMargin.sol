@@ -40,23 +40,23 @@ contract TestDolomiteMargin is DolomiteMargin {
     // ============ Constructor ============
 
     constructor (
+        Storage.RiskLimits memory riskLimits,
         Decimal.D256 memory marginRatio,
         Decimal.D256 memory liquidationSpread,
         Decimal.D256 memory earningsRate,
         Monetary.Value memory minBorrowedValue,
         uint256 accountMaxNumberOfMarketsWithBalances,
-        IOracleSentinel oracleSentinel,
-        Storage.RiskLimits memory riskLimits
+        IOracleSentinel oracleSentinel
     )
         public
         DolomiteMargin(
+            riskLimits,
             marginRatio,
             liquidationSpread,
             earningsRate,
             minBorrowedValue,
             accountMaxNumberOfMarketsWithBalances,
-            oracleSentinel,
-            riskLimits
+            oracleSentinel
         )
     {}
 

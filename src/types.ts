@@ -23,6 +23,7 @@ import {
   Log,
   TransactionReceipt,
 } from 'web3/types';
+import { IOracleSentinel } from '../build/wrappers/IOracleSentinel';
 
 export type address = string;
 export type Integer = BigNumber;
@@ -338,6 +339,7 @@ export interface RiskParams {
   earningsRate: Decimal;
   minBorrowedValue: Integer;
   accountMaxNumberOfMarketsWithBalances: Integer;
+  oracleSentinel: IOracleSentinel;
 }
 
 export interface Balance {

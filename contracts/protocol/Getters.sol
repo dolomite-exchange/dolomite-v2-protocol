@@ -34,7 +34,7 @@ import { Monetary } from "./lib/Monetary.sol";
 import { Storage } from "./lib/Storage.sol";
 import { Types } from "./lib/Types.sol";
 
-import { State } from "./State.sol";
+import { HasState } from "./HasState.sol";
 
 
 /**
@@ -45,7 +45,7 @@ import { State } from "./State.sol";
  */
 contract Getters is
     IDolomiteMargin,
-    State
+    HasState
 {
     // ============ Getters for Risk ============
 
@@ -58,13 +58,13 @@ contract Getters is
     }
 
     function getMarginRatioForAccount(
-        address liquidAccountOwner
+        address accountOwner
     )
         public
         view
         returns (Decimal.D256 memory)
     {
-        return GettersImpl.getMarginRatioForAccount(g_state, liquidAccountOwner);
+        return GettersImpl.getMarginRatioForAccount(g_state, accountOwner);
     }
 
     function getLiquidationSpread()
@@ -73,6 +73,23 @@ contract Getters is
         returns (Decimal.D256 memory)
     {
         return GettersImpl.getLiquidationSpread(g_state);
+    }
+
+    function getLiquidationSpreadForAccountAndPair(
+        address accountOwner,
+        uint256 heldMarketId,
+        uint256 owedMarketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getLiquidationSpreadForAccountAndPair(
+            g_state,
+            accountOwner,
+            heldMarketId,
+            owedMarketId
+        );
     }
 
     function getEarningsRate()
@@ -182,6 +199,16 @@ contract Getters is
         return GettersImpl.getNumMarkets(g_state);
     }
 
+    function getMarketIdByTokenAddress(
+        address token
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return GettersImpl.getMarketIdByTokenAddress(g_state, token);
+    }
+
     function getMarketTokenAddress(
         uint256 marketId
     )
@@ -192,14 +219,24 @@ contract Getters is
         return GettersImpl.getMarketTokenAddress(g_state, marketId);
     }
 
-    function getMarketIdByTokenAddress(
-        address token
+    function getMarketIsClosing(
+        uint256 marketId
     )
         public
         view
-        returns (uint256)
+        returns (bool)
     {
-        return GettersImpl.getMarketIdByTokenAddress(g_state, token);
+        return GettersImpl.getMarketIsClosing(g_state, marketId);
+    }
+
+    function getMarketPrice(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Monetary.Price memory)
+    {
+        return GettersImpl.getMarketPrice(g_state, marketId);
     }
 
     function getMarketTotalPar(
@@ -312,26 +349,6 @@ contract Getters is
         return GettersImpl.getMarketEarningsRateOverride(g_state, marketId);
     }
 
-    function getMarketIsClosing(
-        uint256 marketId
-    )
-        public
-        view
-        returns (bool)
-    {
-        return GettersImpl.getMarketIsClosing(g_state, marketId);
-    }
-
-    function getMarketPrice(
-        uint256 marketId
-    )
-        public
-        view
-        returns (Monetary.Price memory)
-    {
-        return GettersImpl.getMarketPrice(g_state, marketId);
-    }
-
     function getMarketBorrowInterestRatePerSecond(
         uint256 marketId
     )
@@ -360,23 +377,6 @@ contract Getters is
         returns (Interest.Rate memory)
     {
         return GettersImpl.getMarketSupplyInterestRateApr(g_state, marketId);
-    }
-
-    function getLiquidationSpreadForAccountAndPair(
-        address liquidAccountOwner,
-        uint256 heldMarketId,
-        uint256 owedMarketId
-    )
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        return GettersImpl.getLiquidationSpreadForAccountAndPair(
-            g_state,
-            liquidAccountOwner,
-            heldMarketId,
-            owedMarketId
-        );
     }
 
     function getMarket(
@@ -413,6 +413,8 @@ contract Getters is
     {
         return GettersImpl.getNumExcessTokens(g_state, marketId);
     }
+
+    // ============ Getters for Accounts ============
 
     function getAccountPar(
         Account.Info memory account,
@@ -532,6 +534,8 @@ contract Getters is
     {
         return GettersImpl.getAccountBalances(g_state, account);
     }
+
+    // ============ Getters for Account Permissions ============
 
     function getIsLocalOperator(
         address owner,

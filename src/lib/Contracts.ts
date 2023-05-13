@@ -62,6 +62,8 @@ import wethJson from '../../build/published_contracts/Weth.json';
 import testUniswapAmmRebalancerJson from '../../build/published_contracts/TestUniswapAmmRebalancerProxy.json';
 import liquidityTokenUnwrapperJson
   from '../../build/published_contracts/ILiquidityTokenUnwrapperForLiquidation.json';
+import oracleSentinelJson from '../../build/published_contracts/IOracleSentinel.json';
+import accountOverrideGetterJson from '../../build/published_contracts/IAccountRiskOverrideGetter.json';
 
 // Contracts
 import { AmmRebalancerProxyV1 } from '../../build/wrappers/AmmRebalancerProxyV1';
@@ -109,6 +111,8 @@ import { AAVECopyCatAltCoinInterestSetter } from '../../build/wrappers/AAVECopyC
 import { AAVECopyCatStableCoinInterestSetter } from '../../build/wrappers/AAVECopyCatStableCoinInterestSetter';
 import { LiquidatorAssetRegistry } from '../../build/wrappers/LiquidatorAssetRegistry';
 import { ILiquidityTokenUnwrapperForLiquidation } from '../../build/wrappers/ILiquidityTokenUnwrapperForLiquidation';
+import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
+import { IAccountRiskOverrideGetter } from '../../build/wrappers/IAccountRiskOverrideGetter';
 
 interface CallableTransactionObject<T> {
   call(tx?: Tx, blockNumber?: number): Promise<T>;
@@ -286,6 +290,26 @@ export class Contracts {
     unwrapper.setProvider(this.provider);
     unwrapper.options.from = this.dolomiteMargin.options.from;
     return unwrapper;
+  }
+
+  public getOracleSentinel(contractAddress: address): IOracleSentinel {
+    const oracleSentinel = new this.web3.eth.Contract(
+      oracleSentinelJson.abi,
+      contractAddress,
+    ) as IOracleSentinel;
+    oracleSentinel.setProvider(this.provider);
+    oracleSentinel.options.from = this.dolomiteMargin.options.from;
+    return oracleSentinel;
+  }
+
+  public getAccountRiskOverrideGetter(contractAddress: address): IAccountRiskOverrideGetter {
+    const accountRiskOverrideGetter = new this.web3.eth.Contract(
+      accountOverrideGetterJson.abi,
+      contractAddress,
+    ) as IAccountRiskOverrideGetter;
+    accountRiskOverrideGetter.setProvider(this.provider);
+    accountRiskOverrideGetter.options.from = this.dolomiteMargin.options.from;
+    return accountRiskOverrideGetter;
   }
 
   public setProvider(provider: Provider, networkId: number): void {

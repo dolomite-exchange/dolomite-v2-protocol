@@ -64,7 +64,6 @@ import testChainlinkFlagsJson from '../../build/testing_contracts/TestChainlinkF
 import testChainlinkPriceOracleJson from '../../build/testing_contracts/TestChainlinkPriceOracleV1.json';
 import testParaswapAugustusRouterJson from '../../build/testing_contracts/TestParaswapAugustusRouter.json';
 import testLiquidityTokenUnwrapperForLiquidationJson from '../../build/testing_contracts/TestLiquidityTokenUnwrapperForLiquidation.json';
-import testSimpleOracleSentinelJson from '../../build/testing_contracts/TestSimpleOracleSentinel.json';
 
 import { address, DolomiteMarginOptions } from '../../src';
 import { Contracts } from '../../src/lib/Contracts';
@@ -78,7 +77,6 @@ import { ChainlinkPriceOracleV1 } from '../../build/wrappers/ChainlinkPriceOracl
 import {
   TestLiquidityTokenUnwrapperForLiquidation
 } from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperForLiquidation';
-import { TestSimpleOracleSentinel } from '../../build/testing_wrappers/TestSimpleOracleSentinel';
 
 export class TestContracts extends Contracts {
   // Contract instances
@@ -112,7 +110,6 @@ export class TestContracts extends Contracts {
   public testChainlinkFlags: TestChainlinkFlags;
   public testParaswapAugustusRouter: TestParaswapAugustusRouter;
   public testLiquidityTokenUnwrapperForLiquidation: TestLiquidityTokenUnwrapperForLiquidation;
-  public testSimpleOracleSentinel: TestSimpleOracleSentinel;
 
   constructor(
     provider: Provider,
@@ -186,9 +183,6 @@ export class TestContracts extends Contracts {
     this.testLiquidityTokenUnwrapperForLiquidation = new this.web3.eth.Contract(
       testLiquidityTokenUnwrapperForLiquidationJson.abi,
     ) as TestLiquidityTokenUnwrapperForLiquidation;
-    this.testSimpleOracleSentinel = new this.web3.eth.Contract(
-      testSimpleOracleSentinelJson.abi,
-    ) as TestSimpleOracleSentinel;
 
     this.setProvider(provider, networkId);
     this.setDefaultAccount(this.web3.eth.defaultAccount);
@@ -255,7 +249,6 @@ export class TestContracts extends Contracts {
       { contract: this.chainlinkPriceOracleV1, json: testChainlinkPriceOracleJson },
       { contract: this.testParaswapAugustusRouter, json: testParaswapAugustusRouterJson },
       { contract: this.testLiquidityTokenUnwrapperForLiquidation, json: testLiquidityTokenUnwrapperForLiquidationJson },
-      { contract: this.testSimpleOracleSentinel, json: testSimpleOracleSentinelJson },
     ];
 
     contracts.forEach(contract =>
@@ -304,7 +297,6 @@ export class TestContracts extends Contracts {
     this.testChainlinkFlags.options.from = account;
     this.testParaswapAugustusRouter.options.from = account;
     this.testLiquidityTokenUnwrapperForLiquidation.options.from = account;
-    this.testSimpleOracleSentinel.options.from = account;
   }
 
   public getDefaultGasLimit(): string | number {

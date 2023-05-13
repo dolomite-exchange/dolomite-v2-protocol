@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { ILiquidityTokenUnwrapperForLiquidation } from "../external/interfaces/ILiquidityTokenUnwrapperForLiquidation.sol";
+import {ILiquidityTokenUnwrapperTrader} from "../external/interfaces/ILiquidityTokenUnwrapperForLiquidation.sol";
 
 import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 
@@ -32,7 +32,7 @@ import { IDolomiteMargin } from "../protocol/interfaces/IDolomiteMargin.sol";
 import { TestToken } from "./TestToken.sol";
 
 
-contract TestLiquidityTokenUnwrapperForLiquidation is ILiquidityTokenUnwrapperForLiquidation {
+contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTrader {
 
     bytes32 constant FILE = "TestLiquidityTokenUnwrapper";
 
@@ -80,8 +80,8 @@ contract TestLiquidityTokenUnwrapperForLiquidation is ILiquidityTokenUnwrapperFo
     external
     view
     returns (Actions.ActionArgs[] memory) {
-        Require.that(
-            DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _heldMarket,
+        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _heldMarket) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _heldMarket,
             FILE,
             "Invalid held market",
             _heldMarket
@@ -114,8 +114,8 @@ contract TestLiquidityTokenUnwrapperForLiquidation is ILiquidityTokenUnwrapperFo
     )
     external
     returns (uint256) {
-        Require.that(
-            _makerToken == OUTPUT_TOKEN,
+        if (_makerToken == OUTPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_makerToken == OUTPUT_TOKEN,
             FILE,
             "Maker token must be OUTPUT_TOKEN",
             _makerToken
@@ -136,14 +136,14 @@ contract TestLiquidityTokenUnwrapperForLiquidation is ILiquidityTokenUnwrapperFo
     external
     view
     returns (uint256) {
-        Require.that(
-            _makerToken == INPUT_TOKEN,
+        if (_makerToken == INPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_makerToken == INPUT_TOKEN,
             FILE,
             "Maker token must be INPUT_TOKEN",
             _makerToken
         );
-        Require.that(
-            _takerToken == OUTPUT_TOKEN,
+        if (_takerToken == OUTPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_takerToken == OUTPUT_TOKEN,
             FILE,
             "Taker token must be OUTPUT_TOKEN",
             _takerToken
