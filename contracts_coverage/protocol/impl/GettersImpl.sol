@@ -711,8 +711,8 @@ library GettersImpl {
     internal
     view
     {
-        Require.that(
-            marketId < state.numMarkets && state.markets[marketId].token != address(0),
+        if (marketId < state.numMarkets && state.markets[marketId].token != address(0)) { /* FOR COVERAGE TESTING */ }
+        Require.that(marketId < state.numMarkets && state.markets[marketId].token != address(0),
             FILE,
             "Invalid market"
         );
@@ -725,8 +725,8 @@ library GettersImpl {
     private
     view
     {
-        Require.that(
-            token == state.markets[state.tokenToMarketId[token]].token,
+        if (token == state.markets[state.tokenToMarketId[token]].token) { /* FOR COVERAGE TESTING */ }
+        Require.that(token == state.markets[state.tokenToMarketId[token]].token,
             FILE,
             "Invalid token"
         );

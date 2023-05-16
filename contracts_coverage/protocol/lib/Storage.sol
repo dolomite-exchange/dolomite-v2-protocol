@@ -20,6 +20,7 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+
 import { Account } from "./Account.sol";
 import { Bits } from "./Bits.sol";
 import { Cache } from "./Cache.sol";
@@ -32,8 +33,11 @@ import { Require } from "./Require.sol";
 import { Time } from "./Time.sol";
 import { Token } from "./Token.sol";
 import { Types } from "./Types.sol";
+
+import { IAccountRiskOverrideSetter } from "../interfaces/IAccountRiskOverrideSetter.sol";
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 
@@ -66,9 +70,6 @@ library Storage {
         // Whether additional borrows are allowed for this market
         bool isClosing;
 
-        // Whether this market can be removed and its ID can be recycled and reused
-        bool isRecyclable;
-
         // Total aggregated supply and borrow amount of the entire market
         Types.TotalPar totalPar;
 
@@ -94,12 +95,21 @@ library Storage {
         // `liquidationSpread = liquidationSpread * (1 + spreadPremium)`
         // NOTE: This formula is applied up to two times - one for each market whose spreadPremium is greater than 0
         // (when performing a liquidation between two markets)
-        Decimal.D256 spreadPremium;
+        Decimal.D256 liquidationSpreadPremium;
 
         // The maximum amount that can be held by the protocol. This allows the protocol to cap any additional risk
         // that is inferred by allowing borrowing against low-cap or assets with increased volatility. Setting this
         // value to 0 is analogous to having no limit. This value can never be below 0.
-        Types.Wei maxWei;
+        Types.Wei maxSupplyWei;
+
+        // The maximum amount that can be borrowed by the protocol. This allows the protocol to cap any additional risk
+        // that is inferred by allowing borrowing against low-cap or assets with increased volatility. Setting this
+        // value to 0 is analogous to having no limit. This value can never be below 0.
+        Types.Wei maxBorrowWei;
+
+        // The percentage of interest paid that is passed along from borrowers to suppliers. Setting this to 0 will
+        // default to RiskParams.earningsRate.
+        Decimal.D256 earningsRateOverride;
     }
 
     // The global risk parameters that govern the health and security of the system
@@ -119,6 +129,12 @@ library Storage {
 
         // The maximum number of markets a user can have a non-zero balance for a given account.
         uint256 accountMaxNumberOfMarketsWithBalances;
+
+        IOracleSentinel oracleSentinel;
+
+        // Certain addresses are allowed to borrow with different LTV requirements. When an account's risk is overrode,
+        // the global risk parameters are ignored and the account's risk parameters are used instead.
+        mapping(address => IAccountRiskOverrideSetter) accountRiskOverrideSetterMap;
     }
 
     // The maximum RiskParam values that can be set
@@ -139,7 +155,13 @@ library Storage {
         // The highest liquidation reward that can be applied to a particular market. This percentage is applied
         // in addition to the liquidation spread in `RiskParams`. Meaning a value of 1e18 is 100%. It is calculated as:
         // `liquidationSpread * Decimal.onePlus(spreadPremium)`
-        uint64 spreadPremiumMax;
+        uint64 liquidationSpreadPremiumMax;
+        // The highest that the borrow interest rate can ever be. If the rate returned is ever higher, the rate is
+        // capped at this value instead of reverting. The goal is to keep Dolomite operational under all circumstances
+        // instead of inadvertently DOS'ing the protocol.
+        uint96 interestRateMax;
+        // The highest that the minBorrowedValue can be. This is the minimum amount of value that must be borrowed.
+        // Typically a value of $100 (100 * 1e18) is more than sufficient.
         uint128 minBorrowedValueMax;
     }
 
@@ -153,9 +175,6 @@ library Storage {
 
         // token address => marketId
         mapping (address => uint256) tokenToMarketId;
-
-        // Linked list from marketId to the next recycled market id
-        mapping(uint256 => uint256) recycledMarketIds;
 
         // owner => account number => Account
         mapping (address => mapping (uint256 => Account.Storage)) accounts;
@@ -200,7 +219,7 @@ library Storage {
         return state.markets[marketId].totalPar;
     }
 
-    function getMaxWei(
+    function getMaxSupplyWei(
         Storage.State storage state,
         uint256 marketId
     )
@@ -208,7 +227,18 @@ library Storage {
         view
         returns (Types.Wei memory)
     {
-        return state.markets[marketId].maxWei;
+        return state.markets[marketId].maxSupplyWei;
+    }
+
+    function getMaxBorrowWei(
+        Storage.State storage state,
+        uint256 marketId
+    )
+        internal
+        view
+        returns (Types.Wei memory)
+    {
+        return state.markets[marketId].maxBorrowWei;
     }
 
     function getIndex(
@@ -291,17 +321,6 @@ library Storage {
         return Interest.parToWei(par, index);
     }
 
-    function getMarketsWithBalancesSet(
-        Storage.State storage state,
-        Account.Info memory account
-    )
-    internal
-    view
-    returns (EnumerableSet.Set storage)
-    {
-        return state.accounts[account.owner][account.number].marketsWithNonZeroBalanceSet;
-    }
-
     function getMarketsWithBalances(
         Storage.State storage state,
         Account.Info memory account
@@ -347,8 +366,9 @@ library Storage {
         return state.accounts[account.owner][account.number].numberOfMarketsWithDebt;
     }
 
-    function getLiquidationSpreadForPair(
+    function getLiquidationSpreadForAccountAndPair(
         Storage.State storage state,
+        address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -356,9 +376,14 @@ library Storage {
         view
         returns (Decimal.D256 memory)
     {
+        (, Decimal.D256 memory liquidationSpreadOverride) = getAccountRiskOverride(state, liquidAccountOwner);
+        if (liquidationSpreadOverride.value != 0) {
+            return liquidationSpreadOverride;
+        }
+
         uint256 result = state.riskParams.liquidationSpread.value;
-        result = Decimal.mul(result, Decimal.onePlus(state.markets[heldMarketId].spreadPremium));
-        result = Decimal.mul(result, Decimal.onePlus(state.markets[owedMarketId].spreadPremium));
+        result = Decimal.mul(result, Decimal.onePlus(state.markets[heldMarketId].liquidationSpreadPremium));
+        result = Decimal.mul(result, Decimal.onePlus(state.markets[owedMarketId].liquidationSpreadPremium));
         return Decimal.D256({
             value: result
         });
@@ -375,11 +400,17 @@ library Storage {
     {
         Interest.Rate memory rate = state.fetchInterestRate(marketId, index);
 
+        Decimal.D256 memory earningsRate = state.markets[marketId].earningsRateOverride;
+        if (earningsRate.value == 0) {
+            // The earnings rate was not override, fall back to the global one
+            earningsRate = state.riskParams.earningsRate;
+        }
+
         return Interest.calculateNewIndex(
             index,
             rate,
             state.getTotalPar(marketId),
-            state.riskParams.earningsRate
+            earningsRate
         );
     }
 
@@ -403,6 +434,11 @@ library Storage {
             borrowWei.value,
             supplyWei.value
         );
+
+        if (rate.value > state.riskLimits.interestRateMax) {
+            // Cap the interest rate at the max instead of reverting. We don't want to DOS the protocol
+            rate.value = state.riskLimits.interestRateMax;
+        }
 
         return rate;
     }
@@ -439,6 +475,10 @@ library Storage {
     {
         Monetary.Value memory supplyValue;
         Monetary.Value memory borrowValue;
+        (Decimal.D256 memory marginRatioOverride,) = getAccountRiskOverride(state, account.owner);
+
+        // Only adjust for liquidity if prompted AND if there is no override
+        adjustForLiquidity = adjustForLiquidity && marginRatioOverride.value == 0;
 
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
@@ -448,12 +488,12 @@ library Storage {
                 continue;
             }
 
-            uint256 assetValue = userWei.value.mul(cache.getAtIndex(i).price.value);
             Decimal.D256 memory adjust = Decimal.one();
             if (adjustForLiquidity) {
                 adjust = Decimal.onePlus(state.markets[cache.getAtIndex(i).marketId].marginPremium);
             }
 
+            uint256 assetValue = userWei.value.mul(cache.getAtIndex(i).price.value);
             if (userWei.sign) {
                 supplyValue.value = supplyValue.value.add(Decimal.div(assetValue, adjust));
             } else {
@@ -479,11 +519,16 @@ library Storage {
             return true;
         }
 
-        // get account values (adjusted for liquidity)
+        // get account values (adjusted for liquidity, if there isn't a margin ratio override)
+        (Decimal.D256 memory marginRatio,) = getAccountRiskOverride(state, account.owner);
         (
             Monetary.Value memory supplyValue,
             Monetary.Value memory borrowValue
-        ) = state.getAccountValues(account, cache, /* adjustForLiquidity = */ true);
+        ) = state.getAccountValues(
+            account,
+            cache,
+            /* adjustForLiquidity = */ marginRatio.value == 0
+        );
 
         if (requireMinBorrow) {
             if (borrowValue.value >= state.riskParams.minBorrowedValue.value) { /* FOR COVERAGE TESTING */ }
@@ -495,7 +540,11 @@ library Storage {
             );
         }
 
-        uint256 requiredMargin = Decimal.mul(borrowValue.value, state.riskParams.marginRatio);
+        if (marginRatio.value == 0) {
+            marginRatio = state.riskParams.marginRatio;
+        }
+
+        uint256 requiredMargin = Decimal.mul(borrowValue.value, marginRatio);
 
         return supplyValue.value >= borrowValue.value.add(requiredMargin);
     }
@@ -570,6 +619,25 @@ library Storage {
             "Unpermissioned operator",
             operator
         );
+    }
+
+    function getAccountRiskOverride(
+        Storage.State storage state,
+        address accountOwner
+    )
+        internal
+        view
+        returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
+    {
+        IAccountRiskOverrideSetter riskOverrideSetter = state.riskParams.accountRiskOverrideSetterMap[accountOwner];
+        if (address(riskOverrideSetter) != address(0)) {
+            (marginRatioOverride, liquidationSpreadOverride) =
+                riskOverrideSetter.getAccountRiskOverride(accountOwner);
+            validateAccountRiskOverrideValues(state, marginRatioOverride, liquidationSpreadOverride);
+        } else {
+            marginRatioOverride = Decimal.zero();
+            liquidationSpreadOverride = Decimal.zero();
+        }
     }
 
     /**
@@ -695,6 +763,37 @@ library Storage {
             }
         }
         return hasNegative;
+    }
+
+    function validateAccountRiskOverrideValues(
+        Storage.State storage state,
+        Decimal.D256 memory marginRatioOverride,
+        Decimal.D256 memory liquidationSpreadOverride
+    ) internal view {
+        if (marginRatioOverride.value <= state.riskLimits.marginRatioMax) { /* FOR COVERAGE TESTING */ }
+        Require.that(marginRatioOverride.value <= state.riskLimits.marginRatioMax,
+            FILE,
+            "Ratio too high"
+        );
+        if (liquidationSpreadOverride.value <= state.riskLimits.liquidationSpreadMax) { /* FOR COVERAGE TESTING */ }
+        Require.that(liquidationSpreadOverride.value <= state.riskLimits.liquidationSpreadMax,
+            FILE,
+            "Spread too high"
+        );
+
+        if (marginRatioOverride.value > 0 && liquidationSpreadOverride.value > 0) {
+            if (liquidationSpreadOverride.value < marginRatioOverride.value) { /* FOR COVERAGE TESTING */ }
+            Require.that(liquidationSpreadOverride.value < marginRatioOverride.value,
+                FILE,
+                "Spread cannot be >= ratio"
+            );
+        } else {
+            if (liquidationSpreadOverride.value == 0 && marginRatioOverride.value == 0) { /* FOR COVERAGE TESTING */ }
+            Require.that(liquidationSpreadOverride.value == 0 && marginRatioOverride.value == 0,
+                FILE,
+                "Spread and ratio must both be 0"
+            );
+        }
     }
 
     // =============== Setter Functions ===============

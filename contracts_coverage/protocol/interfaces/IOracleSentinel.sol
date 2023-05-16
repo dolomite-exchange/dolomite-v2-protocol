@@ -1,6 +1,6 @@
 /*
 
-    Copyright 2019 dYdX Trading Inc.
+    Copyright 2023 Dolomite
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -19,16 +19,23 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { Storage } from "./lib/Storage.sol";
-
 
 /**
- * @title State
- * @author dYdX
+ * @title IOracleSentinel
+ * @author Dolomite
  *
- * Base-level contract that holds the state of DolomiteMargin
+ * Interface that Dolomite pings to check if the Blockchain or L2 is alive, if liquidations should be processed, and if
+ * markets should are in size-down only mode.
  */
-contract State
-{
-    Storage.State internal g_state;
+contract IOracleSentinel {
+
+    /**
+     * @return True if new borrows should be allowed, false otherwise
+     */
+    function isBorrowAllowed() external view returns (bool);
+
+    /**
+     * @return True if liquidations should be allowed, false otherwise
+     */
+    function isLiquidationAllowed() external view returns (bool);
 }

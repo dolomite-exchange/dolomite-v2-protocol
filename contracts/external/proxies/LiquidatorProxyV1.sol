@@ -283,6 +283,11 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
         uint256 remainingValueBuffer = _cache.supplyValue.sub(requiredSupplyValue);
 
         // get the absolute difference between the minLiquidatorRatio and the liquidation spread
+        Require.that(
+            _constants.minLiquidatorRatio.value >= _cache.spread.value,
+            FILE,
+            "Min liquidator ratio too low"
+        );
         Decimal.D256 memory spreadMarginDiff = Decimal.D256({
             value: _constants.minLiquidatorRatio.value.sub(_cache.spread.value)
         });

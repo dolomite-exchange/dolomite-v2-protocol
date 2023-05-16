@@ -60,6 +60,11 @@ library LiquidateOrVaporizeImpl {
     public
     {
         state.requireIsGlobalOperator(msg.sender);
+        if (state.riskParams.oracleSentinel.isLiquidationAllowed()) { /* FOR COVERAGE TESTING */ }
+        Require.that(state.riskParams.oracleSentinel.isLiquidationAllowed(),
+            FILE,
+            "Liquidations are disabled"
+        );
 
         // verify liquidatable
         if (Account.Status.Liquid != state.getStatus(args.liquidAccount)) {
@@ -104,6 +109,7 @@ library LiquidateOrVaporizeImpl {
         ) = _getLiquidationPrices(
             state,
             cache,
+            args.liquidAccount.owner,
             args.heldMarket,
             args.owedMarket
         );
@@ -241,6 +247,7 @@ library LiquidateOrVaporizeImpl {
         ) = _getLiquidationPrices(
             state,
             cache,
+            args.vaporAccount.owner,
             args.heldMarket,
             args.owedMarket
         );
@@ -400,6 +407,7 @@ library LiquidateOrVaporizeImpl {
     function _getLiquidationPrices(
         Storage.State storage state,
         Cache.MarketCache memory cache,
+        address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -411,7 +419,8 @@ library LiquidateOrVaporizeImpl {
     )
     {
         uint256 owedPrice = cache.get(owedMarketId).price.value;
-        Decimal.D256 memory spread = state.getLiquidationSpreadForPair(
+        Decimal.D256 memory spread = state.getLiquidationSpreadForAccountAndPair(
+            liquidAccountOwner,
             heldMarketId,
             owedMarketId
         );

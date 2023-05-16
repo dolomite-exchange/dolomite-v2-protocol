@@ -26,7 +26,7 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
-import {ILiquidityTokenUnwrapperTrader} from "../interfaces/ILiquidityTokenUnwrapperForLiquidation.sol";
+import { ILiquidityTokenUnwrapperTrader } from "../interfaces/ILiquidityTokenUnwrapperTrader.sol";
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
 import { LiquidatorProxyV2WithExternalLiquidity } from "./LiquidatorProxyV2WithExternalLiquidity.sol";
@@ -83,7 +83,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
     )
     {}
 
-    function setMarketIdToTokenUnwrapperForLiquidationMap(
+    function ownerSetMarketIdToTokenUnwrapperTrader(
         uint256 _marketId,
         address _tokenUnwrapper
     ) external {

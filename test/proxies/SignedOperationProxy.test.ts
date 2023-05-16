@@ -448,6 +448,7 @@ describe('SignedOperationProxy', () => {
         'LogOperationExecuted',
         'LogOperation',
         'LogDeposit',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedOperation]);
 
@@ -463,6 +464,7 @@ describe('SignedOperationProxy', () => {
         'LogOperationExecuted',
         'LogOperation',
         'LogDeposit',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedDepositOperation]);
     });
@@ -476,6 +478,7 @@ describe('SignedOperationProxy', () => {
         'LogOperationExecuted',
         'LogOperation',
         'LogWithdraw',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedWithdrawOperation]);
     });
@@ -489,6 +492,7 @@ describe('SignedOperationProxy', () => {
         'LogOperationExecuted',
         'LogOperation',
         'LogTransfer',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedTransferOperation]);
     });
@@ -498,7 +502,7 @@ describe('SignedOperationProxy', () => {
         .initiate({ proxy: ProxyType.Signed })
         .addSignedOperation(signedBuyOperation)
         .commit({ from: defaultSender });
-      expectLogs(txResult, ['LogOperationExecuted', 'LogOperation', 'LogBuy']);
+      expectLogs(txResult, ['LogOperationExecuted', 'LogOperation', 'LogBuy', 'LogInterestRate', 'LogInterestRate']);
       await expectInvalid([signedBuyOperation]);
     });
 
@@ -507,7 +511,7 @@ describe('SignedOperationProxy', () => {
         .initiate({ proxy: ProxyType.Signed })
         .addSignedOperation(signedSellOperation)
         .commit({ from: defaultSender });
-      expectLogs(txResult, ['LogOperationExecuted', 'LogOperation', 'LogSell']);
+      expectLogs(txResult, ['LogOperationExecuted', 'LogOperation', 'LogSell', 'LogInterestRate', 'LogInterestRate']);
       await expectInvalid([signedSellOperation]);
     });
 
@@ -520,6 +524,8 @@ describe('SignedOperationProxy', () => {
         'LogOperationExecuted',
         'LogOperation',
         'LogTrade',
+        'LogInterestRate',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedTradeOperation]);
     });
@@ -622,6 +628,8 @@ describe('SignedOperationProxy', () => {
         'LogOperationExecuted',
         'LogOperation',
         'LogVaporize',
+        'LogInterestRate',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedVaporizeOperation]);
     });
@@ -1014,6 +1022,7 @@ describe('SignedOperationProxy', () => {
           'LogOperationExecuted',
           'LogOperation',
           'LogTransfer',
+          'LogInterestRate',
         ]);
       }
     });
@@ -1106,6 +1115,7 @@ describe('SignedOperationProxy', () => {
         'LogWithdraw',
         'LogTransfer',
         'LogCall',
+        'LogInterestRate',
       ]);
       await expectInvalid([multiActionOperation]);
 
@@ -1149,6 +1159,7 @@ describe('SignedOperationProxy', () => {
         'LogOperation',
         'LogWithdraw',
         'LogDeposit',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedWithdrawOperation, signedOperation2]);
     });
@@ -1267,6 +1278,7 @@ describe('SignedOperationProxy', () => {
         'LogCall',
         'LogDeposit',
         'LogCall',
+        'LogInterestRate',
       ]);
       await expectInvalid([signedWithdrawOperation, signedOperation2]);
     });

@@ -1043,6 +1043,25 @@ describe('LiquidatorProxyV1', () => {
           `LiquidatorProxyBase: Asset not whitelisted <${market2.toFixed()}>`,
         );
       });
+
+      it('Fails if min liquidator ratio is < spread', async () => {
+        await setUpBasicBalances();
+        const preferences = [market1, market2, market3, market4];
+        await expectThrow(
+          dolomiteMargin.liquidatorProxyV1.liquidate(
+            owner1,
+            accountNumber1,
+            owner2,
+            accountNumber2,
+            INTEGERS.ZERO,
+            zero,
+            preferences,
+            preferences,
+            { from: operator },
+          ),
+          'LiquidatorProxyV1: Min liquidator ratio too low',
+        );
+      });
     });
 
     describe('Interest cases', () => {

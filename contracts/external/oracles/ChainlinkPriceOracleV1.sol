@@ -27,7 +27,6 @@ import { Monetary } from "../../protocol/lib/Monetary.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 
 import { IChainlinkAggregator } from "../interfaces/IChainlinkAggregator.sol";
-import { IChainlinkFlags } from "../interfaces/IChainlinkFlags.sol";
 
 
 /**
@@ -56,8 +55,6 @@ contract ChainlinkPriceOracleV1 is IPriceOracle, Ownable {
     /// Should defaults to CHAINLINK_USD_DECIMALS when value is empty
     mapping(address => uint8) public tokenToAggregatorDecimalsMap;
 
-    IChainlinkFlags public chainlinkFlags;
-
     uint8 public CHAINLINK_USD_DECIMALS = 8;
     uint8 public CHAINLINK_ETH_DECIMALS = 18;
 
@@ -71,17 +68,13 @@ contract ChainlinkPriceOracleV1 is IPriceOracle, Ownable {
      *                              zero address means USD.
      * @param _aggregatorDecimals   The number of decimals that the value has that comes back from the corresponding
      *                              Chainlink Aggregator.
-     * @param _chainlinkFlagsOrNull The contract for layer-2 that denotes whether or not Chainlink oracles are currently
-     *                              offline, meaning data is stale and any critical operations should *not* occur. If
-     *                              not on layer 2, this value can be set to `address(0)`.
      */
     constructor(
         address[] memory _tokens,
         address[] memory _chainlinkAggregators,
         uint8[] memory _tokenDecimals,
         address[] memory _tokenPairs,
-        uint8[] memory _aggregatorDecimals,
-        address _chainlinkFlagsOrNull
+        uint8[] memory _aggregatorDecimals
     ) public {
         require( // coverage-disable-line
             _tokens.length == _chainlinkAggregators.length,
@@ -109,8 +102,6 @@ contract ChainlinkPriceOracleV1 is IPriceOracle, Ownable {
                 _tokenPairs[i]
             );
         }
-
-        chainlinkFlags = IChainlinkFlags(_chainlinkFlagsOrNull);
     }
 
     // ============ Admin Functions ============

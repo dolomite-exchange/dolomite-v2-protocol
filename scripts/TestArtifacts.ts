@@ -23,6 +23,7 @@ import TestPriceOracle from '../build/contracts/TestPriceOracle.json';
 import TestSimpleCallee from '../build/contracts/TestSimpleCallee.json';
 import TestUniswapV3MultiRouter from '../build/contracts/TestUniswapV3MultiRouter.json';
 import TestToken from '../build/contracts/TestToken.json';
+import TestWETH from '../build/contracts/TestWETH.json';
 import TokenA from '../build/contracts/TokenA.json';
 import TokenB from '../build/contracts/TokenB.json';
 import TokenC from '../build/contracts/TokenC.json';
@@ -59,6 +60,7 @@ export default {
   TestSimpleCallee,
   TestUniswapV3MultiRouter,
   TestToken,
+  TestWETH,
   TokenA,
   TokenB,
   TokenC,

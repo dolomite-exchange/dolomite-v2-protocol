@@ -1,7 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { BigNumber } from 'bignumber.js';
-import { IAccountRiskOverrideSetter } from '../../build/wrappers/IAccountRiskOverrideSetter';
 import { Contracts } from '../lib/Contracts';
 import { stringToDecimal, valueToInteger } from '../lib/Helpers';
 import {
@@ -19,6 +18,7 @@ import {
   TotalPar,
   Values,
 } from '../types';
+import { AccountRiskOverrideSetter } from './AccountRiskOverrideSetter';
 import { OracleSentinel } from './OracleSentinel';
 
 export class Getters {
@@ -138,15 +138,15 @@ export class Getters {
   public async getAccountRiskOverrideSetterByAccountOwner(
     accountOwner: address,
     options?: ContractConstantCallOptions,
-  ): Promise<IAccountRiskOverrideSetter> {
+  ): Promise<AccountRiskOverrideSetter> {
     const accountRiskOverrideSetterAddress = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getAccountRiskOverrideSetterByAccountOwner(accountOwner),
       options,
     );
-    return this.contracts.getAccountRiskOverrideSetter(accountRiskOverrideSetterAddress);
+    return new AccountRiskOverrideSetter(this.contracts, accountRiskOverrideSetterAddress);
   }
 
-  public async getAccountRiskForOverrideByAccountOwner(
+  public async getAccountRiskOverrideByAccountOwner(
     accountOwner: address,
     options?: ContractConstantCallOptions,
   ): Promise<{ marginRatioOverride: Decimal; liquidationSpreadOverride: Decimal }> {

@@ -431,12 +431,13 @@ library AdminImpl {
         address accountOwner,
         IAccountRiskOverrideSetter accountRiskOverrideSetter
     ) public {
-        (
-            Decimal.D256 memory marginRatio,
-            Decimal.D256 memory liquidationSpread
-        ) = accountRiskOverrideSetter.getAccountRiskOverride(accountOwner);
-
-        state.validateAccountRiskOverrideValues(marginRatio, liquidationSpread);
+        if (address(accountRiskOverrideSetter) != address(0)) {
+            (
+                Decimal.D256 memory marginRatio,
+                Decimal.D256 memory liquidationSpread
+            ) = accountRiskOverrideSetter.getAccountRiskOverride(accountOwner);
+            state.validateAccountRiskOverrideValues(marginRatio, liquidationSpread);
+        }
 
         state.riskParams.accountRiskOverrideSetterMap[accountOwner] = accountRiskOverrideSetter;
         emit LogSetAccountRiskOverrideSetter(accountOwner, accountRiskOverrideSetter);
@@ -577,7 +578,7 @@ library AdminImpl {
         Require.that(
             earningsRateOverride.value <= state.riskLimits.earningsRateMax,
             FILE,
-            "Rate too high"
+            "Earnings rate override too high"
         );
 
         state.markets[marketId].earningsRateOverride = earningsRateOverride;

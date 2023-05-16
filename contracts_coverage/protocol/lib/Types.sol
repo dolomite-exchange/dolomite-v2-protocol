@@ -200,6 +200,11 @@ library Types {
 
     // ============ Wei (Token Amount) ============
 
+    struct TotalWei {
+        uint128 borrow;
+        uint128 supply;
+    }
+
     // Individual token amount for an account
     struct Wei {
         bool sign; // true if positive

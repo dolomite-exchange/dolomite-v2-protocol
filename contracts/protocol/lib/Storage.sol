@@ -321,17 +321,6 @@ library Storage {
         return Interest.parToWei(par, index);
     }
 
-    function getMarketsWithBalancesSet(
-        Storage.State storage state,
-        Account.Info memory account
-    )
-    internal
-    view
-    returns (EnumerableSet.Set storage)
-    {
-        return state.accounts[account.owner][account.number].marketsWithNonZeroBalanceSet;
-    }
-
     function getMarketsWithBalances(
         Storage.State storage state,
         Account.Info memory account
@@ -486,10 +475,10 @@ library Storage {
     {
         Monetary.Value memory supplyValue;
         Monetary.Value memory borrowValue;
-        IAccountRiskOverrideSetter riskOverrideSetter = state.riskParams.accountRiskOverrideSetterMap[account.owner];
+        (Decimal.D256 memory marginRatioOverride,) = getAccountRiskOverride(state, account.owner);
 
         // Only adjust for liquidity if prompted AND if there is no override
-        adjustForLiquidity = adjustForLiquidity && address(riskOverrideSetter) == address(0);
+        adjustForLiquidity = adjustForLiquidity && marginRatioOverride.value == 0;
 
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
@@ -805,13 +794,6 @@ library Storage {
                 "Spread and ratio must both be 0"
             );
         }
-
-        Require.that(
-            (marginRatioOverride.value == 0 && liquidationSpreadOverride.value == 0)
-            || (marginRatioOverride.value > 0 && liquidationSpreadOverride.value > 0),
-            FILE,
-            "Invalid ratio/spread combination"
-        );
     }
 
     // =============== Setter Functions ===============

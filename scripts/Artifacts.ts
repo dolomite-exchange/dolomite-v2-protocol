@@ -48,7 +48,7 @@ import TestUniswapAmmRebalancerProxy from '../build/contracts/TestUniswapAmmReba
 import TradeImpl from '../build/contracts/TradeImpl.json';
 import TransferImpl from '../build/contracts/TransferImpl.json';
 import TransferProxy from '../build/contracts/TransferProxy.json';
-import WETH from '../build/contracts/IWETH.json';
+import Weth from '../build/contracts/TestWETH.json';
 import WithdrawalImpl from '../build/contracts/WithdrawalImpl.json';
 
 export default {
@@ -98,6 +98,6 @@ export default {
   TradeImpl,
   TransferImpl,
   TransferProxy,
-  WETH,
+  Weth,
   WithdrawalImpl,
 };

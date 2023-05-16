@@ -283,6 +283,11 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
         uint256 remainingValueBuffer = _cache.supplyValue.sub(requiredSupplyValue);
 
         // get the absolute difference between the minLiquidatorRatio and the liquidation spread
+        if (_constants.minLiquidatorRatio.value >= _cache.spread.value) { /* FOR COVERAGE TESTING */ }
+        Require.that(_constants.minLiquidatorRatio.value >= _cache.spread.value,
+            FILE,
+            "Min liquidator ratio too low"
+        );
         Decimal.D256 memory spreadMarginDiff = Decimal.D256({
             value: _constants.minLiquidatorRatio.value.sub(_cache.spread.value)
         });
@@ -332,12 +337,12 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
             FILE,
             "Liquid account no supply"
         );
-        if (_constants.dolomiteMargin.getAccountStatus(_constants.liquidAccount) == Account.Status.Liquid ||!_isCollateralized(liquidSupplyValue.value,liquidBorrowValue.value,_constants.dolomiteMargin.getMarginRatio())) { /* FOR COVERAGE TESTING */ }
+        if (_constants.dolomiteMargin.getAccountStatus(_constants.liquidAccount) == Account.Status.Liquid ||!_isCollateralized(liquidSupplyValue.value,liquidBorrowValue.value,_constants.dolomiteMargin.getMarginRatioForAccount(_constants.liquidAccount.owner))) { /* FOR COVERAGE TESTING */ }
         Require.that(_constants.dolomiteMargin.getAccountStatus(_constants.liquidAccount) == Account.Status.Liquid ||
             !_isCollateralized(
                 liquidSupplyValue.value,
                 liquidBorrowValue.value,
-                _constants.dolomiteMargin.getMarginRatio()
+                _constants.dolomiteMargin.getMarginRatioForAccount(_constants.liquidAccount.owner)
             ),
             FILE,
             "Liquid account not liquidatable",
@@ -425,7 +430,11 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
 
         uint256 heldPrice = heldMarketInfo.price.value;
         uint256 owedPrice = owedMarketInfo.price.value;
-        Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForPair(_heldMarket, _owedMarket);
+        Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
+            _constants.liquidAccount.owner,
+            _heldMarket,
+            _owedMarket
+        );
 
         return LiquidatorProxyV1Cache({
             heldWei: Interest.parToWei(

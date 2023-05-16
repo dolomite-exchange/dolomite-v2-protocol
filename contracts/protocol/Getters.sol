@@ -427,17 +427,6 @@ contract Getters is
         return GettersImpl.getAccountPar(g_state, account, marketId);
     }
 
-    function getAccountParNoMarketCheck(
-        Account.Info memory account,
-        uint256 marketId
-    )
-        public
-        view
-        returns (Types.Par memory)
-    {
-        return GettersImpl.getAccountParNoMarketCheck(g_state, account, marketId);
-    }
-
     function getAccountWei(
         Account.Info memory account,
         uint256 marketId

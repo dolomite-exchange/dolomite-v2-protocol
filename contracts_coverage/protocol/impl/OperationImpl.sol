@@ -314,11 +314,21 @@ library OperationImpl {
     )
         private
     {
-        // verify no increase in borrowPar for closing markets
+        bool isBorrowAllowed = state.riskParams.oracleSentinel.isBorrowAllowed();
+
         uint256 numMarkets = cache.getNumMarkets();
         for (uint256 i = 0; i < numMarkets; i++) {
             uint256 marketId = cache.getAtIndex(i).marketId;
             Types.TotalPar memory totalPar = state.getTotalPar(marketId);
+            (
+                Types.Wei memory totalSupplyWei,
+                Types.Wei memory totalBorrowWei
+            ) = Interest.totalParToWei(totalPar, cache.getAtIndex(i).index);
+
+            Types.Wei memory maxBorrowWei = state.getMaxBorrowWei(marketId);
+            Types.Wei memory maxSupplyWei = state.getMaxSupplyWei(marketId);
+
+            // first check if the market is closing, borrowing is enabled, or if too much is being borrowed
             if (cache.getAtIndex(i).isClosing) {
                 if (totalPar.borrow <= cache.getAtIndex(i).borrowPar) { /* FOR COVERAGE TESTING */ }
                 Require.that(totalPar.borrow <= cache.getAtIndex(i).borrowPar,
@@ -326,42 +336,49 @@ library OperationImpl {
                     "Market is closing",
                     marketId
                 );
+            } else if (!isBorrowAllowed) {
+                if (totalPar.borrow <= cache.getAtIndex(i).borrowPar) { /* FOR COVERAGE TESTING */ }
+                Require.that(totalPar.borrow <= cache.getAtIndex(i).borrowPar,
+                    FILE,
+                    "Borrowing is currently disabled",
+                    marketId
+                );
+            } else if (maxBorrowWei.value != 0) {
+                // require total borrow is less than the max OR it scaled down
+                Types.Wei memory cachedBorrowWei = Interest.parToWei(
+                    Types.Par(true, cache.getAtIndex(i).borrowPar),
+                    cache.getAtIndex(i).index
+                );
+                if (totalBorrowWei.value <= maxBorrowWei.value || totalBorrowWei.value <= cachedBorrowWei.value) { /* FOR COVERAGE TESTING */ }
+                Require.that(totalBorrowWei.value <= maxBorrowWei.value || totalBorrowWei.value <= cachedBorrowWei.value,
+                    FILE,
+                    "Total borrow exceeds max borrow",
+                    marketId
+                );
             }
 
-            Types.Wei memory maxWei = state.getMaxWei(marketId);
-            if (maxWei.value != 0) {
+            // check if too much is being supplied
+            if (maxSupplyWei.value != 0) {
                 // require total supply is less than the max OR it scaled down
-                Interest.Index memory index = cache.getAtIndex(i).index;
-                (Types.Wei memory totalSupplyWei,) = Interest.totalParToWei(totalPar, index);
                 Types.Wei memory cachedSupplyWei = Interest.parToWei(
                     Types.Par(true, cache.getAtIndex(i).supplyPar),
-                    index
+                    cache.getAtIndex(i).index
                 );
-                if (totalSupplyWei.value <= maxWei.value || totalSupplyWei.value <= cachedSupplyWei.value) { /* FOR COVERAGE TESTING */ }
-                Require.that(totalSupplyWei.value <= maxWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
+                if (totalSupplyWei.value <= maxSupplyWei.value || totalSupplyWei.value <= cachedSupplyWei.value) { /* FOR COVERAGE TESTING */ }
+                Require.that(totalSupplyWei.value <= maxSupplyWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
                     FILE,
                     "Total supply exceeds max supply",
                     marketId
                 );
             }
 
-            if (state.markets[marketId].isRecyclable) {
-                // This market is recyclable. Check that only the `token` is the owner
-                for (uint256 a = 0; a < accounts.length; a++) {
-                    if (accounts[a].owner != cache.getAtIndex(i).token) {
-                        // If the owner of the recyclable token isn't the TokenProxy,
-                        // THEN check that the account doesn't have a balance for this recyclable `marketId`
-                        if (!state.getMarketsWithBalancesSet(accounts[a]).contains(marketId)) { /* FOR COVERAGE TESTING */ }
-                        Require.that(!state.getMarketsWithBalancesSet(accounts[a]).contains(marketId),
-                            FILE,
-                            "Invalid recyclable owner",
-                            accounts[a].owner,
-                            accounts[a].number,
-                            marketId
-                        );
-                    }
-                }
-            }
+            // Log the current interest rate
+            Interest.Rate memory rate = state.markets[marketId].interestSetter.getInterestRate(
+                cache.getAtIndex(i).token,
+                totalBorrowWei.value,
+                totalSupplyWei.value
+            );
+            Events.logInterestRate(marketId, rate);
         }
 
         // verify account collateralization

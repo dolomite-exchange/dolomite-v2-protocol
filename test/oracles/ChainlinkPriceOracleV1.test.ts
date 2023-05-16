@@ -4,8 +4,6 @@ import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 import { resetEVM, snapshot } from '../helpers/EVM';
 import { address, ADDRESSES, INTEGERS } from '../../src';
 import { expectThrow } from '../helpers/Expect';
-import TestChainlinkPriceOracleV1Json from '../../build/contracts/TestChainlinkPriceOracleV1.json';
-import { TestChainlinkPriceOracleV1 } from '../../build/testing_wrappers/TestChainlinkPriceOracleV1';
 
 let dolomiteMargin: TestDolomiteMargin;
 let accounts: address[];
@@ -42,45 +40,9 @@ describe('ChainlinkPriceOracleV1', () => {
   describe('#getPrice', () => {
     it('returns the correct value for a token with 18 decimals', async () => {
       const price = await dolomiteMargin.contracts.callConstantContractFunction(
-        chainlinkOracle().getPrice(dolomiteMargin.contracts.weth.options.address),
+        chainlinkOracle().getPrice(dolomiteMargin.weth.address),
       );
       expect(new BigNumber(price.value)).to.eql(WETH_PRICE);
-    });
-
-    it('returns the correct value for a token with 18 decimals when chainlink flags are active', async () => {
-      const testOracle = new dolomiteMargin.web3.eth.Contract(
-        TestChainlinkPriceOracleV1Json.abi,
-        dolomiteMargin.contracts.chainlinkPriceOracleV1.options.address,
-      ) as TestChainlinkPriceOracleV1;
-      await dolomiteMargin.contracts.callContractFunction(
-        testOracle.methods.setChainlinkFlags(dolomiteMargin.contracts.testChainlinkFlags.options.address),
-        { from: admin },
-      );
-      const price = await dolomiteMargin.contracts.callConstantContractFunction(
-        chainlinkOracle().getPrice(dolomiteMargin.contracts.weth.options.address),
-      );
-      expect(new BigNumber(price.value)).to.eql(WETH_PRICE);
-    });
-
-    it('Fails when Arbitrum sequencer is offline', async () => {
-      const testOracle = new dolomiteMargin.web3.eth.Contract(
-        TestChainlinkPriceOracleV1Json.abi,
-        dolomiteMargin.contracts.chainlinkPriceOracleV1.options.address,
-      ) as TestChainlinkPriceOracleV1;
-      await dolomiteMargin.contracts.callContractFunction(
-        dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true),
-        { from: admin }
-      );
-      await dolomiteMargin.contracts.callContractFunction(
-        testOracle.methods.setChainlinkFlags(dolomiteMargin.contracts.testChainlinkFlags.options.address),
-        { from: admin }
-      );
-      await expectThrow(
-        dolomiteMargin.contracts.callConstantContractFunction(
-          chainlinkOracle().getPrice(dolomiteMargin.contracts.weth.options.address),
-        ),
-        'ChainlinkPriceOracleV1: Chainlink price oracles offline',
-      );
     });
 
     it('returns the correct value for a token with less than 18 decimals', async () => {

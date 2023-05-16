@@ -228,11 +228,12 @@ function getGnosisSafeAddress(network) {
   throw new Error('Cannot find GnosisSafe for network: ' + network);
 }
 
-function getChainlinkFlags(network) {
-  if (isArbitrumOne(network)) {
+function getChainlinkFlags(network, TestChainlinkFlags) {
+  if (isDevNetwork(network)) {
+    return TestChainlinkFlags.address;
+  } else if (isArbitrumOne(network)) {
     return '0x3C14e07Edd0dC67442FA96f1Ec6999c57E810a83';
-  }
-  if (isArbitrumRinkeby(network)) {
+  } else if (isArbitrumRinkeby(network)) {
     return '0x491B1dDA0A8fa069bbC1125133A975BF4e85a91b';
   }
   return '0x0000000000000000000000000000000000000000';

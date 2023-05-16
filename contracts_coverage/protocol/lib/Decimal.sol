@@ -44,6 +44,14 @@ library Decimal {
 
     // ============ Functions ============
 
+    function zero()
+        internal
+        pure
+        returns (D256 memory)
+    {
+        return D256({ value: 0 });
+    }
+
     function one()
         internal
         pure

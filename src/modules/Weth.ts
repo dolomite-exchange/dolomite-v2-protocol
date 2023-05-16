@@ -1,6 +1,6 @@
 import { Contracts } from '../lib/Contracts';
 import { Token } from './Token';
-import { WETH as WETHContract } from '../../build/wrappers/WETH';
+import { Weth as WethContract } from '../../build/wrappers/Weth';
 import {
   address,
   ContractCallOptions,
@@ -12,7 +12,7 @@ import {
 export class Weth {
   private contracts: Contracts;
   private token: Token;
-  private weth: WETHContract;
+  private weth: WethContract;
 
   constructor(contracts: Contracts, token: Token) {
     this.contracts = contracts;

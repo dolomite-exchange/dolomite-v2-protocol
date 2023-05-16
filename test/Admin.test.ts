@@ -1041,6 +1041,16 @@ describe('Admin', () => {
       await expectEarningsRateOverride(result2, earningsRateOverride2, secondaryMarket);
     });
 
+    it('Fails for earnings rate override too high', async () => {
+      const limits = await dolomiteMargin.getters.getRiskLimits();
+      await expectThrow(
+        dolomiteMargin.admin.setEarningsRateOverride(defaultMarket, limits.earningsRateMax.plus('0.01'), {
+          from: admin,
+        }),
+        'AdminImpl: Earnings rate override too high',
+      );
+    });
+
     it('Fails for invalid market', async () => {
       await expectThrow(
         dolomiteMargin.admin.setEarningsRateOverride(invalidMarket, highPremium, {
@@ -1353,7 +1363,7 @@ describe('Admin', () => {
       expect(logs.length).to.eql(1);
       expect(logs[0].name).to.eql('LogSetOracleSentinel');
       expect(logs[0].args.oracleSentinel).to.eql(oracleSentinel.address);
-      expect(await dolomiteMargin.getters.getOracleSentinel()).to.eql(oracleSentinel.address);
+      expect((await dolomiteMargin.getters.getOracleSentinel()).address).to.eql(oracleSentinel.address);
     });
 
     it('Fails for non-admin', async () => {
@@ -1363,9 +1373,7 @@ describe('Admin', () => {
 
     it('Fails for when borrowing not allowed or liquidations not allowed', async () => {
       const oracleSentinel = await deployChainlinkOracleSentinel();
-      await dolomiteMargin.contracts.callContractFunction(
-        dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true),
-      );
+      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true)
       await expectThrow(
         dolomiteMargin.admin.setOracleSentinel(oracleSentinel.address, { from: admin }),
         'AdminImpl: Invalid oracle sentinel',
@@ -1382,7 +1390,7 @@ describe('Admin', () => {
       const contract = await deployTestRiskOverrideSetter();
       const accountRiskOverrideSetter = new TestAccountRiskOverrideSetter(
         dolomiteMargin.contracts,
-        contract.options.address,
+        dolomiteMargin.contracts.getTestAccountRiskOverrideSetter(contract.options.address),
       );
 
       await expectAccountRiskOverride(
@@ -1395,6 +1403,7 @@ describe('Admin', () => {
 
       const marginRatio = new BigNumber('0.1');
       const liquidationSpread = new BigNumber('0.04');
+      await accountRiskOverrideSetter.setAccountRiskOverride(accountForOverride, marginRatio, liquidationSpread);
 
       // keep same
       txr = await dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, accountRiskOverrideSetter.address, {
@@ -1446,9 +1455,9 @@ describe('Admin', () => {
       const contract = await deployTestRiskOverrideSetter();
       const accountRiskOverrideSetter = new TestAccountRiskOverrideSetter(
         dolomiteMargin.contracts,
-        contract.options.address,
+        dolomiteMargin.contracts.getTestAccountRiskOverrideSetter(contract.options.address),
       );
-      const error = 'AdminImpl: Spread cannot be >= ratio';
+      const error = 'Storage: Spread cannot be >= ratio';
       const ratio = new BigNumber('0.1');
 
       // passes when ratio is above the spread
@@ -1488,9 +1497,9 @@ describe('Admin', () => {
       const contract = await deployTestRiskOverrideSetter();
       const accountRiskOverrideSetter = new TestAccountRiskOverrideSetter(
         dolomiteMargin.contracts,
-        contract.options.address,
+        dolomiteMargin.contracts.getTestAccountRiskOverrideSetter(contract.options.address),
       );
-      const error = 'AdminImpl: Spread and ratio must both be 0';
+      const error = 'Storage: Spread and ratio must both be 0';
       const marginRatioOverride = new BigNumber('0.1');
       const liquidationSpreadOverride = new BigNumber('0.04');
 
@@ -1534,7 +1543,7 @@ describe('Admin', () => {
       const contract = await deployTestRiskOverrideSetter();
       const accountRiskOverrideSetter = new TestAccountRiskOverrideSetter(
         dolomiteMargin.contracts,
-        contract.options.address,
+        dolomiteMargin.contracts.getTestAccountRiskOverrideSetter(contract.options.address),
       );
 
       await accountRiskOverrideSetter.setAccountRiskOverride(
@@ -1564,7 +1573,7 @@ describe('Admin', () => {
         dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, accountRiskOverrideSetter.address, {
           from: admin,
         }),
-        'AdminImpl: Ratio too high',
+        'Storage: Ratio too high',
       );
 
       await accountRiskOverrideSetter.setAccountRiskOverride(
@@ -1576,7 +1585,7 @@ describe('Admin', () => {
         dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, accountRiskOverrideSetter.address, {
           from: admin,
         }),
-        'AdminImpl: Spread too high',
+        'Storage: Spread too high',
       );
     });
 
@@ -1584,7 +1593,7 @@ describe('Admin', () => {
       const contract = await deployTestRiskOverrideSetter();
       const accountRiskOverrideSetter = new TestAccountRiskOverrideSetter(
         dolomiteMargin.contracts,
-        contract.options.address,
+        dolomiteMargin.contracts.getTestAccountRiskOverrideSetter(contract.options.address),
       );
       await expectThrow(
         dolomiteMargin.admin.setAccountRiskOverride(accountForOverride, accountRiskOverrideSetter.address, {
@@ -1608,7 +1617,7 @@ describe('Admin', () => {
         expect(log.args.accountOwner).to.eql(accountOwner);
         expect(log.args.accountRiskOverrideSetter).to.eql(accountRiskOverrideSetter);
       }
-      const result = await dolomiteMargin.getters.getAccountRiskForOverrideByAccountOwner(accountOwner);
+      const result = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(accountOwner);
       expect(result.marginRatioOverride).to.eql(marginRatio);
       expect(result.liquidationSpreadOverride).to.eql(liquidationSpread);
     }

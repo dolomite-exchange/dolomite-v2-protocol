@@ -23,9 +23,15 @@ import { Admin } from "./Admin.sol";
 import { Getters } from "./Getters.sol";
 import { Operation } from "./Operation.sol";
 import { Permission } from "./Permission.sol";
-import { State } from "./State.sol";
-import { Storage } from "./lib/Storage.sol";
+
+import { AdminImpl } from "./impl/AdminImpl.sol";
+
 import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
+import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
+
+import { Decimal } from "./lib/Decimal.sol";
+import { Monetary } from "./lib/Monetary.sol";
+import { Storage } from "./lib/Storage.sol";
 
 
 /**
@@ -36,7 +42,6 @@ import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
  */
 contract DolomiteMargin is
     IDolomiteMargin,
-    State,
     Admin,
     Getters,
     Operation,
@@ -45,12 +50,22 @@ contract DolomiteMargin is
     // ============ Constructor ============
 
     constructor(
-        Storage.RiskParams memory riskParams,
-        Storage.RiskLimits memory riskLimits
+        Storage.RiskLimits memory riskLimits,
+        Decimal.D256 memory marginRatio,
+        Decimal.D256 memory liquidationSpread,
+        Decimal.D256 memory earningsRate,
+        Monetary.Value memory minBorrowedValue,
+        uint256 accountMaxNumberOfMarketsWithBalances,
+        IOracleSentinel oracleSentinel
     )
         public
     {
-        g_state.riskParams = riskParams;
         g_state.riskLimits = riskLimits;
+        AdminImpl.ownerSetMarginRatio(g_state, marginRatio);
+        AdminImpl.ownerSetLiquidationSpread(g_state, liquidationSpread);
+        AdminImpl.ownerSetEarningsRate(g_state, earningsRate);
+        AdminImpl.ownerSetMinBorrowedValue(g_state, minBorrowedValue);
+        AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(g_state, accountMaxNumberOfMarketsWithBalances);
+        AdminImpl.ownerSetOracleSentinel(g_state, oracleSentinel);
     }
 }

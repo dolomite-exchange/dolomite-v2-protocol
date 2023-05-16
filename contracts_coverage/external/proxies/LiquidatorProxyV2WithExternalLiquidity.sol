@@ -49,7 +49,7 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
 
     // ============ Storage ============
 
-    IExpiry EXPIRY_PROXY;
+    IExpiry public EXPIRY_PROXY;
 
     // ============ Constructor ============
 

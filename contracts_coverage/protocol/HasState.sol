@@ -19,34 +19,16 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
+import { Storage } from "./lib/Storage.sol";
+
 
 /**
- * @title IMakerOracle
+ * @title HasState
  * @author dYdX
  *
- * Interface for the price oracles run by MakerDao
+ * Base-level contract that holds the state of DolomiteMargin
  */
-interface IMakerOracle {
-
-    // Event that is logged when the `note` modifier is used
-    event LogNote(
-        bytes4 indexed msgSig,
-        address indexed msgSender,
-        bytes32 indexed arg1,
-        bytes32 indexed arg2,
-        uint256 msgValue,
-        bytes msgData
-    ) anonymous;
-
-    // returns the current value (ETH/USD * 10**18) as a bytes32
-    function peek()
-        external
-        view
-        returns (bytes32, bool);
-
-    // requires a fresh price and then returns the current value
-    function read()
-        external
-        view
-        returns (bytes32);
+contract HasState
+{
+    Storage.State internal g_state;
 }

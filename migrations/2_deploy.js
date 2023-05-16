@@ -84,8 +84,7 @@ const TestOperationImpl = artifacts.require('TestOperationImpl');
 const ArbitrumMultiCall = artifacts.require('ArbitrumMultiCall');
 const MultiCall = artifacts.require('MultiCall');
 
-// Test Contracts
-const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
+// Test Tokens
 const TokenA = artifacts.require('TokenA');
 const TokenB = artifacts.require('TokenB');
 const TokenC = artifacts.require('TokenC');
@@ -95,24 +94,28 @@ const TokenF = artifacts.require('TokenF');
 const ErroringToken = artifacts.require('ErroringToken');
 const MalformedToken = artifacts.require('MalformedToken');
 const OmiseToken = artifacts.require('OmiseToken');
+
+// Test Contracts
+const TestAccountRiskOverrideSetter = artifacts.require('TestAccountRiskOverrideSetter');
 const TestDolomiteAmmLibrary = artifacts.require('TestDolomiteAmmLibrary');
-const TestLib = artifacts.require('TestLib');
+const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
 const TestAutoTrader = artifacts.require('TestAutoTrader');
-const TestCallee = artifacts.require('TestCallee');
-const TestSimpleCallee = artifacts.require('TestSimpleCallee');
-const TestPriceOracle = artifacts.require('TestPriceOracle');
 const TestBtcUsdChainlinkAggregator = artifacts.require('TestBtcUsdChainlinkAggregator');
+const TestCallee = artifacts.require('TestCallee');
+const TestChainlinkFlags = artifacts.require('TestChainlinkFlags');
+const TestDoubleExponentInterestSetter = artifacts.require('TestDoubleExponentInterestSetter');
 const TestDaiUsdChainlinkAggregator = artifacts.require('TestDaiUsdChainlinkAggregator');
 const TestEthUsdChainlinkAggregator = artifacts.require('TestEthUsdChainlinkAggregator');
+const TestExchangeWrapper = artifacts.require('TestExchangeWrapper');
+const TestInterestSetter = artifacts.require('TestInterestSetter');
+const TestLib = artifacts.require('TestLib');
 const TestLinkUsdChainlinkAggregator = artifacts.require('TestLinkUsdChainlinkAggregator');
 const TestLrcEthChainlinkAggregator = artifacts.require('TestLrcEthChainlinkAggregator');
 const TestMaticUsdChainlinkAggregator = artifacts.require('TestMaticUsdChainlinkAggregator');
-const TestUsdcUsdChainlinkAggregator = artifacts.require('TestUsdcUsdChainlinkAggregator');
-const TestChainlinkFlags = artifacts.require('TestChainlinkFlags');
-const TestInterestSetter = artifacts.require('TestInterestSetter');
 const TestPolynomialInterestSetter = artifacts.require('TestPolynomialInterestSetter');
-const TestDoubleExponentInterestSetter = artifacts.require('TestDoubleExponentInterestSetter');
-const TestExchangeWrapper = artifacts.require('TestExchangeWrapper');
+const TestPriceOracle = artifacts.require('TestPriceOracle');
+const TestSimpleCallee = artifacts.require('TestSimpleCallee');
+const TestUsdcUsdChainlinkAggregator = artifacts.require('TestUsdcUsdChainlinkAggregator');
 const TestWETH = artifacts.require('TestWETH');
 
 // Second-Layer Contracts
@@ -136,8 +139,7 @@ const BorrowPositionProxyV1 = artifacts.require('BorrowPositionProxyV1');
 const BorrowPositionProxyV2 = artifacts.require('BorrowPositionProxyV2');
 
 // Oracle Sentinels
-const SimpleOracleSentinel = artifacts.require('SimpleOracleSentinel');
-const TestSimpleOracleSentinel = artifacts.require('TestSimpleOracleSentinel');
+const ChainlinkOracleSentinel = artifacts.require('ChainlinkOracleSentinel');
 
 // Interest Setters
 const DoubleExponentInterestSetter = artifacts.require('DoubleExponentInterestSetter');
@@ -172,6 +174,7 @@ module.exports = migration;
 async function deployTestContracts(deployer, network) {
   if (isDevNetwork(network)) {
     await Promise.all([
+      // Test Tokens
       deployer.deploy(TokenA),
       deployer.deploy(TokenB),
       deployer.deploy(TokenC),
@@ -182,13 +185,15 @@ async function deployTestContracts(deployer, network) {
       deployer.deploy(ErroringToken),
       deployer.deploy(MalformedToken),
       deployer.deploy(OmiseToken),
-      deployer.deploy(TestDolomiteAmmLibrary),
-      deployer.deploy(TestLib),
+      // Test Contracts
+      deployer.deploy(TestAccountRiskOverrideSetter),
       deployer.deploy(TestAutoTrader),
-      deployer.deploy(TestExchangeWrapper),
-      deployer.deploy(TestPolynomialInterestSetter, getPolynomialParams(network)),
-      deployer.deploy(TestDoubleExponentInterestSetter, getDoubleExponentParams(network)),
       deployer.deploy(TestChainlinkFlags),
+      deployer.deploy(TestDolomiteAmmLibrary),
+      deployer.deploy(TestDoubleExponentInterestSetter, getDoubleExponentParams(network)),
+      deployer.deploy(TestExchangeWrapper),
+      deployer.deploy(TestLib),
+      deployer.deploy(TestPolynomialInterestSetter, getPolynomialParams(network)),
     ]);
   }
 }
@@ -283,17 +288,10 @@ async function deployBaseProtocol(deployer, network) {
     await dolomiteMargin.link('TestOperationImpl', TestOperationImpl.address);
   }
 
-  let oracleSentinel;
-  if (isDevNetwork(network)) {
-    oracleSentinel = TestSimpleOracleSentinel;
+  if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
+    await deployer.deploy(ChainlinkOracleSentinel, getChainlinkFlags(network, TestChainlinkFlags));
   } else {
-    oracleSentinel = SimpleOracleSentinel;
-  }
-
-  if (shouldOverwrite(oracleSentinel, network)) {
-    await deployer.deploy(oracleSentinel);
-  } else {
-    await deployer.deploy(oracleSentinel, getNoOverwriteParams());
+    await deployer.deploy(ChainlinkOracleSentinel, getNoOverwriteParams());
   }
 
   if (shouldOverwrite(dolomiteMargin, network)) {
@@ -306,7 +304,7 @@ async function deployBaseProtocol(deployer, network) {
       riskParams.earningsRate,
       riskParams.minBorrowedValue,
       riskParams.accountMaxNumberOfMarketsWithBalances,
-      oracleSentinel.address,
+      ChainlinkOracleSentinel.address,
     );
   } else {
     await deployer.deploy(dolomiteMargin, getNoOverwriteParams());
@@ -399,7 +397,6 @@ async function deployPriceOracles(deployer, network) {
       params.tokenDecimals,
       params.tokenPairs,
       params.aggregatorDecimals,
-      getChainlinkFlags(network)
     );
   } else {
     await deployer.deploy(

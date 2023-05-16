@@ -61,7 +61,7 @@ contract AAVECopyCatAltCoinInterestSetter is IInterestSetter {
             });
         }
 
-       uint256 utilization = _borrowWei.mul(ONE_HUNDRED_PERCENT).div(_supplyWei);
+        uint256 utilization = _borrowWei.mul(ONE_HUNDRED_PERCENT).div(_supplyWei);
         if (utilization >= ONE_HUNDRED_PERCENT) {
             return Interest.Rate({
                 value: ONE_HUNDRED_PERCENT / SECONDS_IN_A_YEAR

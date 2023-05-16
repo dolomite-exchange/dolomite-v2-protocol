@@ -1,11 +1,21 @@
 import BigNumber from 'bignumber.js';
-import { AccountStatus, address, ADDRESSES, Decimal, Index, Integer, INTEGERS, TotalPar } from '../src';
+import {
+  AccountStatus,
+  address,
+  ADDRESSES,
+  BalanceCheckFlag,
+  Decimal,
+  Index,
+  Integer,
+  INTEGERS,
+  TotalPar,
+} from '../src';
+import { OracleSentinel } from '../src/modules/OracleSentinel';
 import { getDolomiteMargin } from './helpers/DolomiteMargin';
 import { setupMarkets } from './helpers/DolomiteMarginHelpers';
 import { fastForward, mineAvgBlock, resetEVM, snapshot } from './helpers/EVM';
 import { expectThrow } from './helpers/Expect';
 import { TestDolomiteMargin } from './modules/TestDolomiteMargin';
-import { OracleSentinel } from '../src/modules/OracleSentinel';
 
 let dolomiteMargin: TestDolomiteMargin;
 let accounts: address[];
@@ -158,6 +168,29 @@ describe('Getters', () => {
       });
     });
 
+    describe('#getLiquidationSpreadForAccountAndPair', () => {
+      it('Succeeds', async () => {
+        const value1 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(owner1, market1, market2);
+        expect(value1).to.eql(defaultParams.liquidationSpread);
+
+        await dolomiteMargin.admin.setAccountRiskOverride(
+          owner1,
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+        const marginRatio = new BigNumber('0.09');
+        const liquidationSpread = new BigNumber('0.0333');
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(owner1, marginRatio, liquidationSpread);
+
+        const value2 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(
+          owner1,
+          market1,
+          market2,
+        );
+        expect(value2).to.eql(liquidationSpread);
+      });
+    });
+
     describe('#getEarningsRate', () => {
       it('Succeeds', async () => {
         const value1 = await dolomiteMargin.getters.getEarningsRate();
@@ -202,9 +235,7 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
 
-        await dolomiteMargin.contracts.callContractFunction(
-          dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true)
-        );
+        await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       });
     });
@@ -213,10 +244,130 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
 
-        await dolomiteMargin.contracts.callContractFunction(
-          dolomiteMargin.contracts.testChainlinkFlags.methods.setShouldReturnOffline(true)
-        );
+        await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
+      });
+    });
+
+    describe('#getAccountRiskOverrideSetterByAccountOwner', () => {
+      it('Succeeds', async () => {
+        expect((await dolomiteMargin.getters.getAccountRiskOverrideSetterByAccountOwner(owner1)).address).to.eql(
+          ADDRESSES.ZERO,
+        );
+        expect((await dolomiteMargin.getters.getAccountRiskOverrideSetterByAccountOwner(owner2)).address).to.eql(
+          ADDRESSES.ZERO,
+        );
+
+        await dolomiteMargin.admin.setAccountRiskOverride(
+          owner1,
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+
+        expect((await dolomiteMargin.getters.getAccountRiskOverrideSetterByAccountOwner(owner1)).address).to.eql(
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+        );
+        expect((await dolomiteMargin.getters.getAccountRiskOverrideSetterByAccountOwner(owner2)).address).to.eql(
+          ADDRESSES.ZERO,
+        );
+      });
+    });
+
+    describe('#getAccountRiskOverrideByAccountOwner', () => {
+      it('Succeeds', async () => {
+        let overrideForOwner1 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner1);
+        expect(overrideForOwner1.marginRatioOverride).to.eql(INTEGERS.ZERO);
+        expect(overrideForOwner1.liquidationSpreadOverride).to.eql(INTEGERS.ZERO);
+
+        let overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner2);
+        expect(overrideForOwner2.marginRatioOverride).to.eql(INTEGERS.ZERO);
+        expect(overrideForOwner2.liquidationSpreadOverride).to.eql(INTEGERS.ZERO);
+
+        await dolomiteMargin.admin.setAccountRiskOverride(
+          owner1,
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+        const marginRatio = new BigNumber('0.1');
+        const liquidationSpread = new BigNumber('0.03');
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+          owner1,
+          marginRatio,
+          liquidationSpread,
+        );
+
+        overrideForOwner1 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner1);
+        expect(overrideForOwner1.marginRatioOverride).to.eql(marginRatio);
+        expect(overrideForOwner1.liquidationSpreadOverride).to.eql(liquidationSpread);
+
+        overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner2);
+        expect(overrideForOwner2.marginRatioOverride).to.eql(INTEGERS.ZERO);
+        expect(overrideForOwner2.liquidationSpreadOverride).to.eql(INTEGERS.ZERO);
+
+        await dolomiteMargin.testing.priceOracle.setPrice(tokens[0], new BigNumber('1000000000000000000'));
+        await dolomiteMargin.testing.priceOracle.setPrice(tokens[1], new BigNumber('1000000000000000000'));
+        await dolomiteMargin.testing.priceOracle.setPrice(tokens[2], new BigNumber('1000000000000000000'));
+
+        await dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par.times('1.12'));
+        await dolomiteMargin.testing.tokenB.issueTo(wei, dolomiteMargin.address);
+        await dolomiteMargin.depositWithdrawalProxy.withdrawPar(
+          account1,
+          market2,
+          par,
+          BalanceCheckFlag.None,
+          { from: owner1 },
+        );
+        expect(await dolomiteMargin.getters.getMarginRatio()).to.eql(new BigNumber('0.15'));
+        expect(await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1)).to.eql(false);
+
+        await dolomiteMargin.admin.setAccountRiskOverride(owner1, ADDRESSES.ZERO, { from: admin });
+        expect(await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1)).to.eql(true);
+      });
+    });
+
+    describe('#getMarginRatioOverrideByAccountOwner', () => {
+      it('Succeeds', async () => {
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner1)).to.eql(INTEGERS.ZERO);
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+
+        await dolomiteMargin.admin.setAccountRiskOverride(
+          owner1,
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+        const marginRatio = new BigNumber('0.1');
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+          owner1,
+          marginRatio,
+          new BigNumber('0.03'),
+        );
+
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner1)).to.eql(marginRatio);
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+      });
+    });
+
+    describe('#getLiquidationSpreadOverrideByAccountOwner', () => {
+      it('Succeeds', async () => {
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner1)).to.eql(INTEGERS.ZERO);
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+
+        await dolomiteMargin.admin.setAccountRiskOverride(
+          owner1,
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+        const liquidationSpread = new BigNumber('0.03');
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+          owner1,
+          new BigNumber('0.1'),
+          liquidationSpread,
+        );
+
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner1)).to.eql(
+          liquidationSpread,
+        );
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
       });
     });
 
@@ -270,23 +421,6 @@ describe('Getters', () => {
       });
     });
 
-    describe('#getMarketTokenAddress', () => {
-      it('Succeeds', async () => {
-        const actualTokens = await Promise.all([
-          dolomiteMargin.getters.getMarketTokenAddress(market1),
-          dolomiteMargin.getters.getMarketTokenAddress(market2),
-          dolomiteMargin.getters.getMarketTokenAddress(market3),
-        ]);
-        expect(actualTokens[0]).to.eql(tokens[0]);
-        expect(actualTokens[1]).to.eql(tokens[1]);
-        expect(actualTokens[2]).to.eql(tokens[2]);
-      });
-
-      it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketTokenAddress(invalidMarket), INVALID_MARKET_ERROR);
-      });
-    });
-
     describe('#getMarketIdByTokenAddress', () => {
       it('Succeeds', async () => {
         const actualTokens = await Promise.all([
@@ -311,6 +445,58 @@ describe('Getters', () => {
       });
     });
 
+    describe('#getMarketTokenAddress', () => {
+      it('Succeeds', async () => {
+        const actualTokens = await Promise.all([
+          dolomiteMargin.getters.getMarketTokenAddress(market1),
+          dolomiteMargin.getters.getMarketTokenAddress(market2),
+          dolomiteMargin.getters.getMarketTokenAddress(market3),
+        ]);
+        expect(actualTokens[0]).to.eql(tokens[0]);
+        expect(actualTokens[1]).to.eql(tokens[1]);
+        expect(actualTokens[2]).to.eql(tokens[2]);
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketTokenAddress(invalidMarket), INVALID_MARKET_ERROR);
+      });
+    });
+
+    describe('#getMarketIsClosing', () => {
+      it('Succeeds', async () => {
+        await dolomiteMargin.admin.setIsClosing(market2, true, { from: admin });
+        const actualClosing = await Promise.all([
+          dolomiteMargin.getters.getMarketIsClosing(market1),
+          dolomiteMargin.getters.getMarketIsClosing(market2),
+          dolomiteMargin.getters.getMarketIsClosing(market3),
+        ]);
+        expect(actualClosing[0]).to.eql(false);
+        expect(actualClosing[1]).to.eql(true);
+        expect(actualClosing[2]).to.eql(false);
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketIsClosing(invalidMarket), INVALID_MARKET_ERROR);
+      });
+    });
+
+    describe('#getMarketPrice', () => {
+      it('Succeeds', async () => {
+        const actualPrices = await Promise.all([
+          dolomiteMargin.getters.getMarketPrice(market1),
+          dolomiteMargin.getters.getMarketPrice(market2),
+          dolomiteMargin.getters.getMarketPrice(market3),
+        ]);
+        expect(actualPrices[0]).to.eql(prices[0]);
+        expect(actualPrices[1]).to.eql(prices[1]);
+        expect(actualPrices[2]).to.eql(prices[2]);
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketPrice(invalidMarket), INVALID_MARKET_ERROR);
+      });
+    });
+
     describe('#getMarketTotalPar', () => {
       it('Succeeds', async () => {
         await Promise.all([
@@ -332,6 +518,30 @@ describe('Getters', () => {
 
       it('Fails for Invalid market', async () => {
         await expectThrow(dolomiteMargin.getters.getMarketTotalPar(invalidMarket), INVALID_MARKET_ERROR);
+      });
+    });
+
+    describe('#getMarketTotalWei', () => {
+      it('Succeeds', async () => {
+        await Promise.all([
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market2, par),
+          dolomiteMargin.testing.setAccountBalance(owner2, account2, market3, par.times(-1)),
+        ]);
+        const totals = await Promise.all([
+          dolomiteMargin.getters.getMarketTotalWei(market1),
+          dolomiteMargin.getters.getMarketTotalWei(market2),
+          dolomiteMargin.getters.getMarketTotalWei(market3),
+        ]);
+        expect(totals[0].supply).to.eql(zero);
+        expect(totals[0].borrow).to.eql(zero);
+        expect(totals[1].supply).to.eql(wei);
+        expect(totals[1].borrow).to.eql(zero);
+        expect(totals[2].supply).to.eql(zero);
+        expect(totals[2].borrow).to.eql(wei);
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketTotalWei(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 
@@ -446,7 +656,7 @@ describe('Getters', () => {
       });
     });
 
-    describe('#getMarketSpreadPremium', () => {
+    describe('#getMarketLiquidationSpreadPremium', () => {
       it('Succeeds', async () => {
         await dolomiteMargin.admin.setLiquidationSpreadPremium(market2, highPremium, {
           from: admin,
@@ -469,42 +679,68 @@ describe('Getters', () => {
       });
     });
 
-    describe('#getMarketIsClosing', () => {
+    describe('#getMarketMaxSupplyWei', () => {
       it('Succeeds', async () => {
-        await dolomiteMargin.admin.setIsClosing(market2, true, { from: admin });
-        const actualClosing = await Promise.all([
-          dolomiteMargin.getters.getMarketIsClosing(market1),
-          dolomiteMargin.getters.getMarketIsClosing(market2),
-          dolomiteMargin.getters.getMarketIsClosing(market3),
+        await dolomiteMargin.admin.setMaxSupplyWei(market2, par, {
+          from: admin,
+        });
+        const result = await Promise.all([
+          dolomiteMargin.getters.getMarketMaxSupplyWei(market1),
+          dolomiteMargin.getters.getMarketMaxSupplyWei(market2),
+          dolomiteMargin.getters.getMarketMaxSupplyWei(market3),
         ]);
-        expect(actualClosing[0]).to.eql(false);
-        expect(actualClosing[1]).to.eql(true);
-        expect(actualClosing[2]).to.eql(false);
+        expect(result[0]).to.eql(zero);
+        expect(result[1]).to.eql(par);
+        expect(result[2]).to.eql(zero);
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketIsClosing(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(dolomiteMargin.getters.getMarketMaxSupplyWei(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 
-    describe('#getMarketPrice', () => {
+    describe('#getMarketMaxBorrowWei', () => {
       it('Succeeds', async () => {
-        const actualPrices = await Promise.all([
-          dolomiteMargin.getters.getMarketPrice(market1),
-          dolomiteMargin.getters.getMarketPrice(market2),
-          dolomiteMargin.getters.getMarketPrice(market3),
+        await dolomiteMargin.admin.setMaxBorrowWei(market2, par, {
+          from: admin,
+        });
+        const result = await Promise.all([
+          dolomiteMargin.getters.getMarketMaxBorrowWei(market1),
+          dolomiteMargin.getters.getMarketMaxBorrowWei(market2),
+          dolomiteMargin.getters.getMarketMaxBorrowWei(market3),
         ]);
-        expect(actualPrices[0]).to.eql(prices[0]);
-        expect(actualPrices[1]).to.eql(prices[1]);
-        expect(actualPrices[2]).to.eql(prices[2]);
+        expect(result[0]).to.eql(zero);
+        expect(result[1]).to.eql(par.negated());
+        expect(result[2]).to.eql(zero);
       });
 
       it('Fails for Invalid market', async () => {
-        await expectThrow(dolomiteMargin.getters.getMarketPrice(invalidMarket), INVALID_MARKET_ERROR);
+        await expectThrow(dolomiteMargin.getters.getMarketMaxBorrowWei(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 
-    describe('#getMarketInterestRate', () => {
+    describe('#getMarketEarningsRateOverride', () => {
+      it('Succeeds', async () => {
+        const earningsRateOverride = new BigNumber('0.333');
+        await dolomiteMargin.admin.setEarningsRateOverride(market2, earningsRateOverride, {
+          from: admin,
+        });
+        const result = await Promise.all([
+          dolomiteMargin.getters.getMarketEarningsRateOverride(market1),
+          dolomiteMargin.getters.getMarketEarningsRateOverride(market2),
+          dolomiteMargin.getters.getMarketEarningsRateOverride(market3),
+        ]);
+        expect(result[0]).to.eql(zero);
+        expect(result[1]).to.eql(earningsRateOverride);
+        expect(result[2]).to.eql(zero);
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketEarningsRateOverride(invalidMarket), INVALID_MARKET_ERROR);
+      });
+    });
+
+    describe('#getMarketBorrowInterestRatePerSecond', () => {
       it('Succeeds', async () => {
         const actualRates = await Promise.all([
           dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market1),
@@ -516,11 +752,74 @@ describe('Getters', () => {
         expect(actualRates[2]).to.eql(rates[2]);
       });
 
+      it('Succeeds when borrow rate is > max borrow rate', async () => {
+        const limits = await dolomiteMargin.getters.getRiskLimits();
+        await dolomiteMargin.testing.interestSetter.setInterestRate(
+          await dolomiteMargin.getters.getMarketTokenAddress(market1),
+          limits.interestRateMax.times(2),
+        );
+        const actualRates = await Promise.all([dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market1)]);
+        expect(actualRates[0]).to.eql(limits.interestRateMax);
+      });
+
       it('Fails for Invalid market', async () => {
         await expectThrow(
           dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(invalidMarket),
           INVALID_MARKET_ERROR,
         );
+      });
+    });
+
+    describe('#getMarketBorrowInterestRateApr', () => {
+      it('Succeeds', async () => {
+        const actualRates = await Promise.all([
+          dolomiteMargin.getters.getMarketBorrowInterestRateApr(market1),
+          dolomiteMargin.getters.getMarketBorrowInterestRateApr(market2),
+          dolomiteMargin.getters.getMarketBorrowInterestRateApr(market3),
+        ]);
+        expect(actualRates[0]).to.eql(rates[0].times(INTEGERS.ONE_YEAR_IN_SECONDS));
+        expect(actualRates[1]).to.eql(rates[1].times(INTEGERS.ONE_YEAR_IN_SECONDS));
+        expect(actualRates[2]).to.eql(rates[2].times(INTEGERS.ONE_YEAR_IN_SECONDS));
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketBorrowInterestRateApr(invalidMarket), INVALID_MARKET_ERROR);
+      });
+    });
+
+    describe('#getMarketSupplyInterestRateApr', () => {
+      it('Succeeds', async () => {
+        // market 1 has 0% utilization
+        await dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, zero);
+        await dolomiteMargin.testing.setAccountBalance(owner1, account2, market1, zero);
+        // market 2 has 50% utilization
+        await dolomiteMargin.testing.setAccountBalance(owner1, account1, market2, par.times('2'));
+        await dolomiteMargin.testing.setAccountBalance(owner1, account2, market2, par.times('-1'));
+        // market 3 has 105% utilization
+        await dolomiteMargin.testing.setAccountBalance(owner1, account1, market3, par.times('100'));
+        await dolomiteMargin.testing.setAccountBalance(owner1, account2, market3, par.times('-105'));
+
+        const earningsRate = await dolomiteMargin.getters.getEarningsRate();
+        const actualRates = await Promise.all([
+          dolomiteMargin.getters.getMarketSupplyInterestRateApr(market1),
+          dolomiteMargin.getters.getMarketSupplyInterestRateApr(market2),
+          dolomiteMargin.getters.getMarketSupplyInterestRateApr(market3),
+        ]);
+        expect(actualRates[0]).to.eql(zero);
+        expect(actualRates[1]).to.eql(rates[1].times(INTEGERS.ONE_YEAR_IN_SECONDS).times(earningsRate).times('0.5'));
+        expect(actualRates[2]).to.eql(rates[2].times(INTEGERS.ONE_YEAR_IN_SECONDS).times(earningsRate));
+
+        // set an earnings rate override
+        const earningsRateOverride = new BigNumber('0.95');
+        await dolomiteMargin.admin.setEarningsRateOverride(market2, earningsRateOverride, { from: admin });
+        const actualRates2 = await dolomiteMargin.getters.getMarketSupplyInterestRateApr(market2);
+        expect(actualRates2).to.eql(
+          rates[1].times(INTEGERS.ONE_YEAR_IN_SECONDS).times(earningsRateOverride).times('0.5'),
+        );
+      });
+
+      it('Fails for Invalid market', async () => {
+        await expectThrow(dolomiteMargin.getters.getMarketSupplyInterestRateApr(invalidMarket), INVALID_MARKET_ERROR);
       });
     });
 
@@ -586,22 +885,22 @@ describe('Getters', () => {
         ]);
 
         // verify
-        const [earningsRate, market, marketwi] = await Promise.all([
+        const [earningsRate, market, marketWithInfo] = await Promise.all([
           dolomiteMargin.getters.getEarningsRate(),
           dolomiteMargin.getters.getMarket(market2),
           dolomiteMargin.getters.getMarketWithInfo(market2),
         ]);
-        expect(marketwi.market).to.eql(market);
+        expect(marketWithInfo.market).to.eql(market);
         const expectedCurrentIndex = getExpectedCurrentIndex(
           index,
-          marketwi.currentIndex.lastUpdate,
-          marketwi.market.totalPar,
-          marketwi.currentInterestRate,
+          marketWithInfo.currentIndex.lastUpdate,
+          marketWithInfo.market.totalPar,
+          marketWithInfo.currentInterestRate,
           earningsRate,
         );
-        expect(marketwi.currentIndex).to.eql(expectedCurrentIndex);
-        expect(marketwi.currentPrice).to.eql(prices[1]);
-        expect(marketwi.currentInterestRate).to.eql(rates[1]);
+        expect(marketWithInfo.currentIndex).to.eql(expectedCurrentIndex);
+        expect(marketWithInfo.currentPrice).to.eql(prices[1]);
+        expect(marketWithInfo.currentInterestRate).to.eql(rates[1]);
       });
 
       it('Fails for Invalid market', async () => {
@@ -925,6 +1224,25 @@ describe('Getters', () => {
         expect(liquidatable).to.eql(true);
       });
 
+      it('True for undercollateralized account with override', async () => {
+        await Promise.all([
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par.times(1.1)),
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market2, par.times(-1)),
+          dolomiteMargin.admin.setAccountRiskOverride(
+            owner1,
+            dolomiteMargin.testing.accountRiskOverrideSetter.address,
+            { from: admin },
+          ),
+        ]);
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+          owner1,
+          new BigNumber('0.12'),
+          new BigNumber('0.04'),
+        );
+        const liquidatable = await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1);
+        expect(liquidatable).to.eql(true);
+      });
+
       it('True for partially liquidated account', async () => {
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par.times(-1)),
@@ -949,6 +1267,31 @@ describe('Getters', () => {
           dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par.times(-1)),
           dolomiteMargin.testing.setAccountStatus(owner1, account1, AccountStatus.Liquidating),
         ]);
+        const liquidatable = await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1);
+        expect(liquidatable).to.eql(false);
+      });
+
+      it('False for collateralized account with override', async () => {
+        await Promise.all([
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par.times(1.1)),
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market2, par.times(-1)),
+          dolomiteMargin.testing.priceOracle.setPrice(tokens[0], prices[0]),
+          dolomiteMargin.testing.priceOracle.setPrice(tokens[1], prices[0]),
+          dolomiteMargin.testing.priceOracle.setPrice(tokens[2], prices[0]),
+          dolomiteMargin.admin.setAccountRiskOverride(
+            owner1,
+            dolomiteMargin.testing.accountRiskOverrideSetter.address,
+            { from: admin },
+          ),
+        ]);
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+          owner1,
+          new BigNumber('0.05'),
+          new BigNumber('0.018'),
+        );
+
+        const marginRatio = await dolomiteMargin.getters.getMarginRatioForAccount(owner1);
+        expect(marginRatio).to.eql(new BigNumber('0.05'));
         const liquidatable = await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1);
         expect(liquidatable).to.eql(false);
       });

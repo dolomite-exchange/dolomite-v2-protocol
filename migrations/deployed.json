@@ -744,6 +744,12 @@
         }
     },
     "WETH": {
+        "42161": {
+            "contractName": "IWETH",
+            "links": {},
+            "address": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+            "transactionHash": "0x1555f3be9c09cf5bf802109366853cfda812e7a177e755aeb8d9566c5728747e"
+        },
         "421613": {
             "contractName": "TestWETH",
             "links": {},

@@ -1,3 +1,4 @@
+import { decimalToString } from '../../src/lib/Helpers';
 import { TestContracts } from './TestContracts';
 import { address, Decimal, TxResult } from '../../src';
 import { TestAccountRiskOverrideSetter as TestAccountRiskOverrideSetterContract } from '../../build/testing_wrappers/TestAccountRiskOverrideSetter';
@@ -7,9 +8,9 @@ export class TestAccountRiskOverrideSetter {
   private contracts: TestContracts;
   private testAccountRiskOverrideSetter: TestAccountRiskOverrideSetterContract;
 
-  constructor(contracts: TestContracts, contractAddress: address) {
+  constructor(contracts: TestContracts, accountRiskOverrideSetterContract: TestAccountRiskOverrideSetterContract) {
     this.contracts = contracts;
-    this.testAccountRiskOverrideSetter = this.contracts.getTestAccountRiskOverrideSetter(contractAddress);
+    this.testAccountRiskOverrideSetter = accountRiskOverrideSetterContract;
   }
 
   public get address(): string {
@@ -24,8 +25,8 @@ export class TestAccountRiskOverrideSetter {
     return this.contracts.callContractFunction(
       this.testAccountRiskOverrideSetter.methods.setAccountRiskOverride(
         accountOwner,
-        { value: marginRatioOverride.toFixed() },
-        { value: liquidationSpreadOverride.toFixed() },
+        { value: decimalToString(marginRatioOverride) },
+        { value: decimalToString(liquidationSpreadOverride) },
       ),
     );
   }

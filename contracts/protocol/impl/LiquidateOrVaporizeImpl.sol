@@ -63,7 +63,7 @@ library LiquidateOrVaporizeImpl {
         Require.that(
             state.riskParams.oracleSentinel.isLiquidationAllowed(),
             FILE,
-            "Liquidations are inactive"
+            "Liquidations are disabled"
         );
 
         // verify liquidatable

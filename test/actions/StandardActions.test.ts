@@ -20,7 +20,6 @@ describe('StandardActions', () => {
     dolomiteMargin = r.dolomiteMargin;
     accountOwner = r.accounts[5];
     await resetEVM();
-    const dolomiteMarginAddress = dolomiteMargin.contracts.testDolomiteMargin.options.address;
 
     // setup markets
     await dolomiteMargin.testing.priceOracle.setPrice(
@@ -73,10 +72,10 @@ describe('StandardActions', () => {
       dolomiteMargin.weth.wrap(accountOwner, amount.times(3)),
       dolomiteMargin.testing.tokenA.issueTo(amount, accountOwner),
       dolomiteMargin.testing.tokenB.issueTo(amount, accountOwner),
-      dolomiteMargin.testing.tokenA.issueTo(amount.times(2), dolomiteMarginAddress),
-      dolomiteMargin.testing.tokenB.issueTo(amount.times(2), dolomiteMarginAddress),
+      dolomiteMargin.testing.tokenA.issueTo(amount.times(2), dolomiteMargin.address),
+      dolomiteMargin.testing.tokenB.issueTo(amount.times(2), dolomiteMargin.address),
     ]);
-    await dolomiteMargin.weth.transfer(accountOwner, dolomiteMarginAddress, amount.times(2));
+    await dolomiteMargin.weth.transfer(accountOwner, dolomiteMargin.address, amount.times(2));
 
     // set allowances
     await Promise.all([

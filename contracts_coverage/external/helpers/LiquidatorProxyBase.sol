@@ -94,7 +94,7 @@ contract LiquidatorProxyBase {
 
     // ============ Storage ============
 
-    ILiquidatorAssetRegistry public liquidatorAssetRegistry;
+    ILiquidatorAssetRegistry public LIQUIDATOR_ASSET_REGISTRY;
 
     // ============ Constructors ============
 
@@ -103,14 +103,14 @@ contract LiquidatorProxyBase {
     )
         public
     {
-        liquidatorAssetRegistry = ILiquidatorAssetRegistry(_liquidatorAssetRegistry);
+        LIQUIDATOR_ASSET_REGISTRY = ILiquidatorAssetRegistry(_liquidatorAssetRegistry);
     }
 
     // ============ Internal Functions ============
 
     modifier requireIsAssetWhitelistedForLiquidation(uint256 _marketId) {
-        if (liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketId, address(this))) { /* FOR COVERAGE TESTING */ }
-        Require.that(liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketId, address(this)),
+        if (LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketId, address(this))) { /* FOR COVERAGE TESTING */ }
+        Require.that(LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketId, address(this)),
             FILE,
             "Asset not whitelisted",
             _marketId
@@ -120,8 +120,8 @@ contract LiquidatorProxyBase {
 
     modifier requireIsAssetsWhitelistedForLiquidation(uint256[] memory _marketIds) {
         for (uint256 i = 0; i < _marketIds.length; i++) {
-            if (liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this))) { /* FOR COVERAGE TESTING */ }
-            Require.that(liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
+            if (LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketIds[i], address(this))) { /* FOR COVERAGE TESTING */ }
+            Require.that(LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
                 FILE,
                 "Asset not whitelisted",
                 _marketIds[i]
@@ -149,14 +149,16 @@ contract LiquidatorProxyBase {
 
         uint256 owedPriceAdj;
         if (_constants.expiry > 0) {
-            (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getSpreadAdjustedPrices(
+            (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
+                _constants.liquidAccount.owner,
                 _heldMarket,
                 _owedMarket,
                 _constants.expiry
             );
             owedPriceAdj = owedPricePrice.value;
         } else {
-            Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForPair(
+            Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
+                _constants.liquidAccount.owner,
                 _heldMarket,
                 _owedMarket
             );

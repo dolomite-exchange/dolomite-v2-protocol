@@ -20,10 +20,18 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { DolomiteMargin } from "../protocol/DolomiteMargin.sol";
+
+import { GettersImpl } from "../protocol/impl/GettersImpl.sol";
+
+import { IOracleSentinel } from "../protocol/interfaces/IOracleSentinel.sol";
+
 import { Account } from "../protocol/lib/Account.sol";
+import { Decimal } from "../protocol/lib/Decimal.sol";
 import { Interest } from "../protocol/lib/Interest.sol";
+import { Monetary } from "../protocol/lib/Monetary.sol";
 import { Storage } from "../protocol/lib/Storage.sol";
 import { Types } from "../protocol/lib/Types.sol";
+
 import { TestOperationImpl } from "./TestOperationImpl.sol";
 
 
@@ -32,11 +40,24 @@ contract TestDolomiteMargin is DolomiteMargin {
     // ============ Constructor ============
 
     constructor (
-        Storage.RiskParams memory rp,
-        Storage.RiskLimits memory rl
+        Storage.RiskLimits memory riskLimits,
+        Decimal.D256 memory marginRatio,
+        Decimal.D256 memory liquidationSpread,
+        Decimal.D256 memory earningsRate,
+        Monetary.Value memory minBorrowedValue,
+        uint256 accountMaxNumberOfMarketsWithBalances,
+        IOracleSentinel oracleSentinel
     )
         public
-        DolomiteMargin(rp, rl)
+        DolomiteMargin(
+            riskLimits,
+            marginRatio,
+            liquidationSpread,
+            earningsRate,
+            minBorrowedValue,
+            accountMaxNumberOfMarketsWithBalances,
+            oracleSentinel
+        )
     {}
 
     // ============ Testing Functions ============
@@ -48,7 +69,7 @@ contract TestDolomiteMargin is DolomiteMargin {
     )
         public
     {
-        _requireValidMarket(market);
+        GettersImpl._requireValidMarket(g_state, market);
         TestOperationImpl.setPar(g_state, account, market, newPar);
     }
 

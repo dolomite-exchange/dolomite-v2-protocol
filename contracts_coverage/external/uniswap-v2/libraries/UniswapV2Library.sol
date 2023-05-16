@@ -9,7 +9,7 @@ import "../interfaces/IUniswapV2Pair.sol";
 library UniswapV2Library {
     using SafeMath for uint;
 
-    bytes32 private constant PAIR_INIT_CODE_HASH = 0xde2225d544cc541783d60acf2a3d7f1db52e2fc931de207a4653bd24977f0147;
+    bytes32 private constant PAIR_INIT_CODE_HASH = 0x279b748427a44583137a0014f36a15464ce6abd64c8db3ce336c0f84d0be25a7;
 
     function getPairInitCodeHash(address factory) internal pure returns (bytes32) {
         return PAIR_INIT_CODE_HASH == bytes32(0)

@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import {ILiquidityTokenUnwrapperTrader} from "../external/interfaces/ILiquidityTokenUnwrapperForLiquidation.sol";
+import { ILiquidityTokenUnwrapperTrader } from "../external/interfaces/ILiquidityTokenUnwrapperTrader.sol";
 
 import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 

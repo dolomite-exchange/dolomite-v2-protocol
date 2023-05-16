@@ -19,19 +19,22 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { State } from "./State.sol";
+import { IAccountRiskOverrideSetter } from "./interfaces/IAccountRiskOverrideSetter.sol";
+import { IDolomiteMargin } from "./interfaces/IDolomiteMargin.sol";
 import { IInterestSetter } from "./interfaces/IInterestSetter.sol";
+import { IOracleSentinel } from "./interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
+
+import { GettersImpl } from "./impl/GettersImpl.sol";
+
 import { Account } from "./lib/Account.sol";
-import { Cache } from "./lib/Cache.sol";
 import { Decimal } from "./lib/Decimal.sol";
-import { EnumerableSet } from "./lib/EnumerableSet.sol";
 import { Interest } from "./lib/Interest.sol";
 import { Monetary } from "./lib/Monetary.sol";
-import { Require } from "./lib/Require.sol";
 import { Storage } from "./lib/Storage.sol";
-import { Token } from "./lib/Token.sol";
 import { Types } from "./lib/Types.sol";
+
+import { HasState } from "./HasState.sol";
 
 
 /**
@@ -41,17 +44,9 @@ import { Types } from "./lib/Types.sol";
  * Public read-only functions that allow transparency into the state of DolomiteMargin
  */
 contract Getters is
-    State
+    IDolomiteMargin,
+    HasState
 {
-    using Cache for Cache.MarketCache;
-    using Storage for Storage.State;
-    using Types for Types.Par;
-    using EnumerableSet for EnumerableSet.Set;
-
-    // ============ Constants ============
-
-    bytes32 FILE = "Getters";
-
     // ============ Getters for Risk ============
 
     function getMarginRatio()
@@ -59,7 +54,17 @@ contract Getters is
         view
         returns (Decimal.D256 memory)
     {
-        return g_state.riskParams.marginRatio;
+        return GettersImpl.getMarginRatio(g_state);
+    }
+
+    function getMarginRatioForAccount(
+        address accountOwner
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarginRatioForAccount(g_state, accountOwner);
     }
 
     function getLiquidationSpread()
@@ -67,7 +72,24 @@ contract Getters is
         view
         returns (Decimal.D256 memory)
     {
-        return g_state.riskParams.liquidationSpread;
+        return GettersImpl.getLiquidationSpread(g_state);
+    }
+
+    function getLiquidationSpreadForAccountAndPair(
+        address accountOwner,
+        uint256 heldMarketId,
+        uint256 owedMarketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getLiquidationSpreadForAccountAndPair(
+            g_state,
+            accountOwner,
+            heldMarketId,
+            owedMarketId
+        );
     }
 
     function getEarningsRate()
@@ -75,7 +97,7 @@ contract Getters is
         view
         returns (Decimal.D256 memory)
     {
-        return g_state.riskParams.earningsRate;
+        return GettersImpl.getEarningsRate(g_state);
     }
 
     function getMinBorrowedValue()
@@ -83,7 +105,7 @@ contract Getters is
         view
         returns (Monetary.Value memory)
     {
-        return g_state.riskParams.minBorrowedValue;
+        return GettersImpl.getMinBorrowedValue(g_state);
     }
 
     function getAccountMaxNumberOfMarketsWithBalances()
@@ -91,15 +113,72 @@ contract Getters is
         view
         returns (uint256)
     {
-        return g_state.riskParams.accountMaxNumberOfMarketsWithBalances;
+        return GettersImpl.getAccountMaxNumberOfMarketsWithBalances(g_state);
     }
 
-    function getRiskParams()
+    function getOracleSentinel()
         public
         view
-        returns (Storage.RiskParams memory)
+        returns (IOracleSentinel)
     {
-        return g_state.riskParams;
+        return GettersImpl.getOracleSentinel(g_state);
+    }
+
+    function getIsBorrowAllowed()
+        public
+        view
+        returns (bool)
+    {
+        return GettersImpl.getIsBorrowAllowed(g_state);
+    }
+
+    function getIsLiquidationAllowed()
+        public
+        view
+        returns (bool)
+    {
+        return GettersImpl.getIsLiquidationAllowed(g_state);
+    }
+
+    function getAccountRiskOverrideSetterByAccountOwner(
+        address accountOwner
+    )
+        public
+        view
+        returns (IAccountRiskOverrideSetter)
+    {
+        return GettersImpl.getAccountRiskOverrideSetterByAccountOwner(g_state, accountOwner);
+    }
+
+    function getAccountRiskOverrideByAccountOwner(
+        address accountOwner
+    )
+        public
+        view
+        returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
+    {
+        (marginRatioOverride, liquidationSpreadOverride) =
+            GettersImpl.getAccountRiskOverrideByAccountOwner(g_state, accountOwner);
+    }
+
+    function getMarginRatioOverrideByAccountOwner(
+        address accountOwner
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarginRatioOverrideByAccountOwner(g_state, accountOwner);
+    }
+
+    function getLiquidationSpreadOverrideByAccountOwner(
+        address accountOwner
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getLiquidationSpreadOverrideByAccountOwner(g_state, accountOwner);
     }
 
     function getRiskLimits()
@@ -107,7 +186,7 @@ contract Getters is
         view
         returns (Storage.RiskLimits memory)
     {
-        return g_state.riskLimits;
+        return GettersImpl.getRiskLimits(g_state);
     }
 
     // ============ Getters for Markets ============
@@ -117,18 +196,7 @@ contract Getters is
         view
         returns (uint256)
     {
-        return g_state.numMarkets;
-    }
-
-    function getMarketTokenAddress(
-        uint256 marketId
-    )
-        public
-        view
-        returns (address)
-    {
-        _requireValidMarket(marketId);
-        return g_state.getToken(marketId);
+        return GettersImpl.getNumMarkets(g_state);
     }
 
     function getMarketIdByTokenAddress(
@@ -138,96 +206,17 @@ contract Getters is
         view
         returns (uint256)
     {
-        _requireValidToken(token);
-        return g_state.tokenToMarketId[token];
+        return GettersImpl.getMarketIdByTokenAddress(g_state, token);
     }
 
-    function getMarketTotalPar(
+    function getMarketTokenAddress(
         uint256 marketId
     )
         public
         view
-        returns (Types.TotalPar memory)
+        returns (address)
     {
-        _requireValidMarket(marketId);
-        return g_state.getTotalPar(marketId);
-    }
-
-    function getMarketCachedIndex(
-        uint256 marketId
-    )
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        _requireValidMarket(marketId);
-        return g_state.getIndex(marketId);
-    }
-
-    function getMarketCurrentIndex(
-        uint256 marketId
-    )
-        public
-        view
-        returns (Interest.Index memory)
-    {
-        _requireValidMarket(marketId);
-        return g_state.fetchNewIndex(marketId, g_state.getIndex(marketId));
-    }
-
-    function getMarketPriceOracle(
-        uint256 marketId
-    )
-        public
-        view
-        returns (IPriceOracle)
-    {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].priceOracle;
-    }
-
-    function getMarketInterestSetter(
-        uint256 marketId
-    )
-        public
-        view
-        returns (IInterestSetter)
-    {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].interestSetter;
-    }
-
-    function getMarketMarginPremium(
-        uint256 marketId
-    )
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].marginPremium;
-    }
-
-    function getMarketSpreadPremium(
-        uint256 marketId
-    )
-        public
-        view
-        returns (Decimal.D256 memory)
-    {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].spreadPremium;
-    }
-
-    function getMarketMaxWei(
-        uint256 marketId
-    )
-        public
-        view
-        returns (Types.Wei memory)
-    {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].maxWei;
+        return GettersImpl.getMarketTokenAddress(g_state, marketId);
     }
 
     function getMarketIsClosing(
@@ -237,36 +226,7 @@ contract Getters is
         view
         returns (bool)
     {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].isClosing;
-    }
-
-    function getMarketIsRecyclable(
-        uint256 marketId
-    )
-        public
-        view
-        returns (bool)
-    {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId].isRecyclable;
-    }
-
-    function getRecyclableMarkets(
-        uint256 n
-    )
-        public
-        view
-        returns (uint[] memory)
-    {
-        uint counter = 0;
-        uint[] memory markets = new uint[](n);
-        uint pointer = g_state.recycledMarketIds[uint(-1)]; // uint(-1) is the HEAD_POINTER
-        while (pointer != 0 && counter < n) {
-            markets[counter++] = pointer;
-            pointer = g_state.recycledMarketIds[pointer];
-        }
-        return markets;
+        return GettersImpl.getMarketIsClosing(g_state, marketId);
     }
 
     function getMarketPrice(
@@ -276,35 +236,147 @@ contract Getters is
         view
         returns (Monetary.Price memory)
     {
-        _requireValidMarket(marketId);
-        return g_state.fetchPrice(marketId, g_state.getToken(marketId));
+        return GettersImpl.getMarketPrice(g_state, marketId);
     }
 
-    function getMarketInterestRate(
+    function getMarketTotalPar(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Types.TotalPar memory)
+    {
+        return GettersImpl.getMarketTotalPar(g_state, marketId);
+    }
+
+    function getMarketTotalWei(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Types.TotalWei memory)
+    {
+        return GettersImpl.getMarketTotalWei(g_state, marketId);
+    }
+
+    function getMarketCachedIndex(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Interest.Index memory)
+    {
+        return GettersImpl.getMarketCachedIndex(g_state, marketId);
+    }
+
+    function getMarketCurrentIndex(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Interest.Index memory)
+    {
+        return GettersImpl.getMarketCurrentIndex(g_state, marketId);
+    }
+
+    function getMarketPriceOracle(
+        uint256 marketId
+    )
+        public
+        view
+        returns (IPriceOracle)
+    {
+        return GettersImpl.getMarketPriceOracle(g_state, marketId);
+    }
+
+    function getMarketInterestSetter(
+        uint256 marketId
+    )
+        public
+        view
+        returns (IInterestSetter)
+    {
+        return GettersImpl.getMarketInterestSetter(g_state, marketId);
+    }
+
+    function getMarketMarginPremium(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarketMarginPremium(g_state, marketId);
+    }
+
+    function getMarketLiquidationSpreadPremium(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarketLiquidationSpreadPremium(g_state, marketId);
+    }
+
+    function getMarketMaxSupplyWei(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Types.Wei memory)
+    {
+        return GettersImpl.getMarketMaxSupplyWei(g_state, marketId);
+    }
+
+    function getMarketMaxBorrowWei(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Types.Wei memory)
+    {
+        return GettersImpl.getMarketMaxBorrowWei(g_state, marketId);
+    }
+
+    function getMarketEarningsRateOverride(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarketEarningsRateOverride(g_state, marketId);
+    }
+
+    function getMarketBorrowInterestRatePerSecond(
         uint256 marketId
     )
         public
         view
         returns (Interest.Rate memory)
     {
-        _requireValidMarket(marketId);
-        return g_state.fetchInterestRate(
-            marketId,
-            g_state.getIndex(marketId)
-        );
+        return GettersImpl.getMarketBorrowInterestRatePerSecond(g_state, marketId);
     }
 
-    function getLiquidationSpreadForPair(
-        uint256 heldMarketId,
-        uint256 owedMarketId
+    function getMarketBorrowInterestRateApr(
+        uint256 marketId
     )
         public
         view
-        returns (Decimal.D256 memory)
+        returns (Interest.Rate memory)
     {
-        _requireValidMarket(heldMarketId);
-        _requireValidMarket(owedMarketId);
-        return g_state.getLiquidationSpreadForPair(heldMarketId, owedMarketId);
+        return GettersImpl.getMarketBorrowInterestRateApr(g_state, marketId);
+    }
+
+    function getMarketSupplyInterestRateApr(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Interest.Rate memory)
+    {
+        return GettersImpl.getMarketSupplyInterestRateApr(g_state, marketId);
     }
 
     function getMarket(
@@ -314,8 +386,7 @@ contract Getters is
         view
         returns (Storage.Market memory)
     {
-        _requireValidMarket(marketId);
-        return g_state.markets[marketId];
+        return GettersImpl.getMarket(g_state, marketId);
     }
 
     function getMarketWithInfo(
@@ -330,13 +401,7 @@ contract Getters is
             Interest.Rate memory
         )
     {
-        _requireValidMarket(marketId);
-        return (
-            getMarket(marketId),
-            getMarketCurrentIndex(marketId),
-            getMarketPrice(marketId),
-            getMarketInterestRate(marketId)
-        );
+        return GettersImpl.getMarketWithInfo(g_state, marketId);
     }
 
     function getNumExcessTokens(
@@ -346,9 +411,10 @@ contract Getters is
         view
         returns (Types.Wei memory)
     {
-        _requireValidMarket(marketId);
-        return g_state.getNumExcessTokens(marketId);
+        return GettersImpl.getNumExcessTokens(g_state, marketId);
     }
+
+    // ============ Getters for Accounts ============
 
     function getAccountPar(
         Account.Info memory account,
@@ -358,19 +424,7 @@ contract Getters is
         view
         returns (Types.Par memory)
     {
-        _requireValidMarket(marketId);
-        return g_state.getPar(account, marketId);
-    }
-
-    function getAccountParNoMarketCheck(
-        Account.Info memory account,
-        uint256 marketId
-    )
-        public
-        view
-        returns (Types.Par memory)
-    {
-        return g_state.getPar(account, marketId);
+        return GettersImpl.getAccountPar(g_state, account, marketId);
     }
 
     function getAccountWei(
@@ -381,11 +435,7 @@ contract Getters is
         view
         returns (Types.Wei memory)
     {
-        _requireValidMarket(marketId);
-        return Interest.parToWei(
-            g_state.getPar(account, marketId),
-            g_state.fetchNewIndex(marketId, g_state.getIndex(marketId))
-        );
+        return GettersImpl.getAccountWei(g_state, account, marketId);
     }
 
     function getAccountStatus(
@@ -395,7 +445,7 @@ contract Getters is
         view
         returns (Account.Status)
     {
-        return g_state.getStatus(account);
+        return GettersImpl.getAccountStatus(g_state, account);
     }
 
     function getAccountMarketsWithBalances(
@@ -405,7 +455,7 @@ contract Getters is
         view
         returns (uint256[] memory)
     {
-        return g_state.getMarketsWithBalances(account);
+        return GettersImpl.getAccountMarketsWithBalances(g_state, account);
     }
 
     function getAccountNumberOfMarketsWithBalances(
@@ -415,7 +465,7 @@ contract Getters is
         view
         returns (uint256)
     {
-        return g_state.getNumberOfMarketsWithBalances(account);
+        return GettersImpl.getAccountNumberOfMarketsWithBalances(g_state, account);
     }
 
     function getAccountMarketWithBalanceAtIndex(
@@ -426,7 +476,7 @@ contract Getters is
         view
         returns (uint256)
     {
-        return g_state.getAccountMarketWithBalanceAtIndex(account, index);
+        return GettersImpl.getAccountMarketWithBalanceAtIndex(g_state, account, index);
     }
 
     function getAccountNumberOfMarketsWithDebt(
@@ -436,7 +486,7 @@ contract Getters is
         view
         returns (uint256)
     {
-        return g_state.getAccountNumberOfMarketsWithDebt(account);
+        return GettersImpl.getAccountNumberOfMarketsWithDebt(g_state, account);
     }
 
     function getAccountValues(
@@ -446,7 +496,7 @@ contract Getters is
         view
         returns (Monetary.Value memory, Monetary.Value memory)
     {
-        return _getAccountValuesInternal(account, /* adjustForLiquidity = */ false);
+        return GettersImpl.getAccountValues(g_state, account);
     }
 
     function getAdjustedAccountValues(
@@ -456,7 +506,7 @@ contract Getters is
         view
         returns (Monetary.Value memory, Monetary.Value memory)
     {
-        return _getAccountValuesInternal(account, /* adjustForLiquidity = */ true);
+        return GettersImpl.getAdjustedAccountValues(g_state, account);
     }
 
     function getAccountBalances(
@@ -471,24 +521,10 @@ contract Getters is
             Types.Wei[] memory
         )
     {
-        uint256[] memory markets = g_state.getMarketsWithBalances(account);
-        address[] memory tokens = new address[](markets.length);
-        Types.Par[] memory pars = new Types.Par[](markets.length);
-        Types.Wei[] memory weis = new Types.Wei[](markets.length);
-
-        for (uint256 i = 0; i < markets.length; i++) {
-            tokens[i] = getMarketTokenAddress(markets[i]);
-            pars[i] = getAccountPar(account, markets[i]);
-            weis[i] = getAccountWei(account, markets[i]);
-        }
-
-        return (
-            markets,
-            tokens,
-            pars,
-            weis
-        );
+        return GettersImpl.getAccountBalances(g_state, account);
     }
+
+    // ============ Getters for Account Permissions ============
 
     function getIsLocalOperator(
         address owner,
@@ -498,7 +534,7 @@ contract Getters is
         view
         returns (bool)
     {
-        return g_state.isLocalOperator(owner, operator);
+        return GettersImpl.getIsLocalOperator(g_state, owner, operator);
     }
 
     function getIsGlobalOperator(
@@ -508,7 +544,7 @@ contract Getters is
         view
         returns (bool)
     {
-        return g_state.isGlobalOperator(operator);
+        return GettersImpl.getIsGlobalOperator(g_state, operator);
     }
 
     function getIsAutoTraderSpecial(
@@ -518,60 +554,6 @@ contract Getters is
         view
         returns (bool)
     {
-        return g_state.isAutoTraderSpecial(autoTrader);
-    }
-
-    // ============ Internal/Private Helper Functions ============
-
-    /**
-     * Revert if marketId is invalid.
-     */
-    function _requireValidMarket(
-        uint256 marketId
-    )
-        internal
-        view
-    {
-        if (marketId < g_state.numMarkets && g_state.markets[marketId].token != address(0)) { /* FOR COVERAGE TESTING */ }
-        Require.that(marketId < g_state.numMarkets && g_state.markets[marketId].token != address(0),
-            FILE,
-            "Invalid market"
-        );
-    }
-
-    function _requireValidToken(
-        address token
-    )
-        private
-        view
-    {
-        if (token == g_state.markets[g_state.tokenToMarketId[token]].token) { /* FOR COVERAGE TESTING */ }
-        Require.that(token == g_state.markets[g_state.tokenToMarketId[token]].token,
-            FILE,
-            "Invalid token"
-        );
-    }
-
-    /**
-     * Private helper for getting the monetary values of an account.
-     */
-    function _getAccountValuesInternal(
-        Account.Info memory account,
-        bool adjustForLiquidity
-    )
-        private
-        view
-        returns (Monetary.Value memory, Monetary.Value memory)
-    {
-        uint256[] memory markets = g_state.getMarketsWithBalances(account);
-
-        // populate cache
-        Cache.MarketCache memory cache = Cache.create(markets.length);
-        for (uint256 i = 0; i < markets.length; i++) {
-            cache.set(markets[i]);
-        }
-        g_state.initializeCache(cache);
-
-        return g_state.getAccountValues(account, cache, adjustForLiquidity);
+        return GettersImpl.getIsAutoTraderSpecial(g_state, autoTrader);
     }
 }
