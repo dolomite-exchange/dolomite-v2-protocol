@@ -142,7 +142,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
             toBytesNoPadding('0x0'),
           )
         ),
-        'ParaswapTraderProxyWithBackup::getExchangeCost: not implemented',
+        'ParaswapTrader::getExchangeCost: not implemented',
       );
     });
   });
@@ -416,7 +416,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market3, market2),
-          'LiquidatorProxyBase: market not found',
+          'LiquidatorProxyBase: Market not found',
         );
       });
 
@@ -447,7 +447,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market1),
-          `LiquidatorProxyBase: owedMarket equals heldMarket <${market1.toFixed()}>`,
+          `LiquidatorProxyBase: Owed market equals held market <${market1.toFixed()}>`,
         );
       });
 
@@ -455,7 +455,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market2, market1), // swap the two markets so owed = held
-          `LiquidatorProxyBase: owed market cannot be positive <${market2.toFixed()}>`,
+          `LiquidatorProxyBase: Owed market cannot be positive <${market2.toFixed()}>`,
         );
       });
 
@@ -464,7 +464,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market2, new BigNumber(-1));
         await expectThrow(
           liquidate(market1, market2),
-          `LiquidatorProxyBase: held market cannot be negative <${market2.toFixed()}>`,
+          `LiquidatorProxyBase: Held market cannot be negative <${market2.toFixed()}>`,
         );
       });
 
@@ -491,7 +491,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market2, null, FailureType.WithMessage),
-          'ParaswapTraderProxyWithBackup: TestParaswapTransferProxy: insufficient balance',
+          'ParaswapTrader: TestParaswapTransferProxy: insufficient balance',
         );
       });
 
@@ -499,7 +499,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market2, null, FailureType.Silently),
-          'ParaswapTraderProxyWithBackup: revert',
+          'ParaswapTrader: revert',
         );
       });
 
@@ -511,7 +511,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
 
         await expectThrow(
           liquidate(owedMarket, heldMarket, null, FailureType.TooLittleOutput),
-          `ParaswapTraderProxyWithBackup: insufficient output amount <1, ${owedAmount.toFixed()}>`,
+          `ParaswapTrader: insufficient output amount <1, ${owedAmount.toFixed()}>`,
         );
       });
 
@@ -519,7 +519,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         // Market2 (if held) cannot be liquidated by any contract
         await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(
           market2,
-          ADDRESSES.ZERO,
+          ADDRESSES.ONE,
           { from: admin },
         );
         await setUpBasicBalances(isOverCollateralized);
@@ -775,7 +775,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         const expiry = await setUpExpiration(market1, INTEGERS.ONE, true);
         await expectThrow(
           liquidate(market1, market1, expiry),
-          `LiquidatorProxyBase: owedMarket equals heldMarket <${market1.toFixed()}>`,
+          `LiquidatorProxyBase: Owed market equals held market <${market1.toFixed()}>`,
         );
       });
 
@@ -802,7 +802,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         // Market2 (if held) cannot be liquidated by any contract
         await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(
           market2,
-          ADDRESSES.ZERO,
+          ADDRESSES.ONE,
           { from: admin },
         );
         await setUpBasicBalances(isOverCollateralized);
@@ -871,7 +871,7 @@ async function liquidate(
   let paraswapInputToken = marketIdToTokenMap[heldMarket.toFixed()];
   let paraswapInputMarket = heldMarket;
   let isUsingUnwrapper = false;
-  if (heldMarket.eq(marketForUnwrapper) && !owedMarket.eq(outputMarketForUnwrapper) && !heldMarket.eq(owedMarket)) {
+  if (heldMarket.eq(marketForUnwrapper) && !owedMarket.eq(outputMarketForUnwrapper)) {
     isUsingUnwrapper = true;
     paraswapInputToken = outputTokenForUnwrapper;
     paraswapInputMarket = outputMarketForUnwrapper;
@@ -967,9 +967,14 @@ async function expectBalances(solidBalances: (number | BigNumber)[], liquidBalan
     dolomiteMargin.getters.getAccountPar(liquidOwner, liquidNumber, market3),
     dolomiteMargin.getters.getAccountPar(liquidOwner, liquidNumber, market4),
   ]);
+  const markets = [market1, market2, market3, market4];
 
   for (let i = 0; i < solidBalances.length; i += 1) {
-    expect(bal1[i]).to.eql(solidBalances[i]);
+    try {
+      expect(bal1[i]).to.eql(solidBalances[i]);
+    } catch (e) {
+      throw new Error(`Solid balance ${markets[i]} is ${bal1[i].toFixed()} but expected ${solidBalances[i].toFixed()}`);
+    }
   }
   for (let i = 0; i < liquidBalances.length; i += 1) {
     expect(bal2[i]).to.eql(liquidBalances[i]);

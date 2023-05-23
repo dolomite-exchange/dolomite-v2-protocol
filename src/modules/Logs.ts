@@ -17,6 +17,7 @@ import { abi as adminAbi } from '../../build/published_contracts/AdminImpl.json'
 import { abi as permissionAbi } from '../../build/published_contracts/Permission.json';
 import { abi as expiryAbi } from '../../build/published_contracts/Expiry.json';
 import { abi as signedOperationProxyAbi } from '../../build/published_contracts/SignedOperationProxy.json';
+import { abi as marginPositionRegistryAbi } from '../../build/published_contracts/MarginPositionRegistry.json';
 
 export class Logs {
   private contracts: Contracts;
@@ -44,6 +45,9 @@ export class Logs {
     }
     if (options.skipExpiryLogs) {
       logs = logs.filter((log: any) => !this.logIsFrom(log, expiryAbi));
+    }
+    if (options.skipMarginPositionRegistry) {
+      logs = logs.filter((log: any) => !this.logIsFrom(log, marginPositionRegistryAbi));
     }
 
     const coveragePrefix = '__';
@@ -109,6 +113,12 @@ export class Logs {
       case this.contracts.signedOperationProxy.options.address.toLowerCase(): {
         return this.parseLogWithContract(
           this.contracts.signedOperationProxy,
+          log,
+        );
+      }
+      case this.contracts.marginPositionRegistry.options.address.toLowerCase(): {
+        return this.parseLogWithContract(
+          this.contracts.marginPositionRegistry,
           log,
         );
       }

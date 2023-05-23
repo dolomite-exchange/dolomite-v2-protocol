@@ -20,9 +20,14 @@ import { BigNumber } from 'bignumber.js';
 import { Decimal, Integer } from '../types';
 import { getInterestPerSecondForDoubleExponent, getInterestPerSecondForAAVECopyCat } from './Helpers';
 import interestConstants from './interest-constants.json';
+import { INTEGERS } from './Constants';
 
 interface ExtraData {
   interestRateModel: string;
+}
+
+export interface AlwaysZeroData extends ExtraData {
+  interestRateModel: 'AlwaysZero';
 }
 
 export interface AAVECopyCatData extends ExtraData {
@@ -73,6 +78,8 @@ export class Interest {
       borrowInterestRate = getInterestPerSecondForDoubleExponent(constants.maxAPR, constants.coefficients, totals);
     } else if (constants.interestRateModel === 'AAVECopyCat') {
       borrowInterestRate = getInterestPerSecondForAAVECopyCat(constants.isStableCoin, totals);
+    } else if (constants.interestRateModel === 'AlwaysZero') {
+      borrowInterestRate = INTEGERS.ZERO;
     }
 
     // determine the supply interest rate (uncapped decimal places)
@@ -99,7 +106,7 @@ export class Interest {
     return networkConstants;
   }
 
-  private getMarketConstants(marketId: Integer): AAVECopyCatData | DoubleExponentData {
+  private getMarketConstants(marketId: Integer): AlwaysZeroData | AAVECopyCatData | DoubleExponentData {
     const networkConstants = this.getNetworkConstants();
     const constants = networkConstants[marketId.toFixed(0)];
     if (!constants) {

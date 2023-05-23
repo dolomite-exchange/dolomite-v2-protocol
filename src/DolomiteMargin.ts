@@ -23,16 +23,25 @@ import { Interest } from './lib/Interest';
 import { Admin } from './modules/Admin';
 import { AmmRebalancerProxyV1 } from './modules/AmmRebalancerProxyV1';
 import { AmmRebalancerProxyV2 } from './modules/AmmRebalancerProxyV2';
+import { ArbitrumGasInfo } from './modules/ArbitrumGasInfo';
+import { BorrowPositionProxyV1 } from './modules/BorrowPositionProxyV1';
+import { BorrowPositionProxyV2 } from './modules/BorrowPositionProxyV2';
+import { DepositProxy } from './modules/DepositProxy';
 import { DolomiteAmmFactory } from './modules/DolomiteAmmFactory';
 import { DolomiteAmmPair } from './modules/DolomiteAmmPair';
 import { DolomiteAmmRouterProxy } from './modules/DolomiteAmmRouterProxy';
 import { Expiry } from './modules/Expiry';
+import { GenericTraderProxyV1 } from './modules/GenericTraderProxyV1';
 import { Getters } from './modules/Getters';
+import { LiquidatorAssetRegistry } from './modules/LiquidatorAssetRegistry';
 import { LiquidatorProxyV1 } from './modules/LiquidatorProxyV1';
 import { LiquidatorProxyV1WithAmm } from './modules/LiquidatorProxyV1WithAmm';
 import { LiquidatorProxyV2WithExternalLiquidity } from './modules/LiquidatorProxyV2WithExternalLiquidity';
 import { LiquidatorProxyV3WithLiquidityToken } from './modules/LiquidatorProxyV3WithLiquidityToken';
+import { LiquidatorProxyV4WithGenericTrader } from './modules/LiquidatorProxyV4WithGenericTrader';
+import { LiquidityTokenUnwrapper } from './modules/LiquidityTokenUnwrapper';
 import { Logs } from './modules/Logs';
+import { MultiCall } from './modules/MultiCall';
 import { Operation } from './modules/operate/Operation';
 import { ChainlinkPriceOracleV1 } from './modules/oracles/ChainlinkPriceOracleV1';
 import { OrderMapper } from './modules/OrderMapper';
@@ -42,62 +51,51 @@ import { StandardActions } from './modules/StandardActions';
 import { SubgraphAPI } from './modules/SubgraphAPI';
 import { Token } from './modules/Token';
 import { TransferProxy } from './modules/TransferProxy';
-import { BorrowPositionProxyV1 } from './modules/BorrowPositionProxyV1';
 import { WalletLogin } from './modules/WalletLogin';
-import { Weth } from './modules/Weth';
-import { address, DolomiteMarginOptions, EthereumAccount, Networks, } from './types';
-import { MultiCall } from './modules/MultiCall';
-import { ArbitrumGasInfo } from './modules/ArbitrumGasInfo';
-import { DepositProxy } from './modules/DepositProxy';
-import { BorrowPositionProxyV2 } from './modules/BorrowPositionProxyV2';
-import { LiquidatorAssetRegistry } from './modules/LiquidatorAssetRegistry';
-import { LiquidityTokenUnwrapper } from './modules/LiquidityTokenUnwrapper';
+import { WETH } from './modules/WETH';
+import { address, DolomiteMarginOptions, EthereumAccount, Networks } from './types';
 
 export class DolomiteMargin {
   public networkId: number;
-  public contracts: Contracts;
-  public api: SubgraphAPI;
-  public interest: Interest;
-  public token: Token;
-  public expiry: Expiry;
-  public chainlinkPriceOracle: ChainlinkPriceOracleV1;
-  public weth: Weth;
   public web3: Web3;
+  // Contract Wrappers
+  public arbitrumGasInfo: ArbitrumGasInfo;
   public admin: Admin;
+  public borrowPositionProxyV1: BorrowPositionProxyV1;
+  public borrowPositionProxyV2: BorrowPositionProxyV2;
+  public ammRebalancerProxyV1: AmmRebalancerProxyV1;
+  public ammRebalancerProxyV2: AmmRebalancerProxyV2;
+  public api: SubgraphAPI;
+  public chainlinkPriceOracle: ChainlinkPriceOracleV1;
+  public contracts: Contracts;
+  public depositWithdrawalProxy: DepositProxy;
+  public dolomiteAmmFactory: DolomiteAmmFactory;
+  public dolomiteAmmRouterProxy: DolomiteAmmRouterProxy;
+  public expiry: Expiry;
+  public genericTraderProxyV1: GenericTraderProxyV1;
   public getters: Getters;
-  public signedOperations: SignedOperations;
+  public interest: Interest;
   public liquidatorAssetRegistry: LiquidatorAssetRegistry;
   public liquidatorProxyV1: LiquidatorProxyV1;
   public liquidatorProxyV1WithAmm: LiquidatorProxyV1WithAmm;
   public liquidatorProxyV2WithExternalLiquidity: LiquidatorProxyV2WithExternalLiquidity;
   public liquidatorProxyV3WithLiquidityToken: LiquidatorProxyV3WithLiquidityToken;
-  public dolomiteAmmFactory: DolomiteAmmFactory;
-  public dolomiteAmmRouterProxy: DolomiteAmmRouterProxy;
-  public ammRebalancerProxyV1: AmmRebalancerProxyV1;
-  public ammRebalancerProxyV2: AmmRebalancerProxyV2;
-  public depositWithdrawalProxy: DepositProxy;
-  public transferProxy: TransferProxy;
-  public borrowPositionProxyV1: BorrowPositionProxyV1;
-  public borrowPositionProxyV2: BorrowPositionProxyV2;
-  public multiCall: MultiCall;
-  public arbitrumGasInfo: ArbitrumGasInfo;
-  public permissions: Permissions;
+  public liquidatorProxyV4WithGenericTrader: LiquidatorProxyV4WithGenericTrader;
   public logs: Logs;
+  public multiCall: MultiCall;
   public operation: Operation;
+  public permissions: Permissions;
+  public signedOperations: SignedOperations;
   public standardActions: StandardActions;
+  public token: Token;
+  public transferProxy: TransferProxy;
   public walletLogin: WalletLogin;
+  public weth: WETH;
 
-  constructor(
-    provider: Provider | string,
-    networkId: number = Networks.MUMBAI,
-    options: DolomiteMarginOptions = {},
-  ) {
+  constructor(provider: Provider | string, networkId: number = Networks.ARBITRUM, options: DolomiteMarginOptions = {}) {
     let realProvider: Provider;
     if (typeof provider === 'string') {
-      realProvider = new Web3.providers.HttpProvider(
-        provider,
-        options.ethereumNodeTimeout || 10000,
-      );
+      realProvider = new Web3.providers.HttpProvider(provider, options.ethereumNodeTimeout || 10000);
     } else {
       realProvider = provider;
     }
@@ -106,41 +104,39 @@ export class DolomiteMargin {
     if (options.defaultAccount) {
       this.web3.eth.defaultAccount = options.defaultAccount;
     }
-
-    this.networkId = networkId;
     this.contracts = this.createContractsModule(realProvider, networkId, this.web3, options);
-    this.interest = new Interest(networkId);
-    this.token = new Token(this.contracts);
-    this.expiry = new Expiry(this.contracts);
-    this.chainlinkPriceOracle = new ChainlinkPriceOracleV1(this.contracts);
-    this.weth = new Weth(this.contracts, this.token);
+
     this.admin = new Admin(this.contracts);
+    this.ammRebalancerProxyV1 = new AmmRebalancerProxyV1(this.contracts);
+    this.ammRebalancerProxyV2 = new AmmRebalancerProxyV2(this.contracts);
+    this.arbitrumGasInfo = new ArbitrumGasInfo(this.contracts);
+    this.borrowPositionProxyV1 = new BorrowPositionProxyV1(this.contracts);
+    this.borrowPositionProxyV2 = new BorrowPositionProxyV2(this.contracts);
+    this.chainlinkPriceOracle = new ChainlinkPriceOracleV1(this.contracts);
+    this.depositWithdrawalProxy = new DepositProxy(this.contracts);
+    this.dolomiteAmmFactory = new DolomiteAmmFactory(this.contracts);
+    this.dolomiteAmmRouterProxy = new DolomiteAmmRouterProxy(this.contracts);
+    this.expiry = new Expiry(this.contracts);
+    this.genericTraderProxyV1 = new GenericTraderProxyV1(this.contracts);
     this.getters = new Getters(this.contracts);
-    this.signedOperations = new SignedOperations(this.contracts, this.web3, networkId);
+    this.interest = new Interest(networkId);
     this.liquidatorAssetRegistry = new LiquidatorAssetRegistry(this.contracts);
     this.liquidatorProxyV1 = new LiquidatorProxyV1(this.contracts);
     this.liquidatorProxyV1WithAmm = new LiquidatorProxyV1WithAmm(this.contracts);
     this.liquidatorProxyV2WithExternalLiquidity = new LiquidatorProxyV2WithExternalLiquidity(this.contracts);
     this.liquidatorProxyV3WithLiquidityToken = new LiquidatorProxyV3WithLiquidityToken(this.contracts);
-    this.ammRebalancerProxyV1 = new AmmRebalancerProxyV1(this.contracts);
-    this.ammRebalancerProxyV2 = new AmmRebalancerProxyV2(this.contracts);
-    this.depositWithdrawalProxy = new DepositProxy(this.contracts);
-    this.transferProxy = new TransferProxy(this.contracts);
-    this.borrowPositionProxyV1 = new BorrowPositionProxyV1(this.contracts);
-    this.borrowPositionProxyV2 = new BorrowPositionProxyV2(this.contracts);
-    this.multiCall = new MultiCall(this.contracts);
-    this.arbitrumGasInfo = new ArbitrumGasInfo(this.contracts);
-    this.dolomiteAmmFactory = new DolomiteAmmFactory(this.contracts);
-    this.dolomiteAmmRouterProxy = new DolomiteAmmRouterProxy(this.contracts);
-    this.permissions = new Permissions(this.contracts);
+    this.liquidatorProxyV4WithGenericTrader = new LiquidatorProxyV4WithGenericTrader(this.contracts);
     this.logs = new Logs(this.contracts, this.web3);
-    this.operation = new Operation(
-      this.contracts,
-      new OrderMapper(this.contracts),
-      networkId,
-    );
+    this.multiCall = new MultiCall(this.contracts);
+    this.networkId = networkId;
+    this.operation = new Operation(this.contracts, new OrderMapper(this.contracts), networkId);
+    this.permissions = new Permissions(this.contracts);
+    this.signedOperations = new SignedOperations(this.contracts, this.web3, networkId);
     this.standardActions = new StandardActions(this.operation, this.contracts);
+    this.token = new Token(this.contracts);
+    this.transferProxy = new TransferProxy(this.contracts);
     this.walletLogin = new WalletLogin(this.web3, networkId);
+    this.weth = new WETH(this.contracts, this.token);
 
     if (options.accounts) {
       options.accounts.forEach(a => this.loadAccount(a));
@@ -174,15 +170,9 @@ export class DolomiteMargin {
   public loadAccount(account: EthereumAccount): void {
     const newAccount = this.web3.eth.accounts.wallet.add(account.privateKey);
 
-    if (
-      !newAccount ||
-      (account.address &&
-        account.address.toLowerCase() !== newAccount.address.toLowerCase())
-    ) {
+    if (!newAccount || (account.address && account.address.toLowerCase() !== newAccount.address.toLowerCase())) {
       throw new Error(`Loaded account address mismatch.
-        Expected ${account.address}, got ${
-        newAccount ? newAccount.address : null
-      }`);
+        Expected ${account.address}, got ${newAccount ? newAccount.address : null}`);
     }
   }
 

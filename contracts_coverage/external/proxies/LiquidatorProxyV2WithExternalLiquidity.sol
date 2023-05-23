@@ -28,10 +28,14 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
+import { HasLiquidatorRegistry } from "../helpers/HasLiquidatorRegistry.sol";
+import { LiquidatorProxyBase } from "../helpers/LiquidatorProxyBase.sol";
+
 import { IExpiry } from "../interfaces/IExpiry.sol";
+
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
-import { ParaswapTraderProxyWithBackup } from "./ParaswapTraderProxyWithBackup.sol";
+import { ParaswapTrader } from "../traders/ParaswapTrader.sol";
 
 
 /**
@@ -41,7 +45,7 @@ import { ParaswapTraderProxyWithBackup } from "./ParaswapTraderProxyWithBackup.s
  * Contract for liquidating other accounts in DolomiteMargin and atomically selling off collateral via Paraswap
  * liquidity aggregation
  */
-contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTraderProxyWithBackup {
+contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrader, LiquidatorProxyBase {
 
     // ============ Constants ============
 
@@ -61,10 +65,12 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
         address _liquidatorAssetRegistry
     )
         public
-        ParaswapTraderProxyWithBackup(
+        ParaswapTrader(
             _paraswapAugustusRouter,
             _paraswapTransferProxy,
-            _dolomiteMargin,
+            _dolomiteMargin
+        )
+        HasLiquidatorRegistry(
             _liquidatorAssetRegistry
         )
     {
@@ -97,38 +103,31 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
         public
         nonReentrant
         requireIsAssetWhitelistedForLiquidation(_heldMarket)
+        requireIsAssetWhitelistedForLiquidation(_owedMarket)
     {
         // put all values that will not change into a single struct
         LiquidatorProxyConstants memory constants;
         constants.dolomiteMargin = DOLOMITE_MARGIN;
-
-        _checkConstants(
-            constants,
-            _liquidAccount,
-            _owedMarket,
-            _heldMarket,
-            _expiry
-        );
-
         constants.solidAccount = _solidAccount;
         constants.liquidAccount = _liquidAccount;
+        constants.heldMarket = _heldMarket;
+        constants.owedMarket = _owedMarket;
+
+        _checkConstants(constants, _expiry);
+
         constants.liquidMarkets = constants.dolomiteMargin.getAccountMarketsWithBalances(_liquidAccount);
         constants.markets = _getMarketInfos(
             constants.dolomiteMargin,
             constants.dolomiteMargin.getAccountMarketsWithBalances(_solidAccount),
             constants.liquidMarkets
         );
-        constants.expiryProxy = _expiry > 0 ? EXPIRY_PROXY: IExpiry(address(0));
+        constants.expiryProxy = _expiry > 0 ? EXPIRY_PROXY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
         constants.expiry = uint32(_expiry);
 
-        LiquidatorProxyCache memory cache = _initializeCache(
-            constants,
-            _heldMarket,
-            _owedMarket
-        );
+        LiquidatorProxyCache memory cache = _initializeCache(constants);
 
         // validate the msg.sender and that the liquidAccount can be liquidated
-        _checkBasicRequirements(constants, _owedMarket);
+        _checkBasicRequirements(constants);
 
         // get the max liquidation amount
         _calculateAndSetMaxLiquidationAmount(cache);
@@ -182,11 +181,13 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
             actions[0] = AccountActionLib.encodeExpiryLiquidateAction(
                 _solidAccountId,
                 _liquidAccountId,
-                _cache.owedMarket,
-                _cache.heldMarket,
+                _constants.owedMarket,
+                _constants.heldMarket,
                 address(_constants.expiryProxy),
                 _constants.expiry,
-                _cache.flipMarkets
+                _cache.solidHeldUpdateWithReward,
+                _cache.owedWeiToLiquidate,
+                _cache.flipMarketsForExpiration
             );
         } else {
             // First action is a liquidation
@@ -194,16 +195,16 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
             actions[0] = AccountActionLib.encodeLiquidateAction(
                 _solidAccountId,
                 _liquidAccountId,
-                _cache.owedMarket,
-                _cache.heldMarket,
+                _constants.owedMarket,
+                _constants.heldMarket,
                 _cache.owedWeiToLiquidate
             );
         }
 
         actions[1] = AccountActionLib.encodeExternalSellAction(
             _solidAccountId,
-            _cache.heldMarket,
-            _cache.owedMarket,
+            _constants.heldMarket,
+            _constants.owedMarket,
             /* _trader = */ address(this), // solium-disable-line indentation
             _cache.solidHeldUpdateWithReward,
             _cache.owedWeiToLiquidate,

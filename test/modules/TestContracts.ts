@@ -16,35 +16,11 @@
 
 */
 
-import { Provider } from 'web3/providers';
 import Web3 from 'web3';
-
-// Contracts
-import { TestAutoTrader } from '../../build/testing_wrappers/TestAutoTrader';
-import { TestDolomiteAmmLibrary } from '../../build/testing_wrappers/TestDolomiteAmmLibrary';
-import { TestDolomiteMargin } from '../../build/testing_wrappers/TestDolomiteMargin';
-import { TestCallee } from '../../build/testing_wrappers/TestCallee';
-import { TestDoubleExponentInterestSetter } from '../../build/testing_wrappers/TestDoubleExponentInterestSetter';
-import { TestExchangeWrapper } from '../../build/testing_wrappers/TestExchangeWrapper';
-import { TestInterestSetter } from '../../build/testing_wrappers/TestInterestSetter';
-import { TestLib } from '../../build/testing_wrappers/TestLib';
-import { TestParaswapAugustusRouter } from '../../build/testing_wrappers/TestParaswapAugustusRouter';
-import { TestPolynomialInterestSetter } from '../../build/testing_wrappers/TestPolynomialInterestSetter';
-import { TestPriceOracle } from '../../build/testing_wrappers/TestPriceOracle';
-import { TestSimpleCallee } from '../../build/testing_wrappers/TestSimpleCallee';
-import { TestToken } from '../../build/testing_wrappers/TestToken';
-import { TestWETH } from '../../build/testing_wrappers/TestWETH';
-
-// JSON - Tokens
-import tokenAJson from '../../build/testing_contracts/TokenA.json';
-import tokenBJson from '../../build/testing_contracts/TokenB.json';
-import tokenCJson from '../../build/testing_contracts/TokenC.json';
-import tokenDJson from '../../build/testing_contracts/TokenD.json';
-import tokenEJson from '../../build/testing_contracts/TokenE.json';
-import tokenFJson from '../../build/testing_contracts/TokenF.json';
+import { Provider } from 'web3/providers';
 import erroringTokenJson from '../../build/testing_contracts/ErroringToken.json';
-import omiseTokenJson from '../../build/testing_contracts/OmiseToken.json';
 import malformedTokenJson from '../../build/testing_contracts/MalformedToken.json';
+import omiseTokenJson from '../../build/testing_contracts/OmiseToken.json';
 
 // JSON - Contracts
 import testAccountRiskOverrideSetterJson from '../../build/testing_contracts/TestAccountRiskOverrideSetter.json';
@@ -61,26 +37,52 @@ import testInterestSetterJson from '../../build/testing_contracts/TestInterestSe
 import testLibJson from '../../build/testing_contracts/TestLib.json';
 import testLiquidityTokenUnwrapperTraderJson from '../../build/testing_contracts/TestLiquidityTokenUnwrapperTrader.json';
 import testParaswapAugustusRouterJson from '../../build/testing_contracts/TestParaswapAugustusRouter.json';
+import testParaswapTraderJson from '../../build/testing_contracts/TestParaswapTrader.json';
 import testPolynomialInterestSetterJson from '../../build/testing_contracts/TestPolynomialInterestSetter.json';
 import testPriceOracleJson from '../../build/testing_contracts/TestPriceOracle.json';
 import testSimpleCalleeJson from '../../build/testing_contracts/TestSimpleCallee.json';
-import testUniswapV2FactoryJson from '../../build/testing_contracts/UniswapV2Factory.json';
-import testUniswapV2PairJson from '../../build/testing_contracts/UniswapV2Pair.json';
-import testUniswapV2RouterJson from '../../build/testing_contracts/UniswapV2Router02.json';
 import testUniswapV3MultiRouterJson from '../../build/testing_contracts/TestUniswapV3MultiRouter.json';
 import testWeth from '../../build/testing_contracts/TestWETH.json';
 
+// JSON - Tokens
+import tokenAJson from '../../build/testing_contracts/TokenA.json';
+import tokenBJson from '../../build/testing_contracts/TokenB.json';
+import tokenCJson from '../../build/testing_contracts/TokenC.json';
+import tokenDJson from '../../build/testing_contracts/TokenD.json';
+import tokenEJson from '../../build/testing_contracts/TokenE.json';
+import tokenFJson from '../../build/testing_contracts/TokenF.json';
+import testUniswapV2FactoryJson from '../../build/testing_contracts/UniswapV2Factory.json';
+import testUniswapV2PairJson from '../../build/testing_contracts/UniswapV2Pair.json';
+import testUniswapV2RouterJson from '../../build/testing_contracts/UniswapV2Router02.json';
+
+// Contracts
+import { TestAccountRiskOverrideSetter } from '../../build/testing_wrappers/TestAccountRiskOverrideSetter';
+import { TestAmmRebalancerProxy } from '../../build/testing_wrappers/TestAmmRebalancerProxy';
+import { TestAutoTrader } from '../../build/testing_wrappers/TestAutoTrader';
+import { TestCallee } from '../../build/testing_wrappers/TestCallee';
+import { TestChainlinkFlags } from '../../build/testing_wrappers/TestChainlinkFlags';
+import { TestChainlinkPriceOracleV1 } from '../../build/testing_wrappers/TestChainlinkPriceOracleV1';
+import { TestDolomiteAmmLibrary } from '../../build/testing_wrappers/TestDolomiteAmmLibrary';
+import { TestDolomiteMargin } from '../../build/testing_wrappers/TestDolomiteMargin';
+import { TestDoubleExponentInterestSetter } from '../../build/testing_wrappers/TestDoubleExponentInterestSetter';
+import { TestExchangeWrapper } from '../../build/testing_wrappers/TestExchangeWrapper';
+import { TestInterestSetter } from '../../build/testing_wrappers/TestInterestSetter';
+import { TestLib } from '../../build/testing_wrappers/TestLib';
+import { TestLiquidityTokenUnwrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
+import { TestParaswapAugustusRouter } from '../../build/testing_wrappers/TestParaswapAugustusRouter';
+import { TestParaswapTrader } from '../../build/testing_wrappers/TestParaswapTrader';
+import { TestPolynomialInterestSetter } from '../../build/testing_wrappers/TestPolynomialInterestSetter';
+import { TestPriceOracle } from '../../build/testing_wrappers/TestPriceOracle';
+import { TestSimpleCallee } from '../../build/testing_wrappers/TestSimpleCallee';
+import { TestToken } from '../../build/testing_wrappers/TestToken';
+import { TestUniswapV3MultiRouter } from '../../build/testing_wrappers/TestUniswapV3MultiRouter';
+import { TestWETH } from '../../build/testing_wrappers/TestWETH';
+import { UniswapV2Factory } from '../../build/testing_wrappers/UniswapV2Factory';
+import { UniswapV2Pair } from '../../build/testing_wrappers/UniswapV2Pair';
+import { UniswapV2Router02 } from '../../build/testing_wrappers/UniswapV2Router02';
+
 import { address, DolomiteMarginOptions } from '../../src';
 import { Contracts } from '../../src/lib/Contracts';
-import { ChainlinkPriceOracleV1 } from '../../build/wrappers/ChainlinkPriceOracleV1';
-import { UniswapV2Factory } from '../../build/testing_wrappers/UniswapV2Factory';
-import { UniswapV2Router02 } from '../../build/testing_wrappers/UniswapV2Router02';
-import { UniswapV2Pair } from '../../build/testing_wrappers/UniswapV2Pair';
-import { TestAmmRebalancerProxy } from '../../build/testing_wrappers/TestAmmRebalancerProxy';
-import { TestChainlinkFlags } from '../../build/testing_wrappers/TestChainlinkFlags';
-import { TestLiquidityTokenUnwrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
-import { TestUniswapV3MultiRouter } from '../../build/testing_wrappers/TestUniswapV3MultiRouter';
-import { TestAccountRiskOverrideSetter } from '../../build/testing_wrappers/TestAccountRiskOverrideSetter';
 
 export class TestContracts extends Contracts {
   // Contract instances
@@ -111,6 +113,7 @@ export class TestContracts extends Contracts {
   public testDoubleExponentInterestSetter: TestDoubleExponentInterestSetter;
   public testExchangeWrapper: TestExchangeWrapper;
   public testParaswapAugustusRouter: TestParaswapAugustusRouter;
+  public testParaswapTrader: TestParaswapTrader;
   public testPolynomialInterestSetter: TestPolynomialInterestSetter;
   public testPriceOracle: TestPriceOracle;
   public testSimpleCallee: TestSimpleCallee;
@@ -118,12 +121,7 @@ export class TestContracts extends Contracts {
   public testUniswapV3MultiRouter: TestUniswapV3MultiRouter;
   public testUniswapV2Router: UniswapV2Router02;
 
-  constructor(
-    provider: Provider,
-    networkId: number,
-    web3: Web3,
-    options: DolomiteMarginOptions,
-  ) {
+  constructor(provider: Provider, networkId: number, web3: Web3, options: DolomiteMarginOptions) {
     super(provider, networkId, web3, options);
 
     // Token instances
@@ -141,36 +139,22 @@ export class TestContracts extends Contracts {
     // Testing Contracts
     this.chainlinkPriceOracleV1 = new this.web3.eth.Contract(
       testChainlinkPriceOracleJson.abi
-    ) as ChainlinkPriceOracleV1;
+    ) as TestChainlinkPriceOracleV1;
     this.testAccountRiskOverrideSetter = new this.web3.eth.Contract(
       testAccountRiskOverrideSetterJson.abi,
     ) as TestAccountRiskOverrideSetter;
-    this.testAmmRebalancerProxy = new this.web3.eth.Contract(
-      testAmmRebalancerProxyJson.abi,
-    ) as TestAmmRebalancerProxy;
-    this.testAutoTrader = new this.web3.eth.Contract(
-      testAutoTraderJson.abi,
-    ) as TestAutoTrader;
-    this.testCallee = new this.web3.eth.Contract(
-      testCalleeJson.abi,
-    ) as TestCallee;
-    this.testChainlinkFlags = new this.web3.eth.Contract(
-      testChainlinkFlagsJson.abi,
-    ) as TestChainlinkFlags;
+    this.testAmmRebalancerProxy = new this.web3.eth.Contract(testAmmRebalancerProxyJson.abi) as TestAmmRebalancerProxy;
+    this.testAutoTrader = new this.web3.eth.Contract(testAutoTraderJson.abi) as TestAutoTrader;
+    this.testCallee = new this.web3.eth.Contract(testCalleeJson.abi) as TestCallee;
+    this.testChainlinkFlags = new this.web3.eth.Contract(testChainlinkFlagsJson.abi) as TestChainlinkFlags;
     this.testDolomiteAmmLibrary = new this.web3.eth.Contract(testDolomiteAmmLibraryJson.abi) as TestDolomiteAmmLibrary;
-    this.testDolomiteMargin = new this.web3.eth.Contract(
-      testDolomiteMarginJson.abi,
-    ) as TestDolomiteMargin;
+    this.testDolomiteMargin = new this.web3.eth.Contract(testDolomiteMarginJson.abi) as TestDolomiteMargin;
     this.dolomiteMargin = this.testDolomiteMargin;
     this.testDoubleExponentInterestSetter = new this.web3.eth.Contract(
       testDoubleExponentInterestSetterJson.abi,
     ) as TestDoubleExponentInterestSetter;
-    this.testExchangeWrapper = new this.web3.eth.Contract(
-      testExchangeWrapperJson.abi,
-    ) as TestExchangeWrapper;
-    this.testInterestSetter = new this.web3.eth.Contract(
-      testInterestSetterJson.abi,
-    ) as TestInterestSetter;
+    this.testExchangeWrapper = new this.web3.eth.Contract(testExchangeWrapperJson.abi) as TestExchangeWrapper;
+    this.testInterestSetter = new this.web3.eth.Contract(testInterestSetterJson.abi) as TestInterestSetter;
     this.testLib = new this.web3.eth.Contract(testLibJson.abi) as TestLib;
     this.testLiquidityTokenUnwrapperTrader = new this.web3.eth.Contract(
       testLiquidityTokenUnwrapperTraderJson.abi,
@@ -178,18 +162,15 @@ export class TestContracts extends Contracts {
     this.testParaswapAugustusRouter = new this.web3.eth.Contract(
       testParaswapAugustusRouterJson.abi,
     ) as TestParaswapAugustusRouter;
+    this.testParaswapTrader = new this.web3.eth.Contract(
+      testParaswapTraderJson.abi,
+    ) as TestParaswapTrader;
     this.testPolynomialInterestSetter = new this.web3.eth.Contract(
       testPolynomialInterestSetterJson.abi,
     ) as TestPolynomialInterestSetter;
-    this.testPriceOracle = new this.web3.eth.Contract(
-      testPriceOracleJson.abi,
-    ) as TestPriceOracle;
-    this.testSimpleCallee = new this.web3.eth.Contract(
-      testSimpleCalleeJson.abi,
-    ) as TestSimpleCallee;
-    this.testUniswapV2Factory = new this.web3.eth.Contract(
-      testUniswapV2FactoryJson.abi,
-    ) as UniswapV2Factory;
+    this.testPriceOracle = new this.web3.eth.Contract(testPriceOracleJson.abi) as TestPriceOracle;
+    this.testSimpleCallee = new this.web3.eth.Contract(testSimpleCalleeJson.abi) as TestSimpleCallee;
+    this.testUniswapV2Factory = new this.web3.eth.Contract(testUniswapV2FactoryJson.abi) as UniswapV2Factory;
     this.testUniswapV3MultiRouter = new this.web3.eth.Contract(
       testUniswapV3MultiRouterJson.abi,
     ) as TestUniswapV3MultiRouter;
@@ -201,17 +182,9 @@ export class TestContracts extends Contracts {
     this.setDefaultAccount(this.web3.eth.defaultAccount);
   }
 
-  public async getUniswapV2PairByTokens(
-    tokenA: address,
-    tokenB: address,
-  ): Promise<UniswapV2Pair> {
-    const pairAddress = await this.testUniswapV2Factory.methods
-      .getPair(tokenA, tokenB)
-      .call();
-    const pair = new this.web3.eth.Contract(
-      testUniswapV2PairJson.abi,
-      pairAddress,
-    ) as UniswapV2Pair;
+  public async getUniswapV2PairByTokens(tokenA: address, tokenB: address): Promise<UniswapV2Pair> {
+    const pairAddress = await this.testUniswapV2Factory.methods.getPair(tokenA, tokenB).call();
+    const pair = new this.web3.eth.Contract(testUniswapV2PairJson.abi, pairAddress) as UniswapV2Pair;
     pair.options.from = this.testUniswapV2Factory.options.from;
     return pair;
   }
@@ -237,11 +210,12 @@ export class TestContracts extends Contracts {
       { contract: this.erroringToken, json: erroringTokenJson },
       { contract: this.malformedToken, json: malformedTokenJson },
       { contract: this.omiseToken, json: omiseTokenJson },
+      { contract: this.weth, json: testWeth },
       // test contracts
       { contract: this.chainlinkPriceOracleV1, json: testChainlinkPriceOracleJson },
       { contract: this.dolomiteMargin, json: testDolomiteMarginJson },
+      { contract: this.testAmmRebalancerProxy, json: testAmmRebalancerProxyJson },
       { contract: this.testAccountRiskOverrideSetter, json: testAccountRiskOverrideSetterJson, },
-      { contract: this.testAmmRebalancerProxy, json: testAmmRebalancerProxyJson, },
       { contract: this.testAutoTrader, json: testAutoTraderJson },
       { contract: this.testCallee, json: testCalleeJson },
       { contract: this.testChainlinkFlags, json: testChainlinkFlagsJson },
@@ -253,6 +227,7 @@ export class TestContracts extends Contracts {
       { contract: this.testLib, json: testLibJson },
       { contract: this.testLiquidityTokenUnwrapperTrader, json: testLiquidityTokenUnwrapperTraderJson },
       { contract: this.testParaswapAugustusRouter, json: testParaswapAugustusRouterJson },
+      { contract: this.testParaswapTrader, json: testParaswapTraderJson },
       { contract: this.testPolynomialInterestSetter, json: testPolynomialInterestSetterJson },
       { contract: this.testPriceOracle, json: testPriceOracleJson },
       { contract: this.testSimpleCallee, json: testSimpleCalleeJson },
@@ -262,13 +237,7 @@ export class TestContracts extends Contracts {
     ];
 
     contracts.forEach(contract =>
-      this.setContractProvider(
-        contract.contract,
-        contract.json,
-        provider,
-        networkId,
-        null,
-      ),
+      this.setContractProvider(contract.contract, contract.json, provider, networkId, null),
     );
   }
 
@@ -305,8 +274,9 @@ export class TestContracts extends Contracts {
     this.testInterestSetter.options.from = account;
     this.testLib.options.from = account;
     this.testLiquidityTokenUnwrapperTrader.options.from = account;
-    this.testPolynomialInterestSetter.options.from = account;
     this.testParaswapAugustusRouter.options.from = account;
+    this.testParaswapTrader.options.from = account;
+    this.testPolynomialInterestSetter.options.from = account;
     this.testPriceOracle.options.from = account;
     this.testSimpleCallee.options.from = account;
     this.testUniswapV2Factory.options.from = account;

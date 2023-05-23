@@ -254,17 +254,34 @@ library AccountActionLib {
         uint256 _heldMarketId,
         address _expiryProxy,
         uint32 _expiry,
+        uint256 _solidHeldUpdateWithReward,
+        uint256 _owedWeiToLiquidate,
         bool _flipMarkets
     ) internal pure returns (Actions.ActionArgs memory) {
-        return Actions.ActionArgs({
-        actionType: Actions.ActionType.Trade,
-            accountId: _solidAccountId,
-            amount: Types.AssetAmount({
+        Types.AssetAmount memory assetAmount;
+        if (!_flipMarkets) {
+            // Make the amount positive so the liquid account's owedMarket goes up (gets repaid).
+            assetAmount = Types.AssetAmount({
                 sign: true,
                 denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Target,
-                value: 0
-            }),
+                ref: Types.AssetReference.Delta,
+                value: _owedWeiToLiquidate
+            });
+        } else {
+          /*assert(_flipMarkets);*/
+            // Make the amount negative so the liquid account's heldMarket goes down (gets spent to repay owedMarket).
+            assetAmount = Types.AssetAmount({
+                sign: false,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: _solidHeldUpdateWithReward
+            });
+        }
+
+        return Actions.ActionArgs({
+            actionType: Actions.ActionType.Trade,
+            accountId: _solidAccountId,
+            amount: assetAmount,
             primaryMarketId: !_flipMarkets ? _owedMarketId : _heldMarketId,
             secondaryMarketId: !_flipMarkets ? _heldMarketId : _owedMarketId,
             otherAddress: _expiryProxy,
@@ -280,7 +297,7 @@ library AccountActionLib {
         uint256 _secondaryMarketId,
         address _traderAddress,
         uint256 _amountInWei,
-        uint256 _amountOutWei
+        uint256 _amountOutMinWei
     ) internal pure returns (Actions.ActionArgs memory) {
         return Actions.ActionArgs({
             actionType : Actions.ActionType.Trade,
@@ -291,7 +308,29 @@ library AccountActionLib {
             secondaryMarketId : _secondaryMarketId,
             otherAddress : _traderAddress,
             otherAccountId : _toAccountId,
-            data : abi.encode(_amountOutWei)
+            data : abi.encode(_amountOutMinWei)
+        });
+    }
+
+    function encodeInternalTradeActionWithCustomData(
+        uint256 _fromAccountId,
+        uint256 _toAccountId,
+        uint256 _primaryMarketId,
+        uint256 _secondaryMarketId,
+        address _traderAddress,
+        uint256 _amountInWei,
+        bytes memory _orderData
+    ) internal pure returns (Actions.ActionArgs memory) {
+        return Actions.ActionArgs({
+            actionType : Actions.ActionType.Trade,
+            accountId : _fromAccountId,
+            // solium-disable-next-line arg-overflow
+            amount : Types.AssetAmount(true, Types.AssetDenomination.Wei, Types.AssetReference.Delta, _amountInWei),
+            primaryMarketId : _primaryMarketId,
+            secondaryMarketId : _secondaryMarketId,
+            otherAddress : _traderAddress,
+            otherAccountId : _toAccountId,
+            data : _orderData
         });
     }
 

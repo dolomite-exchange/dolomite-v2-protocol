@@ -34,8 +34,11 @@ import { Require } from "../../protocol/lib/Require.sol";
 import { Time } from "../../protocol/lib/Time.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
+import { HasLiquidatorRegistry } from "../helpers/LiquidatorProxyBase.sol";
 import { LiquidatorProxyBase } from "../helpers/LiquidatorProxyBase.sol";
+
 import { IExpiry } from "../interfaces/IExpiry.sol";
+
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
 import { DolomiteAmmRouterProxy } from "./DolomiteAmmRouterProxy.sol";
@@ -97,7 +100,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
         address _liquidatorAssetRegistry
     )
         public
-        LiquidatorProxyBase(_liquidatorAssetRegistry)
+        HasLiquidatorRegistry(_liquidatorAssetRegistry)
     {
         DOLOMITE_MARGIN = IDolomiteMargin(dolomiteMargin);
         ROUTER_PROXY = DolomiteAmmRouterProxy(dolomiteAmmRouterProxy);
@@ -137,37 +140,31 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
         uint256 _minOwedOutputAmount,
         bool _revertOnFailToSellCollateral
     )
-    public
-    nonReentrant
-    requireIsAssetWhitelistedForLiquidation(_heldMarket)
+        public
+        nonReentrant
+        requireIsAssetWhitelistedForLiquidation(_owedMarket)
+        requireIsAssetWhitelistedForLiquidation(_heldMarket)
     {
         // put all values that will not change into a single struct
         LiquidatorProxyConstants memory constants;
         constants.dolomiteMargin = DOLOMITE_MARGIN;
-        _checkConstants(
-            constants,
-            _liquidAccount,
-            _owedMarket,
-            _heldMarket,
-            _expiry
-        );
-
         constants.solidAccount = _solidAccount;
         constants.liquidAccount = _liquidAccount;
-        constants.liquidMarkets = constants.dolomiteMargin.getAccountMarketsWithBalances(_liquidAccount);
+        constants.heldMarket = _heldMarket;
+        constants.owedMarket = _owedMarket;
+
+        _checkConstants(constants, _expiry);
+
+        constants.liquidMarkets = constants.dolomiteMargin.getAccountMarketsWithBalances(constants.liquidAccount);
         constants.markets = _getMarketInfos(
             constants.dolomiteMargin,
             constants.dolomiteMargin.getAccountMarketsWithBalances(_solidAccount),
             constants.liquidMarkets
         );
-        constants.expiryProxy = _expiry > 0 ? EXPIRY_PROXY: IExpiry(address(0));
+        constants.expiryProxy = _expiry > 0 ? EXPIRY_PROXY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
         constants.expiry = uint32(_expiry);
 
-        LiquidatorProxyCache memory cache = _initializeCache(
-            constants,
-            _heldMarket,
-            _owedMarket
-        );
+        LiquidatorProxyCache memory cache = _initializeCache(constants);
 
         // validate the msg.sender and that the liquidAccount can be liquidated
         _checkRequirements(
@@ -189,15 +186,16 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             totalSolidHeldWei = totalSolidHeldWei.add(cache.solidHeldWei.value);
         }
 
+        address[] memory tokenPathInFrontOfStack = _tokenPath; // used to prevent "stack too deep" error
         (
-            Account.Info[] memory accounts,
+            Account.Info[] memory accountsForTrade,
             Actions.ActionArgs[] memory actions
         ) = ROUTER_PROXY.getParamsForSwapTokensForExactTokens(
             constants.solidAccount.owner,
             constants.solidAccount.number,
             /* _amountInMaxWei = */ uint(- 1), // solium-disable-line indentation
             cache.owedWeiToLiquidate, // the amount of owedMarket that needs to be repaid. Exact output amount
-            _tokenPath
+            tokenPathInFrontOfStack
         );
 
         if (cache.solidHeldUpdateWithReward >= actions[0].amount.value) {
@@ -205,10 +203,10 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             emit LogLiquidateWithAmm(
                 constants.solidAccount.owner,
                 constants.solidAccount.number,
-                cache.heldMarket,
+                constants.heldMarket,
                 cache.solidHeldUpdateWithReward,
                 Types.Wei(true, profit),
-                cache.owedMarket,
+                constants.owedMarket,
                 cache.owedWeiToLiquidate
             );
         } else {
@@ -220,10 +218,9 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
                 actions[0].amount.value
             );
 
-            address[] memory tokenPathInFrontOfStack = _tokenPath; // used to prevent "stack too deep" error
             // This value needs to be calculated before `actions` is overwritten below with the new swap parameters
             uint256 profit = actions[0].amount.value.sub(cache.solidHeldUpdateWithReward);
-            (accounts, actions) = ROUTER_PROXY.getParamsForSwapExactTokensForTokens(
+            (accountsForTrade, actions) = ROUTER_PROXY.getParamsForSwapExactTokensForTokens(
                 constants.solidAccount.owner,
                 constants.solidAccount.number,
                 totalSolidHeldWei, // inputWei
@@ -234,15 +231,15 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             emit LogLiquidateWithAmm(
                 constants.solidAccount.owner,
                 constants.solidAccount.number,
-                cache.heldMarket,
+                constants.heldMarket,
                 cache.solidHeldUpdateWithReward,
                 Types.Wei(false, profit),
-                cache.owedMarket,
+                constants.owedMarket,
                 cache.owedWeiToLiquidate
             );
         }
 
-        accounts = _constructAccountsArray(constants, accounts);
+        Account.Info[] memory accounts = _constructAccountsArray(constants, accountsForTrade);
 
         // execute the liquidations
         constants.dolomiteMargin.operate(
@@ -286,7 +283,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             _tokenPath[_tokenPath.length - 1]
         );
 
-        _checkBasicRequirements(_constants, _owedMarket);
+        _checkBasicRequirements(_constants);
     }
 
     function _constructAccountsArray(
@@ -329,11 +326,13 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             actions[0] = AccountActionLib.encodeExpiryLiquidateAction(
                 _solidAccountId,
                 _liquidAccountId,
-                _cache.owedMarket,
-                _cache.heldMarket,
+                _constants.owedMarket,
+                _constants.heldMarket,
                 address(_constants.expiryProxy),
                 _constants.expiry,
-                _cache.flipMarkets
+                _cache.solidHeldUpdateWithReward,
+                _cache.owedWeiToLiquidate,
+                _cache.flipMarketsForExpiration
             );
         } else {
             // First action is a liquidation
@@ -341,8 +340,8 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             actions[0] = AccountActionLib.encodeLiquidateAction(
                 _solidAccountId,
                 _liquidAccountId,
-                _cache.owedMarket,
-                _cache.heldMarket,
+                _constants.owedMarket,
+                _constants.heldMarket,
                 _cache.owedWeiToLiquidate
             );
         }

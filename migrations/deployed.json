@@ -379,8 +379,8 @@
         },
         "421613": {
             "links": {},
-            "address": "0x67d1287Ae9e7beAd6cf0ea993a0A9145503D452e",
-            "transactionHash": "0x18a1fbd1cc4482e18d36dd98eb19dcdb0b3adbfadc23329ed34a3ef6acc09eb0"
+            "address": "0x2FF985ee3a262D647D9dA67424C219507F4C8297",
+            "transactionHash": "0xea7310f5a747ad87068efea88f3c64eb50a710d1f09a36a47285a50aaddc56fd"
         }
     },
     "LiquidatorProxyV1WithAmm": {
@@ -401,8 +401,8 @@
         },
         "421613": {
             "links": {},
-            "address": "0x253ab314Db0688A22280F800790cF1493E660b07",
-            "transactionHash": "0x2bfaaf74d8773ad6784c62ed789c626713ffe25ea39ff16fc4240ca325dae11a"
+            "address": "0x1F24F5c24eD8AAdf499C146388d05cdeE6Eaa4Cf",
+            "transactionHash": "0x6f6c82f43bb74b5579cf81d085d0d674aaee660d08c6ee918bc7eaf4fac8e883"
         }
     },
     "LiquidatorProxyV2WithExternalLiquidity": {
@@ -595,6 +595,11 @@
             "links": {},
             "address": "0x38E49A617305101216eC6306e3a18065D14Bf3a7",
             "transactionHash": "0x6de8d7f6e27d62e73dd25e5af4de52e2ce086b51252805db63a8255760746995"
+        },
+        "421613": {
+            "links": {},
+            "address": "0x686E939B9Aa7Ed1DD13716Ee6dBA0ee7d096Da78",
+            "transactionHash": "0x361e9ef6aa826da50712682e21c254b448176d766973e7a0c8758dda7991a32f"
         }
     },
     "MultiCall": {
@@ -762,6 +767,11 @@
             "links": {},
             "address": "0xc2cBd99bb35b22C43010a8c8266Cdff057f70BB1",
             "transactionHash": "0xe0eff4b219f64d2dbdfa2e4d0163769d2f1e9eee537499a58482fe976bd3b78c"
+        },
+        "421613": {
+            "links": {},
+            "address": "0x7CB819797Aa1BE2F46eC34D6176349BCD999Ea7F",
+            "transactionHash": "0x70687ac03f790760350456962f6a569bdd0fdc640c1359a3b3d900b507321650"
         }
     },
     "AAVECopyCatStableCoinInterestSetter": {
@@ -769,6 +779,11 @@
             "links": {},
             "address": "0xEA4E670fD64aE82af5a3d77b3Db6b5E28A5522de",
             "transactionHash": "0xb5e614f72cbdb3b9a879e176bc72eac0027c08a17956ee20b2c55eeaa058b8b9"
+        },
+        "421613": {
+            "links": {},
+            "address": "0xC60200f49E28C8EAC78336d895a18D5699E073ce",
+            "transactionHash": "0x0491bbba251f329fce024bbcbc801a0a2f7d9aa32e58a61a957d76f89161b239"
         }
     },
     "LiquidatorAssetRegistry": {
@@ -776,6 +791,30 @@
             "links": {},
             "address": "0x89324260096f1e7D3678Bf0ec9E3b8c7530111b2",
             "transactionHash": "0x8023408ca5d1408a4d887eb11674da54dcb910affd091e9f0e9a13f04f7a3b53"
+        },
+        "421613": {
+            "links": {},
+            "address": "0xAB417755ae9E43b1E44BFe2b78B7a4e808A9d3ca",
+            "transactionHash": "0xe45910c0f1b33c17280859d4031fdf4fbefccc26705aa1730e4a971dc956c33d"
+        }
+    },
+    "PartiallyDelayedMultiSig": {
+        "42161": {
+            "links": {},
+            "address": "0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9",
+            "transactionHash": "0xd4534bcd27dadbf4a3743dd5f6b325e8a370709f681d7c7e678a5d8745a6e551"
+        }
+    },
+    "AlwaysZeroInterestSetter": {
+        "42161": {
+            "links": {},
+            "address": "0x37b6fF70654EDfBdAA3c9a723fdAdF5844De2168",
+            "transactionHash": "0x6992828fe897b2b26ee8707e07019491f40b9b660760a39a8e85b46ef2057e7c"
+        },
+        "421613": {
+            "links": {},
+            "address": "0x2536ef4105a6173683C7fFCE9547091960F6d939",
+            "transactionHash": "0xe5d59294ad68866954d5c737aa7bb766783526922e839efc2de7a0d3d71eec15"
         }
     }
 }

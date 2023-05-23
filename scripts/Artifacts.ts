@@ -22,6 +22,7 @@ import DolomiteMargin from '../build/contracts/DolomiteMargin.json';
 import DoubleExponentInterestSetter from '../build/contracts/DoubleExponentInterestSetter.json';
 import Events from '../build/contracts/Events.json';
 import Expiry from '../build/contracts/Expiry.json';
+import GenericTraderProxyV1 from '../build/contracts/GenericTraderProxyV1.json';
 import GettersImpl from '../build/contracts/GettersImpl.json';
 import LiquidateOrVaporizeImpl from '../build/contracts/LiquidateOrVaporizeImpl.json';
 import IArbitrumGasInfo from '../build/contracts/IArbitrumGasInfo.json';
@@ -29,6 +30,7 @@ import IERC20 from '../build/contracts/IERC20.json';
 import IAccountRiskOverrideSetter from '../build/contracts/IAccountRiskOverrideSetter.json';
 import IInterestSetter from '../build/contracts/IInterestSetter.json';
 import ILiquidityTokenUnwrapperTrader from '../build/contracts/ILiquidityTokenUnwrapperTrader.json';
+import ILiquidityTokenWrapperTrader from '../build/contracts/ILiquidityTokenWrapperTrader.json';
 import IOracleSentinel from '../build/contracts/IOracleSentinel.json';
 import IPriceOracle from '../build/contracts/IPriceOracle.json';
 import LiquidatorAssetRegistry from '../build/contracts/LiquidatorAssetRegistry.json';
@@ -36,6 +38,8 @@ import LiquidatorProxyV1 from '../build/contracts/LiquidatorProxyV1.json';
 import LiquidatorProxyV1WithAmm from '../build/contracts/LiquidatorProxyV1WithAmm.json';
 import LiquidatorProxyV2WithExternalLiquidity from '../build/contracts/LiquidatorProxyV2WithExternalLiquidity.json';
 import LiquidatorProxyV3WithLiquidityToken from '../build/contracts/LiquidatorProxyV3WithLiquidityToken.json';
+import LiquidatorProxyV4WithGenericTrader from '../build/contracts/LiquidatorProxyV4WithGenericTrader.json';
+import MarginPositionRegistry from '../build/contracts/MarginPositionRegistry.json';
 import MultiCall from '../build/contracts/MultiCall.json';
 import OperationImpl from '../build/contracts/OperationImpl.json';
 import PartiallyDelayedMultiSig from '../build/contracts/PartiallyDelayedMultiSig.json';
@@ -48,7 +52,7 @@ import TestUniswapAmmRebalancerProxy from '../build/contracts/TestUniswapAmmReba
 import TradeImpl from '../build/contracts/TradeImpl.json';
 import TransferImpl from '../build/contracts/TransferImpl.json';
 import TransferProxy from '../build/contracts/TransferProxy.json';
-import Weth from '../build/contracts/TestWETH.json';
+import WETH from '../build/contracts/IWETH.json';
 import WithdrawalImpl from '../build/contracts/WithdrawalImpl.json';
 
 export default {
@@ -72,6 +76,7 @@ export default {
   DoubleExponentInterestSetter,
   Events,
   Expiry,
+  GenericTraderProxyV1,
   GettersImpl,
   LiquidateOrVaporizeImpl,
   IAccountRiskOverrideSetter,
@@ -79,6 +84,7 @@ export default {
   IERC20,
   IInterestSetter,
   ILiquidityTokenUnwrapperTrader,
+  ILiquidityTokenWrapperTrader,
   IOracleSentinel,
   IPriceOracle,
   LiquidatorAssetRegistry,
@@ -86,6 +92,8 @@ export default {
   LiquidatorProxyV1WithAmm,
   LiquidatorProxyV2WithExternalLiquidity,
   LiquidatorProxyV3WithLiquidityToken,
+  LiquidatorProxyV4WithGenericTrader,
+  MarginPositionRegistry,
   MultiCall,
   OperationImpl,
   PartiallyDelayedMultiSig,
@@ -98,6 +106,6 @@ export default {
   TradeImpl,
   TransferImpl,
   TransferProxy,
-  Weth,
+  WETH,
   WithdrawalImpl,
 };

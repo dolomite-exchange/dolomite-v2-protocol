@@ -258,8 +258,9 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
         markets[0] = marketId0;
         markets[1] = marketId1;
 
-        uint amount0 = _getTokenBalancePar(_dolomiteMargin, markets[0]).sub(reserve0Par);
-        uint amount1 = _getTokenBalancePar(_dolomiteMargin, markets[1]).sub(reserve1Par);
+        (uint112 reserve0Wei, uint112 reserve1Wei,) = getReservesWei();
+        uint amount0 = _getTokenBalanceWei(_dolomiteMargin, markets[0]).sub(reserve0Wei);
+        uint amount1 = _getTokenBalanceWei(_dolomiteMargin, markets[1]).sub(reserve1Wei);
 
         uint[] memory amounts = new uint[](2);
         amounts[0] = amount0;

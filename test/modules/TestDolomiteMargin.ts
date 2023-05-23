@@ -1,10 +1,7 @@
 import Web3 from 'web3';
 import { Provider } from 'web3/providers';
 
-import {
-  DolomiteMargin,
-  DolomiteMarginOptions,
-} from '../../src';
+import { DolomiteMargin, DolomiteMarginOptions } from '../../src';
 import { Contracts } from '../../src/lib/Contracts';
 import { Operation } from '../../src/modules/operate/Operation';
 import { TestContracts } from './TestContracts';
@@ -15,11 +12,7 @@ export class TestDolomiteMargin extends DolomiteMargin {
   public contracts: TestContracts;
   public testing: Testing;
 
-  constructor(
-    provider: Provider,
-    networkId: number,
-    options: DolomiteMarginOptions = {},
-  ) {
+  constructor(provider: Provider, networkId: number, options: DolomiteMarginOptions = {}) {
     super(provider, networkId, options);
     this.testing = new Testing(provider, this.contracts, this.token);
     this.operation = new Operation(this.contracts as Contracts, new TestOrderMapper(this.contracts), networkId);

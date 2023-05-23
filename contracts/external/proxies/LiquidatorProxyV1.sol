@@ -32,6 +32,7 @@ import { Monetary } from "../../protocol/lib/Monetary.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
+import { HasLiquidatorRegistry } from "../helpers/HasLiquidatorRegistry.sol";
 import { LiquidatorProxyBase } from "../helpers/LiquidatorProxyBase.sol";
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 
@@ -87,9 +88,11 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
         address _dolomiteMargin
     )
         public
-        LiquidatorProxyBase(_liquidatorAssetRegistry)
+        HasLiquidatorRegistry(_liquidatorAssetRegistry)
         OnlyDolomiteMargin(_dolomiteMargin)
-    {} /* solium-disable-line no-empty-blocks */
+    {
+        /* solium-disable-line no-empty-blocks */
+    }
 
     // ============ Public Functions ============
 
@@ -113,6 +116,7 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
     )
         public
         nonReentrant
+        requireIsAssetsWhitelistedForLiquidation(_owedPreferences)
         requireIsAssetsWhitelistedForLiquidation(_heldPreferences)
     {
         // put all values that will not change into a single struct

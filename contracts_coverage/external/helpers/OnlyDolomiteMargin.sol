@@ -60,4 +60,24 @@ contract OnlyDolomiteMargin {
         );
         _;
     }
+
+    modifier onlyDolomiteMarginOwner(address _from) {
+        if (_from == DOLOMITE_MARGIN.owner()) { /* FOR COVERAGE TESTING */ }
+        Require.that(_from == DOLOMITE_MARGIN.owner(),
+            FILE,
+            "Only Dolomite owner can call",
+            _from
+        );
+        _;
+    }
+
+    modifier onlyGlobalOperator(address _from) {
+        if (DOLOMITE_MARGIN.getIsGlobalOperator(_from)) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getIsGlobalOperator(_from),
+            FILE,
+            "Only global operator can call",
+            _from
+        );
+        _;
+    }
 }

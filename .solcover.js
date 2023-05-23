@@ -1,8 +1,3 @@
-// const { Typechain } = require('typechain');
-// const { tsGenerator } = require('ts-generator');
-// const truffleUtils = require('solidity-coverage/plugins/resources/truffle.utils');
-// const resetTestEvm = require('./scripts/reset-test-evm-runnable');
-// const snapshotTestEvm = require('./scripts/snapshot-test-evm-runnable');
 const { execSync } = require('child_process');
 const chainId = 1002;
 const port = 8555;
@@ -10,16 +5,16 @@ const port = 8555;
 module.exports = {
   skipFiles: [
     'Migrations.sol',
-    'external/amm/SimpleFeeOwner.sol',
-    'external/oracles/TestChainlinkPriceOracleV1.sol',
-    'external/multisig/MultiSig.sol',
-    'external/multisig/DelayedMultiSig.sol',
+    'external/amm/',
+    'external/interestsetters/',
+    'external/multisig/',
     'external/rebalancers/',
     'external/uniswap-v2/',
     'external/utils/MultiCall.sol',
     'external/utils/ArbitrumMultiCall.sol',
     'testing/',
   ],
+  measureFunctionCoverage: false, // done because of this error here: https://github.com/sc-forks/solidity-coverage/blob/master/docs/faq.md#running-out-of-memory
   measureStatementCoverage: false, // done because of this error here: https://github.com/sc-forks/solidity-coverage/blob/master/docs/faq.md#running-out-of-memory
   providerOptions: {
     chainId: chainId,

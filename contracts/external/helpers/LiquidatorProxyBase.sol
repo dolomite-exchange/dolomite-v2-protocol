@@ -1,6 +1,6 @@
 /*
 
-    Copyright 2019 dYdX Trading Inc.
+    Copyright 2022 Dolomite.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ import { Require } from "../../protocol/lib/Require.sol";
 import { Time } from "../../protocol/lib/Time.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
+import { HasLiquidatorRegistry } from "./HasLiquidatorRegistry.sol";
+
 
 /**
  * @title LiquidatorProxyBase
@@ -42,7 +44,7 @@ import { Types } from "../../protocol/lib/Types.sol";
  *
  * Inheritable contract that allows sharing code across different liquidator proxy contracts
  */
-contract LiquidatorProxyBase {
+contract LiquidatorProxyBase is HasLiquidatorRegistry {
     using SafeMath for uint;
     using Types for Types.Par;
 
@@ -66,6 +68,8 @@ contract LiquidatorProxyBase {
         IDolomiteMargin dolomiteMargin;
         Account.Info solidAccount;
         Account.Info liquidAccount;
+        uint256 heldMarket;
+        uint256 owedMarket;
         MarketInfo[] markets;
         uint256[] liquidMarkets;
         IExpiry expiryProxy;
@@ -82,85 +86,80 @@ contract LiquidatorProxyBase {
         Types.Wei solidOwedWei;
         Types.Wei liquidHeldWei;
         Types.Wei liquidOwedWei;
+        // This exists purely for expirations. If the amount being repaid is meant to be ALL but the value of the debt
+        // is greater than the value of the collateral, then we need to flip the markets in the trade for the Target=0
+        // encoding of the Amount. There's a rounding issue otherwise because amounts are calculated differently for
+        // trades vs. liquidations
+        bool flipMarketsForExpiration;
 
         // immutable
-        uint256 heldMarket;
-        uint256 owedMarket;
         uint256 heldPrice;
         uint256 owedPrice;
         uint256 owedPriceAdj;
-        bool flipMarkets;
-    }
-
-    // ============ Storage ============
-
-    ILiquidatorAssetRegistry public LIQUIDATOR_ASSET_REGISTRY;
-
-    // ============ Constructors ============
-
-    constructor(
-        address _liquidatorAssetRegistry
-    )
-        public
-    {
-        LIQUIDATOR_ASSET_REGISTRY = ILiquidatorAssetRegistry(_liquidatorAssetRegistry);
     }
 
     // ============ Internal Functions ============
 
     modifier requireIsAssetWhitelistedForLiquidation(uint256 _marketId) {
+        _validateAssetForLiquidation(_marketId);
+        _;
+    }
+
+    modifier requireIsAssetsWhitelistedForLiquidation(uint256[] memory _marketIds) {
+        _validateAssetsForLiquidation(_marketIds);
+        _;
+    }
+
+    // ============ Internal Functions ============
+
+    function _validateAssetForLiquidation(uint256 _marketId) internal view {
         Require.that(
             LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketId, address(this)),
             FILE,
             "Asset not whitelisted",
             _marketId
         );
-        _;
     }
 
-    modifier requireIsAssetsWhitelistedForLiquidation(uint256[] memory _marketIds) {
+    function _validateAssetsForLiquidation(uint256[] memory _marketIds) internal view {
+        ILiquidatorAssetRegistry liquidatorAssetRegistry = LIQUIDATOR_ASSET_REGISTRY;
         for (uint256 i = 0; i < _marketIds.length; i++) {
             Require.that(
-                LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
+                liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
                 FILE,
                 "Asset not whitelisted",
                 _marketIds[i]
             );
         }
-        _;
     }
-
-    // ============ Internal Functions ============
 
     /**
      * Pre-populates cache values for some pair of markets.
      */
     function _initializeCache(
-        LiquidatorProxyConstants memory _constants,
-        uint256 _heldMarket,
-        uint256 _owedMarket
+        LiquidatorProxyConstants memory _constants
     )
     internal
     view
     returns (LiquidatorProxyCache memory)
     {
-        MarketInfo memory heldMarketInfo = _binarySearch(_constants.markets, _heldMarket);
-        MarketInfo memory owedMarketInfo = _binarySearch(_constants.markets, _owedMarket);
+        MarketInfo memory heldMarketInfo = _binarySearch(_constants.markets, _constants.heldMarket);
+        MarketInfo memory owedMarketInfo = _binarySearch(_constants.markets, _constants.owedMarket);
 
         uint256 owedPriceAdj;
         if (_constants.expiry > 0) {
             (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
                 _constants.liquidAccount.owner,
-                _heldMarket,
-                _owedMarket,
+                _constants.heldMarket,
+                _constants.owedMarket,
                 _constants.expiry
             );
             owedPriceAdj = owedPricePrice.value;
         } else {
             Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
                 _constants.liquidAccount.owner,
-                _heldMarket,
-                _owedMarket
+                _constants.heldMarket,
+                _constants.owedMarket
             );
             owedPriceAdj = owedMarketInfo.price.value.add(Decimal.mul(owedMarketInfo.price.value, spread));
         }
@@ -169,27 +168,25 @@ contract LiquidatorProxyBase {
             owedWeiToLiquidate: 0,
             solidHeldUpdateWithReward: 0,
             solidHeldWei: Interest.parToWei(
-                _constants.dolomiteMargin.getAccountPar(_constants.solidAccount, _heldMarket),
+                _constants.dolomiteMargin.getAccountPar(_constants.solidAccount, _constants.heldMarket),
                 heldMarketInfo.index
             ),
             solidOwedWei: Interest.parToWei(
-                _constants.dolomiteMargin.getAccountPar(_constants.solidAccount, _owedMarket),
+                _constants.dolomiteMargin.getAccountPar(_constants.solidAccount, _constants.owedMarket),
                 owedMarketInfo.index
             ),
             liquidHeldWei: Interest.parToWei(
-                _constants.dolomiteMargin.getAccountPar(_constants.liquidAccount, _heldMarket),
+                _constants.dolomiteMargin.getAccountPar(_constants.liquidAccount, _constants.heldMarket),
                 heldMarketInfo.index
             ),
             liquidOwedWei: Interest.parToWei(
-                _constants.dolomiteMargin.getAccountPar(_constants.liquidAccount, _owedMarket),
+                _constants.dolomiteMargin.getAccountPar(_constants.liquidAccount, _constants.owedMarket),
                 owedMarketInfo.index
             ),
-            heldMarket: _heldMarket,
-            owedMarket: _owedMarket,
+            flipMarketsForExpiration: false,
             heldPrice: heldMarketInfo.price.value,
             owedPrice: owedMarketInfo.price.value,
-            owedPriceAdj: owedPriceAdj,
-            flipMarkets: false
+            owedPriceAdj: owedPriceAdj
         });
     }
 
@@ -201,53 +198,59 @@ contract LiquidatorProxyBase {
      */
     function _checkConstants(
         LiquidatorProxyConstants memory _constants,
-        Account.Info memory _liquidAccount,
-        uint256 _owedMarket,
-        uint256 _heldMarket,
         uint256 _expiry
     )
     internal
     view
     {
+        // panic if the developer didn't set these variables already
         assert(address(_constants.dolomiteMargin) != address(0));
+        assert(_constants.solidAccount.owner != address(0));
+        assert(_constants.liquidAccount.owner != address(0));
+
         Require.that(
-            _owedMarket != _heldMarket,
+            _constants.owedMarket != _constants.heldMarket,
             FILE,
-            "owedMarket equals heldMarket",
-            _owedMarket
+            "Owed market equals held market",
+            _constants.owedMarket
         );
 
         Require.that(
-            !_constants.dolomiteMargin.getAccountPar(_liquidAccount, _owedMarket).isPositive(),
+            !_constants.dolomiteMargin.getAccountPar(_constants.liquidAccount, _constants.owedMarket).isPositive(),
             FILE,
-            "owed market cannot be positive",
-            _owedMarket
+            "Owed market cannot be positive",
+            _constants.owedMarket
         );
 
         Require.that(
-            _constants.dolomiteMargin.getAccountPar(_liquidAccount, _heldMarket).isPositive(),
+            _constants.dolomiteMargin.getAccountPar(_constants.liquidAccount, _constants.heldMarket).isPositive(),
             FILE,
-            "held market cannot be negative",
-            _heldMarket
+            "Held market cannot be negative",
+            _constants.heldMarket
         );
 
         Require.that(
             uint32(_expiry) == _expiry,
             FILE,
-            "expiry overflow",
+            "Expiry overflows",
+            _expiry
+        );
+
+        Require.that(
+            _expiry <= Time.currentTime(),
+            FILE,
+            "Borrow not yet expired",
             _expiry
         );
     }
 
     /**
      * Make some basic checks before attempting to liquidate an account.
-     *  - Require that the msg.sender has the permission to use the liquidator account
-     *  - Require that the liquid account is liquidatable based on the accounts global value (all assets held and owed,
-     *    not just what's being liquidated)
+     *  - Require that the msg.sender has the permission to use the solid account
+     *  - Require that the liquid account is liquidatable if using an expiry
      */
     function _checkBasicRequirements(
-        LiquidatorProxyConstants memory _constants,
-        uint256 _owedMarket
+        LiquidatorProxyConstants memory _constants
     )
     internal
     view
@@ -255,7 +258,7 @@ contract LiquidatorProxyBase {
         // check credentials for msg.sender
         Require.that(
             _constants.solidAccount.owner == msg.sender
-            || _constants.dolomiteMargin.getIsLocalOperator(_constants.solidAccount.owner, msg.sender),
+                || _constants.dolomiteMargin.getIsLocalOperator(_constants.solidAccount.owner, msg.sender),
             FILE,
             "Sender not operator",
             msg.sender
@@ -263,7 +266,7 @@ contract LiquidatorProxyBase {
 
         if (_constants.expiry != 0) {
             // check the expiration is valid; to get here we already know constants.expiry != 0
-            uint32 expiry = _constants.expiryProxy.getExpiry(_constants.liquidAccount, _owedMarket);
+            uint32 expiry = _constants.expiryProxy.getExpiry(_constants.liquidAccount, _constants.owedMarket);
             Require.that(
                 expiry == _constants.expiry,
                 FILE,
@@ -271,37 +274,29 @@ contract LiquidatorProxyBase {
                 expiry,
                 _constants.expiry
             );
-            Require.that(
-                expiry <= Time.currentTime(),
-                FILE,
-                "Borrow not yet expired",
-                expiry
-            );
         }
     }
 
     /**
-     * Calculate the additional owedAmount that can be liquidated until the collateralization of the liquidator account
-     * reaches the minLiquidatorRatio. By this point, the cache will be set such that the amount of owedMarket is
-     * non-positive and the amount of heldMarket is non-negative.
+     * Calculate the maximum amount that can be liquidated on `liquidAccount`
      */
     function _calculateAndSetMaxLiquidationAmount(
         LiquidatorProxyCache memory _cache
     )
-    internal
-    pure
+        internal
+        pure
     {
         uint256 liquidHeldValue = _cache.heldPrice.mul(_cache.liquidHeldWei.value);
         uint256 liquidOwedValue = _cache.owedPriceAdj.mul(_cache.liquidOwedWei.value);
         if (liquidHeldValue < liquidOwedValue) {
-            // The held collateral is worth less than the debt
+            // The held collateral is worth less than the adjusted debt
             _cache.solidHeldUpdateWithReward = _cache.liquidHeldWei.value;
             _cache.owedWeiToLiquidate = DolomiteMarginMath.getPartialRoundUp(
                 _cache.liquidHeldWei.value,
                 _cache.heldPrice,
                 _cache.owedPriceAdj
             );
-            _cache.flipMarkets = true;
+            _cache.flipMarketsForExpiration = true;
         } else {
             _cache.solidHeldUpdateWithReward = DolomiteMarginMath.getPartial(
                 _cache.liquidOwedWei.value,
@@ -309,6 +304,39 @@ contract LiquidatorProxyBase {
                 _cache.heldPrice
             );
             _cache.owedWeiToLiquidate = _cache.liquidOwedWei.value;
+        }
+    }
+
+    function _calculateAndSetActualLiquidationAmount(
+        uint256[] memory _amountWeisForSellActionsPath,
+        LiquidatorProxyCache memory _cache
+    )
+        internal
+        pure
+    {
+        // at this point, _cache.owedWeiToLiquidate should be the max amount that can be liquidated on the user.
+        assert(_cache.owedWeiToLiquidate > 0); // assert it was initialized
+
+        uint256 desiredLiquidationOwedAmount = _amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1];
+        if (
+            desiredLiquidationOwedAmount < _cache.owedWeiToLiquidate
+            && desiredLiquidationOwedAmount.mul(_cache.owedPriceAdj) < _cache.heldPrice.mul(_cache.liquidHeldWei.value)
+        ) {
+            // The user wants to liquidate less than the max amount, and the held collateral is worth more than the
+            // desired debt to liquidate
+            _cache.owedWeiToLiquidate = desiredLiquidationOwedAmount;
+            _cache.solidHeldUpdateWithReward = DolomiteMarginMath.getPartial(
+                desiredLiquidationOwedAmount,
+                _cache.owedPriceAdj,
+                _cache.heldPrice
+            );
+        }
+
+        if (_amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1] == uint(-1)) {
+            // minOutputAmount is equal to the value at `length - 1` of the array. The amount being liquidated should
+            // always be covered by the sale of assets if the value was set to uint(-1). Setting the value to uint(-1)
+            // is analogous to saying "liquidated all"
+            _amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1] = _cache.owedWeiToLiquidate;
         }
     }
 
@@ -488,7 +516,7 @@ contract LiquidatorProxyBase {
     ) private pure returns (MarketInfo memory) {
         uint len = endExclusive - beginInclusive;
         if (len == 0 || (len == 1 && markets[beginInclusive].marketId != marketId)) {
-            revert("LiquidatorProxyBase: market not found");
+            revert("LiquidatorProxyBase: Market not found");
         }
 
         uint mid = beginInclusive + len / 2;

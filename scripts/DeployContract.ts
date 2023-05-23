@@ -1,13 +1,12 @@
-import { abi, bytecode, contractName } from '../build/contracts/LiquidatorProxyV3WithLiquidityToken.json';
+import { abi, bytecode, contractName } from '../build/contracts/LiquidatorProxyV1WithAmm.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
-import { LiquidatorProxyV3WithLiquidityToken } from '../build/wrappers/LiquidatorProxyV3WithLiquidityToken';
+import { LiquidatorProxyV1WithAmm } from '../build/wrappers/LiquidatorProxyV1WithAmm';
 import { execSync } from 'child_process';
 import deployed from '../migrations/deployed.json';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
 const truffle = require('../truffle');
 const writeFileAsync = promisify(fs.writeFile);
-const { getParaswapAugustusRouter, getParaswapTransferProxy } = require('../migrations/liquidator_helpers.js');
 
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -28,19 +27,18 @@ async function deploy(): Promise<void> {
   const provider = truffle.networks[network].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const deployer = (await dolomiteMargin.web3.eth.getAccounts())[0];
-  const contract = new dolomiteMargin.web3.eth.Contract(abi) as LiquidatorProxyV3WithLiquidityToken;
+  const contract = new dolomiteMargin.web3.eth.Contract(abi) as LiquidatorProxyV1WithAmm;
   const txResult = await dolomiteMargin.contracts.callContractFunction(
     contract.deploy({
       data: bytecode,
       arguments: [
-        dolomiteMargin.expiry.address,
-        getParaswapAugustusRouter(network),
-        getParaswapTransferProxy(network),
         dolomiteMargin.address,
+        dolomiteMargin.dolomiteAmmRouterProxy.address,
+        dolomiteMargin.expiry.address,
         dolomiteMargin.liquidatorAssetRegistry.address,
       ],
     }),
-    { confirmationType: ConfirmationType.Confirmed, gas: '30000000', gasPrice: '1000000000', from: deployer },
+    { confirmationType: ConfirmationType.Confirmed, gas: '30000000', gasPrice: '100000000', from: deployer },
   );
 
   console.log(`Deployed ${contractName} to ${txResult.contractAddress}`);

@@ -20,15 +20,17 @@ pragma solidity ^0.5.7;
 
 
 /**
- * @title IChainlinkAggregator
+ * @title IArbitrumSys
  * @author Dolomite
  *
- * Gets the latest price from the Chainlink Oracle Network. Amount of decimals depends on the base.
+ * Arbitrum pre-compile for getting the latest L2 block number
  */
 interface IArbitrumSys {
+
     /**
-    * @notice Get Arbitrum block number (distinct from L1 block number; Arbitrum genesis block has block number 0)
-    * @return block number as int
+     * Get Arbitrum block number (distinct from L1 block number; Arbitrum genesis block has block number 0)
+     *
+     * @return block number as a uint
      */
     function arbBlockNumber() external view returns (uint);
 }

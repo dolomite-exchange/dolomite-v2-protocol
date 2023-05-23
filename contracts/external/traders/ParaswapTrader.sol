@@ -36,44 +36,21 @@ import { Require } from "../../protocol/lib/Require.sol";
 import { Time } from "../../protocol/lib/Time.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
-import { LiquidatorProxyBase } from "../helpers/LiquidatorProxyBase.sol";
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 import { ERC20Lib } from "../lib/ERC20Lib.sol";
 
 
 /**
- * @title ParaswapTraderProxyWithBackup
+ * @title ParaswapTrader
  * @author Dolomite
  *
- * Contract for performing an external trade with Paraswap with a backup to other venues if the trade fails.
+ * Contract for performing an external trade with Paraswap.
  */
-contract ParaswapTraderProxyWithBackup is OnlyDolomiteMargin, LiquidatorProxyBase, IExchangeWrapper {
+contract ParaswapTrader is OnlyDolomiteMargin, IExchangeWrapper {
 
     // ============ Constants ============
 
-    bytes32 private constant FILE = "ParaswapTraderProxyWithBackup";
-
-    // ============ Events ============
-
-    /**
-     * @param solidAccountOwner         The liquidator's address
-     * @param heldToken                 The held token (collateral) that will be received by the liquidator
-     * @param heldDeltaWeiWithReward    The amount of `heldToken` the liquidator will receive, including the reward
-     *                                  (positive number)
-     * @param profitHeldWei             The amount of profit the liquidator will realize by performing the liquidation
-     *                                  and atomically selling off the collateral. Can be negative or positive.
-     * @param owedToken                 The debt token that will be received by the liquidator
-     * @param owedDeltaWei              The amount of `owedToken` that will be received by the liquidator (previously a
-     *                                  negative number, from taking the debt of the liquidated account)
-     */
-    event LogLiquidateWithParaswap(
-        address indexed solidAccountOwner,
-        address heldToken,
-        uint256 heldDeltaWeiWithReward,
-        Types.Wei profitHeldWei, // calculated as `heldWeiWithReward - soldHeldWeiToBreakEven`
-        address owedToken,
-        uint256 owedDeltaWei
-    );
+    bytes32 private constant FILE = "ParaswapTrader";
 
     // ============ Storage ============
 
@@ -85,12 +62,10 @@ contract ParaswapTraderProxyWithBackup is OnlyDolomiteMargin, LiquidatorProxyBas
     constructor(
         address _paraswapAugustusRouter,
         address _paraswapTransferProxy,
-        address _dolomiteMargin,
-        address _liquidatorAssetRegistry
+        address _dolomiteMargin
     )
         public
         OnlyDolomiteMargin(_dolomiteMargin)
-        LiquidatorProxyBase(_liquidatorAssetRegistry)
     {
         PARASWAP_AUGUSTUS_ROUTER = _paraswapAugustusRouter;
         PARASWAP_TRANSFER_PROXY = _paraswapTransferProxy;
@@ -99,7 +74,7 @@ contract ParaswapTraderProxyWithBackup is OnlyDolomiteMargin, LiquidatorProxyBas
     // ============ Public Functions ============
 
     function exchange(
-        address _tradeOriginator,
+        address /* _tradeOriginator */,
         address _receiver,
         address _makerToken,
         address _takerToken,
@@ -117,21 +92,12 @@ contract ParaswapTraderProxyWithBackup is OnlyDolomiteMargin, LiquidatorProxyBas
 
         uint256 amount = IERC20(_makerToken).balanceOf(address(this));
 
-        if (amount >= minAmountOutWei) { /* FOR COVERAGE TESTING */ }
-        Require.that(amount >= minAmountOutWei,
+        Require.that(
+            amount >= minAmountOutWei,
             FILE,
             "insufficient output amount",
             amount,
             minAmountOutWei
-        );
-
-        emit LogLiquidateWithParaswap(
-            _tradeOriginator,
-            _takerToken,
-            _requestedFillAmount,
-            Types.Wei(true, amount - minAmountOutWei),
-            _makerToken,
-            amount
         );
 
         ERC20Lib.checkAllowanceAndApprove(_makerToken, _receiver, amount);
@@ -168,5 +134,4 @@ contract ParaswapTraderProxyWithBackup is OnlyDolomiteMargin, LiquidatorProxyBas
             }
         }
     }
-
 }

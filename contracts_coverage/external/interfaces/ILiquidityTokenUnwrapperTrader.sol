@@ -24,6 +24,12 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { IExchangeWrapper } from "../../protocol/interfaces/IExchangeWrapper.sol";
 
 
+/**
+ * @title   ILiquidityTokenUnwrapperTrader
+ * @author  Dolomite
+ *
+ * Interface for a contract that can convert a token into a wrapped/LP/isolation mode token.
+ */
 contract ILiquidityTokenUnwrapperTrader is IExchangeWrapper {
 
     /**
@@ -32,39 +38,43 @@ contract ILiquidityTokenUnwrapperTrader is IExchangeWrapper {
     function token() external view returns (address);
 
     /**
+     * @return True if the `_outputToken` is a valid output token for this contract, to be unwrapped by `token()`.
+     */
+    function isValidOutputToken(address _outputToken) external view returns (bool);
+
+    /**
      * @return  The number of Actions used to unwrap the LP token into `outputMarketId`. If `owedMarketId` equals
      *          `outputMarketId`, there is no need to chain additional actions on, since the debt will be paid off.
      */
     function actionsLength() external pure returns (uint256);
 
-    function outputMarketId() external view returns (uint256);
-
     /**
-     * @notice  Creates the necessary actions for selling the `_heldMarket` into `_outputMarket`. Note, `_outputMarket`
-     *          may not equal `_owedMarket` depending on the implementation of this contract. It is the responsibility
-     *          of the caller to ensure that the `_outputMarket` is converted to `_owedMarket` in subsequent actions.
+     * @notice  Creates the necessary actions for selling the `_inputMarket` into `_outputMarket`. Note, the
+     *          `_inputMarket` should be equal to `token()` and `_outputMarket` should be validated to be a correct
+     *           market that can be transformed into `token()`.
      *
-     * @param _solidAccountId       The index of the account (according the Accounts[] array) that is performing the
-     *                              liquidation.
-     * @param _liquidAccountId      The index of the account (according the Accounts[] array) that is being liquidated.
-     * @param _solidAccountOwner    The address of the owner of the account that is performing the liquidation.
-     * @param _liquidAccountOwner   The address of the owner of the account that is being liquidated.
-     * @param _owedMarket           The market that the liquid account owes and must be repaid via the liquidation.
-     * @param _heldMarket           The market that the liquid account holds and must be sold to repay the
-     *                              `_owedMarket`.
-     * @param _owedAmount           The amount of the `_owedMarket` that the liquid account owes and must repay.
-     * @param _heldAmountWithReward The amount of the `_heldMarket` that the liquid account holds and must sell.
-     * @return                      The actions that will be executed to unwrap the `_heldMarket` into `outputMarketId`.
+     * @param _primaryAccountId     The index of the account (according the Accounts[] array) that is performing the
+     *                              sell.
+     * @param _otherAccountId       The index of the account (according the Accounts[] array) that is being liquidated.
+     *                              This is set to `_primaryAccountId` if a liquidation is not occurring.
+     * @param _primaryAccountOwner  The address of the owner of the account that is performing the sell.
+     * @param _otherAccountOwner    The address of the owner of the account that is being liquidated. This is set to
+     *                              `_primaryAccountOwner` if a liquidation is not occurring.
+     * @param _outputMarket         The market that is being outputted by the wrapping, should be equal to `token().
+     * @param _inputMarket          The market that is being used to wrap into `token()`.
+     * @param _minOutputAmount      The min amount of `_outputMarket` that must be outputted by the wrapping.
+     * @param _inputAmount          The amount of the `_inputMarket` that the _primaryAccountId must sell.
+     * @return                      The actions that will be executed to wrap the `_inputMarket` into `_outputMarket`.
      */
-    function createActionsForUnwrappingForLiquidation(
-        uint256 _solidAccountId,
-        uint256 _liquidAccountId,
-        address _solidAccountOwner,
-        address _liquidAccountOwner,
-        uint256 _owedMarket,
-        uint256 _heldMarket,
-        uint256 _owedAmount,
-        uint256 _heldAmountWithReward
+    function createActionsForUnwrapping(
+        uint256 _primaryAccountId,
+        uint256 _otherAccountId,
+        address _primaryAccountOwner,
+        address _otherAccountOwner,
+        uint256 _outputMarket,
+        uint256 _inputMarket,
+        uint256 _minOutputAmount,
+        uint256 _inputAmount
     )
         external
         view

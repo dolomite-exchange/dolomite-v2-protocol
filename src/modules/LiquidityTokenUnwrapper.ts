@@ -33,14 +33,7 @@ export class LiquidityTokenUnwrapper {
     return new BigNumber(result);
   }
 
-  public async outputMarketId(): Promise<Integer> {
-    const result = await this.contracts.callConstantContractFunction(
-      this.unwrapperContract.methods.outputMarketId()
-    );
-    return new BigNumber(result);
-  }
-
-  public async createActionsForUnwrappingForLiquidation(
+  public async createActionsForUnwrapping(
     solidAccountId: Integer,
     liquidAccountId: Integer,
     solidAccountOwner: address,
@@ -51,7 +44,7 @@ export class LiquidityTokenUnwrapper {
     heldAmountWithReward: Integer,
   ): Promise<ActionArgs[]> {
     return this.contracts.callConstantContractFunction(
-      this.unwrapperContract.methods.createActionsForUnwrappingForLiquidation(
+      this.unwrapperContract.methods.createActionsForUnwrapping(
         solidAccountId.toFixed(),
         liquidAccountId.toFixed(),
         solidAccountOwner,

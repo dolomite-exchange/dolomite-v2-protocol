@@ -32,7 +32,7 @@ import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry
  * @title   LiquidatorAssetRegistry
  * @author  Dolomite
  *
- * @dev Registry contract for tracking which assets can be liquidated by each contract.
+ * @notice  A registry contract for tracking which assets can be liquidated by each contract.
  */
 contract LiquidatorAssetRegistry is ILiquidatorAssetRegistry, OnlyDolomiteMargin {
     using OpenZeppelinEnumerableSet for OpenZeppelinEnumerableSet.AddressSet;
@@ -44,6 +44,8 @@ contract LiquidatorAssetRegistry is ILiquidatorAssetRegistry, OnlyDolomiteMargin
     // ============ Storage ============
 
     mapping(uint256 => OpenZeppelinEnumerableSet.AddressSet) private _marketIdToLiquidatorWhitelistMap;
+    mapping(uint256 => OpenZeppelinEnumerableSet.AddressSet) private _marketIdToUnwrapperMap;
+    mapping(uint256 => OpenZeppelinEnumerableSet.AddressSet) private _marketIdToWrapperMap;
 
     // ============ Constructor ============
 
@@ -54,38 +56,47 @@ contract LiquidatorAssetRegistry is ILiquidatorAssetRegistry, OnlyDolomiteMargin
     OnlyDolomiteMargin(dolomiteMargin)
     {}
 
-    // ============ Modifiers ============
+    // ============ Admin Functions ============
 
-    modifier onlyDolomiteMarginOwner(address _from) {
-        if (_from == DOLOMITE_MARGIN.owner()) { /* FOR COVERAGE TESTING */ }
-        Require.that(_from == DOLOMITE_MARGIN.owner(),
-            FILE,
-            "Only Dolomite owner can call",
-            _from
-        );
-        _;
-    }
-
-    // ============ Public Functions ============
-
-    function addLiquidatorToAssetWhitelist(
+    function ownerAddLiquidatorToAssetWhitelist(
         uint256 _marketId,
         address _liquidator
     )
     external
     onlyDolomiteMarginOwner(msg.sender) {
+        if (_liquidator != address(0)) { /* FOR COVERAGE TESTING */ }
+        Require.that(_liquidator != address(0),
+            FILE,
+            "Invalid liquidator address"
+        );
+
         _marketIdToLiquidatorWhitelistMap[_marketId].add(_liquidator);
         emit LiquidatorAddedToWhitelist(_marketId, _liquidator);
     }
 
-    function removeLiquidatorFromAssetWhitelist(
+    function ownerRemoveLiquidatorFromAssetWhitelist(
         uint256 _marketId,
         address _liquidator
     )
     external
     onlyDolomiteMarginOwner(msg.sender) {
+        if (_liquidator != address(0)) { /* FOR COVERAGE TESTING */ }
+        Require.that(_liquidator != address(0),
+            FILE,
+            "Invalid liquidator address"
+        );
+
         _marketIdToLiquidatorWhitelistMap[_marketId].remove(_liquidator);
         emit LiquidatorRemovedFromWhitelist(_marketId, _liquidator);
+    }
+
+    // ============ Getter Functions ============
+
+    function getLiquidatorsForAsset(
+        uint256 _marketId
+    )
+    external view returns (address[] memory) {
+        return _marketIdToLiquidatorWhitelistMap[_marketId].enumerate();
     }
 
     function isAssetWhitelistedForLiquidation(

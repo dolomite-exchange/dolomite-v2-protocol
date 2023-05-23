@@ -21,6 +21,9 @@
   <a href='https://t.me/dolomite_official' style="text-decoration:none;">
     <img src='https://img.shields.io/badge/chat-on%20telegram-9cf.svg?longCache=true' alt='Telegram' />
   </a>
+  <a href='https://github.com/dolomite-exchange/dolomite-margin' style="text-decoration:none;">
+    <img src='https://img.shields.io/badge/GitHub-dolomite--exchange%2Fdolomite--margin-lightgrey' alt='GitHub'/>
+  </a>
 </div>
 
 > Ethereum Smart Contracts and TypeScript library used for the Dolomite Trading Protocol. Currently used by [app.dolomite.io](https://app.dolomite.io)

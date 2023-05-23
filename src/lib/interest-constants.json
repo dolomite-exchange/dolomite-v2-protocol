@@ -73,6 +73,16 @@
     "5": {
       "interestRateModel": "AAVECopyCat",
       "isStableCoin": true
+    },
+    "6": {
+      "interestRateModel": "AlwaysZero"
+    },
+    "7": {
+      "interestRateModel": "AAVECopyCat",
+      "isStableCoin": false
+    },
+    "8": {
+      "interestRateModel": "AlwaysZero"
     }
   },
   "421611": {
@@ -93,20 +103,29 @@
     }
   },
   "421613": {
-    "earningsRate": "0.9",
+    "earningsRate": "0.85",
     "0": {
-      "interestRateModel": "DoubleExponent",
-      "maxAPR": "1.00",
-      "coefficients": [
-        0,
-        20,
-        0,
-        0,
-        0,
-        0,
-        20,
-        60
-      ]
+      "interestRateModel": "AAVECopyCat",
+      "isStableCoin": false
+    },
+    "1": {
+      "interestRateModel": "AAVECopyCat",
+      "isStableCoin": true
+    },
+    "2": {
+      "interestRateModel": "AAVECopyCat",
+      "isStableCoin": true
+    },
+    "3": {
+      "interestRateModel": "AAVECopyCat",
+      "isStableCoin": false
+    },
+    "4": {
+      "interestRateModel": "AAVECopyCat",
+      "isStableCoin": false
+    },
+    "5": {
+      "interestRateModel": "AlwaysZero"
     }
   }
 }

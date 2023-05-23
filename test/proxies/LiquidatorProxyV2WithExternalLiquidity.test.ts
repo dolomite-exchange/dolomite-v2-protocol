@@ -6,7 +6,6 @@ import { getDolomiteMargin } from '../helpers/DolomiteMargin';
 import { setGlobalOperator, setupMarkets } from '../helpers/DolomiteMarginHelpers';
 import { fastForward, mineAvgBlock, resetEVM, snapshot } from '../helpers/EVM';
 import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
-import { toBytesNoPadding } from '../../src/lib/BytesHelper';
 
 enum FailureType {
   None,
@@ -103,22 +102,6 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
 
   beforeEach(async () => {
     await resetEVM(snapshotId);
-  });
-
-  describe('#getExchangeCost', () => {
-    it('should always fail', async () => {
-      await expectThrow(
-        dolomiteMargin.contracts.callConstantContractFunction(
-          dolomiteMargin.contracts.liquidatorProxyV2WithExternalLiquidity.methods.getExchangeCost(
-            ADDRESSES.ZERO,
-            ADDRESSES.ZERO,
-            par.toFixed(),
-            toBytesNoPadding('0x0'),
-          )
-        ),
-        'ParaswapTraderProxyWithBackup::getExchangeCost: not implemented',
-      );
-    });
   });
 
   describe('#liquidate', () => {
@@ -348,7 +331,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market3, market2),
-          'LiquidatorProxyBase: market not found',
+          'LiquidatorProxyBase: Market not found',
         );
       });
 
@@ -379,7 +362,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market1),
-          `LiquidatorProxyBase: owedMarket equals heldMarket <${market1.toFixed()}>`,
+          `LiquidatorProxyBase: Owed market equals held market <${market1.toFixed()}>`,
         );
       });
 
@@ -387,7 +370,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market2, market1), // swap the two markets so owed = held
-          `LiquidatorProxyBase: owed market cannot be positive <${market2.toFixed()}>`,
+          `LiquidatorProxyBase: Owed market cannot be positive <${market2.toFixed()}>`,
         );
       });
 
@@ -396,7 +379,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         await dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market2, new BigNumber(-1));
         await expectThrow(
           liquidate(market1, market2),
-          `LiquidatorProxyBase: held market cannot be negative <${market2.toFixed()}>`,
+          `LiquidatorProxyBase: Held market cannot be negative <${market2.toFixed()}>`,
         );
       });
 
@@ -423,7 +406,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market2, null, FailureType.WithMessage),
-          'ParaswapTraderProxyWithBackup: TestParaswapTransferProxy: insufficient balance',
+          'ParaswapTrader: TestParaswapTransferProxy: insufficient balance',
         );
       });
 
@@ -431,7 +414,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market2, null, FailureType.Silently),
-          'ParaswapTraderProxyWithBackup: revert',
+          'ParaswapTrader: revert',
         );
       });
 
@@ -443,7 +426,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
 
         await expectThrow(
           liquidate(owedMarket, heldMarket, null, FailureType.TooLittleOutput),
-          `ParaswapTraderProxyWithBackup: insufficient output amount <1, ${owedAmount.toFixed()}>`,
+          `ParaswapTrader: insufficient output amount <1, ${owedAmount.toFixed()}>`,
         );
       });
 
@@ -451,7 +434,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         // Market2 (if held) cannot be liquidated by any contract
         await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(
           market2,
-          ADDRESSES.ZERO,
+          ADDRESSES.ONE,
           { from: admin },
         );
         await setUpBasicBalances(isOverCollateralized);
@@ -685,7 +668,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         const expiry = await setUpExpiration(market1, INTEGERS.ONE, true);
         await expectThrow(
           liquidate(market1, market1, expiry),
-          `LiquidatorProxyBase: owedMarket equals heldMarket <${market1.toFixed()}>`,
+          `LiquidatorProxyBase: Owed market equals held market <${market1.toFixed()}>`,
         );
       });
 
@@ -712,7 +695,7 @@ describe('LiquidatorProxyV2WithExternalLiquidity', () => {
         // Market2 (if held) cannot be liquidated by any contract
         await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(
           market2,
-          ADDRESSES.ZERO,
+          ADDRESSES.ONE,
           { from: admin },
         );
         await setUpBasicBalances(isOverCollateralized);
@@ -797,6 +780,7 @@ async function liquidate(
     owedAmount = rawOwedAmount.times(liquidationRewardAdditive);
     heldAmount = owedAmount.times(owedPrice).dividedToIntegerBy(heldPrice);
   }
+
   if (failureType === FailureType.WithMessage) {
     heldAmount = INTEGERS.MAX_UINT_128;
   } else if (failureType === FailureType.Silently) {

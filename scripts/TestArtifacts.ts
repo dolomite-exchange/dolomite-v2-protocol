@@ -14,10 +14,13 @@ import TestDolomiteMargin from '../build/contracts/TestDolomiteMargin.json';
 import TestDoubleExponentInterestSetter from '../build/contracts/TestDoubleExponentInterestSetter.json';
 import TestExchangeWrapper from '../build/contracts/TestExchangeWrapper.json';
 import TestInterestSetter from '../build/contracts/TestInterestSetter.json';
+import TestIsolationModeToken from '../build/contracts/TestIsolationModeToken.json';
 import TestLib from '../build/contracts/TestLib.json';
 import TestLiquidationCallback from '../build/contracts/TestLiquidationCallback.json';
 import TestLiquidityTokenUnwrapperTrader from '../build/contracts/TestLiquidityTokenUnwrapperTrader.json';
+import TestLiquidityTokenWrapperTrader from '../build/contracts/TestLiquidityTokenWrapperTrader.json';
 import TestParaswapAugustusRouter from '../build/contracts/TestParaswapAugustusRouter.json';
+import TestParaswapTrader from '../build/contracts/TestParaswapTrader.json';
 import TestPolynomialInterestSetter from '../build/contracts/TestPolynomialInterestSetter.json';
 import TestPriceOracle from '../build/contracts/TestPriceOracle.json';
 import TestSimpleCallee from '../build/contracts/TestSimpleCallee.json';
@@ -51,10 +54,13 @@ export default {
   TestDoubleExponentInterestSetter,
   TestExchangeWrapper,
   TestInterestSetter,
+  TestIsolationModeToken,
   TestLib,
   TestLiquidationCallback,
   TestLiquidityTokenUnwrapperTrader,
+  TestLiquidityTokenWrapperTrader,
   TestParaswapAugustusRouter,
+  TestParaswapTrader,
   TestPolynomialInterestSetter,
   TestPriceOracle,
   TestSimpleCallee,

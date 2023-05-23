@@ -24,15 +24,14 @@ import { TestToken } from "./TestToken.sol";
 
 contract TestParaswapAugustusRouter {
 
-    TestParaswapTransferProxy TRANSFER_PROXY;
+    TestParaswapTransferProxy public TRANSFER_PROXY;
 
     constructor(address _transferProxy) public {
         TRANSFER_PROXY = TestParaswapTransferProxy(_transferProxy);
     }
 
     /**
-     * This function is called blindly by `LiquidatorProxyV2WithExternalLiquidity` via the pass through
-     * `_paraswapCalldata` variable
+     * This function is called blindly via the pass-through `_paraswapCalldata` variable
      */
     function call(
         address tokenIn,

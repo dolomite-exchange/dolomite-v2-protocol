@@ -10,7 +10,7 @@ import {
 } from '../../src';
 
 export class TestToken {
-  private contracts: TestContracts;
+  protected contracts: TestContracts;
   private token: Token;
   private testTokenContract: TestTokenContract;
 

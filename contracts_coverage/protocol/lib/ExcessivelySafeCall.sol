@@ -24,6 +24,14 @@ pragma solidity ^0.5.7;
  */
 library ExcessivelySafeCall {
 
+    function safeStaticCall(
+        address _target,
+        bytes4 _selector,
+        bytes memory _calldata
+    ) internal view returns (bool isSuccess, bytes memory returnData) {
+        (isSuccess, returnData) = _target.staticcall(abi.encodeWithSelector(_selector, _calldata));
+    }
+
     /// @notice Use when you _really_ really _really_ don't trust the called
     /// contract. This prevents the called contract from causing reversion of
     /// the caller in as many ways as we can.

@@ -22,7 +22,6 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { IInterestSetter } from "../../protocol/interfaces/IInterestSetter.sol";
 import { Interest } from "../../protocol/lib/Interest.sol";
-import { DolomiteMarginMath } from "../../protocol/lib/DolomiteMarginMath.sol";
 
 
 /**
