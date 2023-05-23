@@ -289,6 +289,47 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(liquidMarket2Balance).to.eql(par2.minus(amountWeisPath[0]));
       });
 
+      it('should succeed when there is a risk override', async () => {
+        await Promise.all([
+          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, negPar.times('2.4')),
+          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market3, INTEGERS.ZERO),
+          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market4, INTEGERS.ZERO),
+          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market5, INTEGERS.ZERO),
+          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
+          dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(liquidOwner, new BigNumber('0.1'), new BigNumber('0.03')),
+          dolomiteMargin.admin.setAccountRiskOverride(liquidOwner, dolomiteMargin.testing.accountRiskOverrideSetter.address, { from: admin }),
+        ]);
+        const marketPath = [market2, market1];
+        const amountWeisPath = [par.times('123.6'), par.times('2.4720')];
+        await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
+          solidOwner,
+          solidNumber,
+          liquidOwner,
+          liquidNumber,
+          marketPath,
+          amountWeisPath,
+          [getParaswapTraderParam(marketPath[0], marketPath[1], amountWeisPath[0], amountWeisPath[1])],
+          [],
+          noExpiry,
+          { from: operator },
+        );
+
+        const [solidMarket1Balance, solidMarket2Balance, liquidMarket1Balance, liquidMarket2Balance] =
+          await Promise.all([
+            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market1),
+            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market2),
+
+            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market1),
+            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market2),
+          ]);
+
+        expect(solidMarket1Balance).to.eql(par1.plus(amountWeisPath[1].minus(par.times('2.40'))));
+        expect(solidMarket2Balance).to.eql(par2);
+
+        expect(liquidMarket1Balance).to.eql(INTEGERS.ZERO);
+        expect(liquidMarket2Balance).to.eql(par2.minus(amountWeisPath[0]));
+      });
+
       it('should succeed for a simple swap when desired liquidation amount < max amount', async () => {
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, negPar.times('2.25')),
