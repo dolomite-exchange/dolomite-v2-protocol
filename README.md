@@ -57,12 +57,10 @@ margin systems in DeFi. The detailed changes are outlined below:
 - Upgraded the Solidity compiler version from `0.5.7` to `0.5.16`.
 - Added a `getPartialRoundHalfUp` function that's used when converting between `Wei` & `Par` values. The reason for
   this change is that there would be truncation issues when using `getPartial` or `getPartialRoundUp`, which would lead
-  to
-  lossy conversions to and from `Wei` and `Par` that would be incorrect by 1 unit.
+  to lossy conversions to and from `Wei` and `Par` that would be incorrect by 1 unit.
 - Added a `numberOfMarketsWithBorrow` field to `Account.Storage`, which makes checking collateralization for accounts
   that do not have an active borrow much more gas efficient. If `numberOfMarketsWithBorrow`
-  is `0`, `state.isCollateralized(...)`
-  always returns `true`. Else, it does the normal collateralization check.
+  is `0`, `state.isCollateralized(...)` always returns `true`. Else, it does the normal collateralization check.
 - Added a `marketsWithNonZeroBalanceSet` which function as an enumerable hash set. Its implementation mimics
   [Open Zeppelin's](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/structs/EnumerableSet.sol)
   with adjustments made to support only the `uint256` type (for gas efficiency's sake).
@@ -107,6 +105,8 @@ margin systems in DeFi. The detailed changes are outlined below:
     - If a `maxSupplyWei` or `maxBorrowWei` is set that is higher than the current TVL, all new actions involving that
       currency must lower the TVL or keep it the same (not accounting for any increase in `Wei` value that occurs from
       users paying the borrow rate on that asset).
+- Added `earningsRateOverride` to the `Market` struct so a particular market can fine-tune the fees paid to the protocol
+  for borrowing.
 - Added `accountMaxNumberOfMarketsWithBalances` to `RiskParams` which limits how many assets a user can hold in the same
   account index.
     - This number was initialized to be sufficiently high, at `32`, meaning a user could use up to 32 unique
@@ -114,6 +114,21 @@ margin systems in DeFi. The detailed changes are outlined below:
     - This risk param limits the stress that can be put on the system gas-wise, whereby a user could add many unique
       assets to the same account index that has an active position, causing maintenance gas costs for any action that
       interacts with that user's account index to increase.
+- Added `oracleSentinel` to `RiskParams` which allows DolomiteMargin to disable borrowing or liquidations when the
+  sequencer is down for a L2.
+- Added `accountRiskOverrideSetterMap` to `RiskParams` which allows an address to override the default margin ratio,
+  margin ratio premium, liquidation spread, and liquidation spread premium for a given market.
+    - This effectively allows the protocol to offer efficiency mode (e-mode).
+    - The intention is to allow certain smart contract vaults hold a user's assets for particular pairings, like:
+        - Stablecoins
+        - Liquid staking tokens + their underlying token(s)
+        - LP tokens and their underlying token(s)
+- Added `interestRateMax` to `RiskLimits` to prevent the interest rate from ever being *too* high.
+    - If the rate returned by a market is ever higher, the rate is capped at this value instead of reverting.
+    - The goal is to keep Dolomite operational under all circumstances instead of inadvertently DOS'ing the protocol by
+      setting a high interest rate.
+    - This field was added to reduce an attack vector whereby a malicious (or negligent) market could return a very high
+      interest rate that would cause the protocol to increase the users' owed amount unreasonably quickly.
 
 ## Documentation
 
