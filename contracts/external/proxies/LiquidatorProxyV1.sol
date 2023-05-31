@@ -51,7 +51,7 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "LiquidatorProxyV1";
+    bytes32 private constant FILE = "LiquidatorProxyV1";
 
     // ============ Structs ============
 

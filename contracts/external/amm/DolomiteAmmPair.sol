@@ -51,7 +51,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
     using SafeMath  for uint;
     using UQ112x112 for uint224;
 
-    bytes32 internal constant FILE = "DolomiteAmmPair";
+    bytes32 private constant FILE = "DolomiteAmmPair";
 
     uint public constant INDEX_BASE = 1e18;
     uint public constant MINIMUM_LIQUIDITY = 10 ** 3;

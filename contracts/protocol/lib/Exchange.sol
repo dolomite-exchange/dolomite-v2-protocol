@@ -36,7 +36,7 @@ library Exchange {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "Exchange";
+    bytes32 private constant FILE = "Exchange";
 
     // ============ Library Functions ============
 

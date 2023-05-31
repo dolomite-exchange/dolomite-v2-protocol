@@ -35,7 +35,6 @@ import testDoubleExponentInterestSetterJson from '../../build/testing_contracts/
 import testExchangeWrapperJson from '../../build/testing_contracts/TestExchangeWrapper.json';
 import testInterestSetterJson from '../../build/testing_contracts/TestInterestSetter.json';
 import testLibJson from '../../build/testing_contracts/TestLib.json';
-import testLiquidityTokenUnwrapperTraderJson from '../../build/testing_contracts/TestLiquidityTokenUnwrapperTrader.json';
 import testParaswapAugustusRouterJson from '../../build/testing_contracts/TestParaswapAugustusRouter.json';
 import testParaswapTraderJson from '../../build/testing_contracts/TestParaswapTrader.json';
 import testPolynomialInterestSetterJson from '../../build/testing_contracts/TestPolynomialInterestSetter.json';
@@ -68,7 +67,6 @@ import { TestDoubleExponentInterestSetter } from '../../build/testing_wrappers/T
 import { TestExchangeWrapper } from '../../build/testing_wrappers/TestExchangeWrapper';
 import { TestInterestSetter } from '../../build/testing_wrappers/TestInterestSetter';
 import { TestLib } from '../../build/testing_wrappers/TestLib';
-import { TestLiquidityTokenUnwrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
 import { TestParaswapAugustusRouter } from '../../build/testing_wrappers/TestParaswapAugustusRouter';
 import { TestParaswapTrader } from '../../build/testing_wrappers/TestParaswapTrader';
 import { TestPolynomialInterestSetter } from '../../build/testing_wrappers/TestPolynomialInterestSetter';
@@ -109,7 +107,6 @@ export class TestContracts extends Contracts {
   public testDolomiteMargin: TestDolomiteMargin;
   public testInterestSetter: TestInterestSetter;
   public testLib: TestLib;
-  public testLiquidityTokenUnwrapperTrader: TestLiquidityTokenUnwrapperTrader;
   public testDoubleExponentInterestSetter: TestDoubleExponentInterestSetter;
   public testExchangeWrapper: TestExchangeWrapper;
   public testParaswapAugustusRouter: TestParaswapAugustusRouter;
@@ -156,9 +153,6 @@ export class TestContracts extends Contracts {
     this.testExchangeWrapper = new this.web3.eth.Contract(testExchangeWrapperJson.abi) as TestExchangeWrapper;
     this.testInterestSetter = new this.web3.eth.Contract(testInterestSetterJson.abi) as TestInterestSetter;
     this.testLib = new this.web3.eth.Contract(testLibJson.abi) as TestLib;
-    this.testLiquidityTokenUnwrapperTrader = new this.web3.eth.Contract(
-      testLiquidityTokenUnwrapperTraderJson.abi,
-    ) as TestLiquidityTokenUnwrapperTrader;
     this.testParaswapAugustusRouter = new this.web3.eth.Contract(
       testParaswapAugustusRouterJson.abi,
     ) as TestParaswapAugustusRouter;
@@ -225,7 +219,6 @@ export class TestContracts extends Contracts {
       { contract: this.testExchangeWrapper, json: testExchangeWrapperJson },
       { contract: this.testInterestSetter, json: testInterestSetterJson },
       { contract: this.testLib, json: testLibJson },
-      { contract: this.testLiquidityTokenUnwrapperTrader, json: testLiquidityTokenUnwrapperTraderJson },
       { contract: this.testParaswapAugustusRouter, json: testParaswapAugustusRouterJson },
       { contract: this.testParaswapTrader, json: testParaswapTraderJson },
       { contract: this.testPolynomialInterestSetter, json: testPolynomialInterestSetterJson },
@@ -273,7 +266,6 @@ export class TestContracts extends Contracts {
     this.testExchangeWrapper.options.from = account;
     this.testInterestSetter.options.from = account;
     this.testLib.options.from = account;
-    this.testLiquidityTokenUnwrapperTrader.options.from = account;
     this.testParaswapAugustusRouter.options.from = account;
     this.testParaswapTrader.options.from = account;
     this.testPolynomialInterestSetter.options.from = account;

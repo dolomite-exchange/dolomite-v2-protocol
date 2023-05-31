@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { ILiquidityTokenUnwrapperTraderOld } from "../external/interfaces/ILiquidityTokenUnwrapperTraderOld.sol";
+import {IIsolationModeWrapperTrader} from "../external/interfaces/IIsolationModeWrapperTrader.sol";
 
 import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 
@@ -32,15 +32,15 @@ import { IDolomiteMargin } from "../protocol/interfaces/IDolomiteMargin.sol";
 import { TestToken } from "./TestToken.sol";
 
 
-contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld {
+contract TestIsolationModeWrapperTrader is IIsolationModeWrapperTrader {
 
-    bytes32 constant FILE = "TestLiquidityTokenUnwrapper";
+    bytes32 private constant FILE = "TestIsolationModeWrapperTrader";
 
     uint256 constant public ACTIONS_LENGTH = 1;
 
-    IDolomiteMargin public DOLOMITE_MARGIN;
     address public INPUT_TOKEN;
     address public OUTPUT_TOKEN;
+    IDolomiteMargin public DOLOMITE_MARGIN;
 
     constructor(
         address _inputToken,
@@ -53,22 +53,18 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
     }
 
     function token() external view returns (address) {
-        return INPUT_TOKEN;
+        return OUTPUT_TOKEN;
     }
 
-    function isValidOutputToken(address _outputToken) external view returns (bool) {
-        return _outputToken == OUTPUT_TOKEN;
-    }
-
-    function outputMarketId() external view returns (uint256) {
-        return DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN);
+    function isValidInputToken(address _inputToken) external view returns (bool) {
+        return _inputToken == INPUT_TOKEN;
     }
 
     function actionsLength() external pure returns (uint256) {
         return ACTIONS_LENGTH;
     }
 
-    function createActionsForUnwrapping(
+    function createActionsForWrapping(
         uint256 _primaryAccountId,
         uint256,
         address,
@@ -76,17 +72,12 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
         uint256 _outputMarket,
         uint256 _inputMarket,
         uint256 _minAmountOut,
-        uint256 _inputAmount
+        uint256 _inputAmount,
+        bytes calldata _orderData
     )
     external
     view
     returns (Actions.ActionArgs[] memory) {
-        Require.that(
-            DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _inputMarket,
-            FILE,
-            "Invalid input market",
-            _inputMarket
-        );
         Require.that(
             DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _outputMarket,
             FILE,
@@ -111,7 +102,7 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
             address(this),
             _inputAmount,
             amountOut,
-            bytes("")
+            _orderData
         );
         return actions;
     }
@@ -120,20 +111,21 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
         address,
         address _receiver,
         address _makerToken,
-        address _takerToken,
+        address,
         uint256,
         bytes calldata _orderData
     )
     external
     returns (uint256) {
         Require.that(
-            _takerToken == INPUT_TOKEN,
+            _makerToken == OUTPUT_TOKEN,
             FILE,
-            "Taker token must be UNDERLYING",
-            _takerToken
+            "Maker token must be OUTPUT_TOKEN",
+            _makerToken
         );
 
         (uint256 amountOut,) = abi.decode(_orderData, (uint256, bytes));
+
         TestToken(_makerToken).setBalance(address(this), amountOut);
         TestToken(_makerToken).approve(_receiver, amountOut);
         return amountOut;
@@ -149,10 +141,10 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
     view
     returns (uint256) {
         Require.that(
-            _makerToken == INPUT_TOKEN,
+            _takerToken == OUTPUT_TOKEN,
             FILE,
-            "Maker token must be wrapper",
-            _makerToken
+            "Taker token must be OUTPUT_TOKEN",
+            _takerToken
         );
 
         uint256 makerMarketId = DOLOMITE_MARGIN.getMarketIdByTokenAddress(_makerToken);

@@ -25,12 +25,12 @@ import { IExchangeWrapper } from "../../protocol/interfaces/IExchangeWrapper.sol
 
 
 /**
- * @title   ILiquidityTokenWrapperTrader
+ * @title   IIsolationModeWrapperTrader
  * @author  Dolomite
  *
- * Interface for a contract that can convert a token into a wrapped/LP/isolation mode token.
+ * Interface for a contract that can convert a token into an isolation mode token.
  */
-contract ILiquidityTokenWrapperTrader is IExchangeWrapper {
+contract IIsolationModeWrapperTrader is IExchangeWrapper {
 
     /**
      * @return The liquidity token that this contract can wrap
@@ -63,6 +63,7 @@ contract ILiquidityTokenWrapperTrader is IExchangeWrapper {
      * @param _inputMarket          The market that is being used to wrap into `token()`.
      * @param _minOutputAmount      The min amount of `_outputMarket` that must be outputted by the wrapping.
      * @param _inputAmount          The amount of the `_inputMarket` that the _primaryAccountId must sell.
+     * @param _orderData            The calldata to pass through to any external sales that occur.
      * @return                      The actions that will be executed to wrap the `_inputMarket` into `_outputMarket`.
      */
     function createActionsForWrapping(
@@ -73,7 +74,8 @@ contract ILiquidityTokenWrapperTrader is IExchangeWrapper {
         uint256 _outputMarket,
         uint256 _inputMarket,
         uint256 _minOutputAmount,
-        uint256 _inputAmount
+        uint256 _inputAmount,
+        bytes calldata _orderData
     )
         external
         view

@@ -44,7 +44,7 @@ contract TransferProxy is ITransferProxy, AuthorizationBase, ReentrancyGuard {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "TransferProxy";
+    bytes32 private constant FILE = "TransferProxy";
 
     // ============ Constructor ============
 

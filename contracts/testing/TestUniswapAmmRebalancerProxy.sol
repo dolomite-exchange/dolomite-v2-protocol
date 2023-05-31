@@ -41,7 +41,7 @@ contract TestUniswapAmmRebalancerProxy is Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint;
 
-    bytes32 public constant FILE = "TestUniswapAmmRebalancerProxy";
+    bytes32 private constant FILE = "TestUniswapAmmRebalancerProxy";
 
     // ============ Functions ============
 

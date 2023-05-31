@@ -60,7 +60,7 @@ contract Expiry is
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "Expiry";
+    bytes32 private constant FILE = "Expiry";
 
     // ============ Events ============
 

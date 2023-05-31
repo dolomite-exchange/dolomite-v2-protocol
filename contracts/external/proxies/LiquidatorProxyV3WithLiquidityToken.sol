@@ -26,14 +26,14 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
-import { ILiquidityTokenUnwrapperTraderOld } from "../interfaces/ILiquidityTokenUnwrapperTraderOld.sol";
+import {IIsolationModeUnwrapperTraderForV3Liquidator} from "../interfaces/IIsolationModeUnwrapperTraderForV3Liquidator.sol";
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
 import { LiquidatorProxyV2WithExternalLiquidity } from "./LiquidatorProxyV2WithExternalLiquidity.sol";
 
 
 /**
- * @title LiquidatorProxyV4WithExternalLiquidityToken
+ * @title LiquidatorProxyV3WithExternalLiquidityToken
  * @author Dolomite
  *
  * Contract for liquidating other accounts in DolomiteMargin that use external LP token(s) (ones that are not native to
@@ -52,7 +52,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
         uint256 solidAccountId;
         uint256 liquidAccountId;
         uint256 initialOutputMarket;
-        ILiquidityTokenUnwrapperTraderOld tokenUnwrapper;
+        IIsolationModeUnwrapperTraderForV3Liquidator tokenUnwrapper;
         Actions.ActionArgs[] actions;
     }
 
@@ -62,7 +62,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
 
     // ============ Storage ============
 
-    mapping(uint256 => ILiquidityTokenUnwrapperTraderOld) public marketIdToTokenUnwrapperMap;
+    mapping(uint256 => IIsolationModeUnwrapperTraderForV3Liquidator) public marketIdToTokenUnwrapperMap;
 
     // ============ Constructor ============
 
@@ -93,7 +93,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
             "Only owner can call",
             msg.sender
         );
-        marketIdToTokenUnwrapperMap[_marketId] = ILiquidityTokenUnwrapperTraderOld(_tokenUnwrapper);
+        marketIdToTokenUnwrapperMap[_marketId] = IIsolationModeUnwrapperTraderForV3Liquidator(_tokenUnwrapper);
         emit TokenUnwrapperTraderSet(_marketId, _tokenUnwrapper);
     }
 
@@ -110,8 +110,8 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
     view
     returns (Actions.ActionArgs[] memory)
     {
-        // TODO:    if the LP token is used as the `_owedMarket`, create a `wrapper` that wraps `initialOutputMarket`
-        // TODO:    into the `_owedMarket`
+        /// @dev This implementation is technically unfinished since it can't wrap the held token in an IsolationMode
+        ///      token
 
         // This cache is created to prevent "stack too deep" errors
         LiquidatorProxyV3Cache memory v3Cache = LiquidatorProxyV3Cache({
@@ -183,8 +183,8 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
     ) internal view {
         if (address(_v3Cache.tokenUnwrapper) != address(0)) {
             // Get the actions for selling the `_cache.heldMarket` into `outputMarket`
-            ILiquidityTokenUnwrapperTraderOld tokenUnwrapper = _v3Cache.tokenUnwrapper;
-            Actions.ActionArgs[] memory unwrapActions = tokenUnwrapper.createActionsForUnwrapping(
+            IIsolationModeUnwrapperTraderForV3Liquidator tokenUnwrapper = _v3Cache.tokenUnwrapper;
+            Actions.ActionArgs[] memory unwrapActions = tokenUnwrapper.createActionsForUnwrappingForLiquidation(
                 _v3Cache.solidAccountId,
                 _v3Cache.liquidAccountId,
                 _constants.solidAccount.owner,

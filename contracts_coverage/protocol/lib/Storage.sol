@@ -58,7 +58,7 @@ library Storage {
 
     // ============ Constants ============
 
-    bytes32 internal constant FILE = "Storage";
+    bytes32 private constant FILE = "Storage";
 
     // ============ Structs ============
 

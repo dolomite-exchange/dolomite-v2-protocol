@@ -38,7 +38,7 @@ OnlyDolomiteMargin
 {
     // ============ Constants ============
 
-    bytes32 constant FILE = "TestCallee";
+    bytes32 private constant FILE = "TestCallee";
 
     // ============ Events ============
 

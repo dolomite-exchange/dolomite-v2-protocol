@@ -28,7 +28,7 @@ contract AuthorizationBase is IAuthorizationBase {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "AuthorizationBase";
+    bytes32 private constant FILE = "AuthorizationBase";
 
     // ============ State Variables ============
 

@@ -2,12 +2,12 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import * as testTokenJson from '../../build/contracts/CustomTestToken.json';
 import * as testIsolationModeTokenJson from '../../build/contracts/TestIsolationModeToken.json';
-import * as testLiquidityTokenUnwrapperTraderJson from '../../build/contracts/TestLiquidityTokenUnwrapperTrader.json';
-import * as testLiquidityTokenWrapperTraderJson from '../../build/contracts/TestLiquidityTokenWrapperTrader.json';
+import * as testIsolationModeUnwrapperTraderJson from '../../build/contracts/TestIsolationModeUnwrapperTrader.json';
+import * as testIsolationModeWrapperTraderJson from '../../build/contracts/TestIsolationModeWrapperTrader.json';
 import { CustomTestToken as TestTokenContract } from '../../build/testing_wrappers/CustomTestToken';
 import { TestIsolationModeToken as TestIsolationModeTokenContract } from '../../build/testing_wrappers/TestIsolationModeToken';
-import { TestLiquidityTokenUnwrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
-import { TestLiquidityTokenWrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenWrapperTrader';
+import { TestIsolationModeUnwrapperTrader } from '../../build/testing_wrappers/TestIsolationModeUnwrapperTrader';
+import { TestIsolationModeWrapperTrader } from '../../build/testing_wrappers/TestIsolationModeWrapperTrader';
 import {
   address,
   ADDRESSES,
@@ -47,8 +47,8 @@ let token3Contract: TestIsolationModeToken;
 let token4Contract: TestIsolationModeToken;
 let token5Contract: TestToken;
 let token6Contract: TestToken;
-let testLiquidityUnwrapper: TestLiquidityTokenUnwrapperTrader;
-let testLiquidityWrapper: TestLiquidityTokenWrapperTrader;
+let testIsolationModeUnwrapper: TestIsolationModeUnwrapperTrader;
+let testIsolationModeWrapper: TestIsolationModeWrapperTrader;
 
 const solidNumber = new BigNumber(111);
 const liquidNumber = new BigNumber(222);
@@ -122,14 +122,14 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
     marketIdToTokenMap[market5.toFixed()] = token5;
     marketIdToTokenMap[market6.toFixed()] = token6;
 
-    testLiquidityUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+    testIsolationModeUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
       dolomiteMargin,
-      testLiquidityTokenUnwrapperTraderJson,
+      testIsolationModeUnwrapperTraderJson,
       [token3, token2, dolomiteMargin.address],
     );
-    testLiquidityWrapper = await deployContract<TestLiquidityTokenWrapperTrader>(
+    testIsolationModeWrapper = await deployContract<TestIsolationModeWrapperTrader>(
       dolomiteMargin,
-      testLiquidityTokenWrapperTraderJson,
+      testIsolationModeWrapperTraderJson,
       [token2, token3, dolomiteMargin.address],
     );
 
@@ -161,8 +161,8 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
     testToken6RawContract.options.from = dolomiteMargin.getDefaultAccount();
     token6Contract = new TestIsolationModeToken(dolomiteMargin.contracts, dolomiteMargin.token, testToken6RawContract);
 
-    await token3Contract.setTokenConverterTrusted(testLiquidityUnwrapper.options.address, true);
-    await token3Contract.setTokenConverterTrusted(testLiquidityWrapper.options.address, true);
+    await token3Contract.setTokenConverterTrusted(testIsolationModeUnwrapper.options.address, true);
+    await token3Contract.setTokenConverterTrusted(testIsolationModeWrapper.options.address, true);
 
     await Promise.all([
       token1Contract.issueTo(par1.times(1000), dolomiteMargin.address),
@@ -600,9 +600,9 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
         ]);
 
-        const freshUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
           dolomiteMargin,
-          testLiquidityTokenUnwrapperTraderJson,
+          testIsolationModeUnwrapperTraderJson,
           [token3, token4, dolomiteMargin.address],
         );
         await token3Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
@@ -1190,7 +1190,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
       });
 
       it('should fail when the unwrapper trader is not trusted', async () => {
-        await token3Contract.setTokenConverterTrusted(testLiquidityUnwrapper.options.address, false);
+        await token3Contract.setTokenConverterTrusted(testIsolationModeUnwrapper.options.address, false);
         await expectThrow(
           dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
             solidOwner,
@@ -1203,7 +1203,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
             [],
             null,
           ),
-          `GenericTraderProxyBase: Unwrapper trader not enabled <${testLiquidityUnwrapper.options.address.toLowerCase()}, ${market3.toFixed()}>`,
+          `GenericTraderProxyBase: Unwrapper trader not enabled <${testIsolationModeUnwrapper.options.address.toLowerCase()}, ${market3.toFixed()}>`,
         );
       });
 
@@ -1242,7 +1242,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
       });
 
       it('should fail when the wrapper trader is not trusted', async () => {
-        await token3Contract.setTokenConverterTrusted(testLiquidityWrapper.options.address, false);
+        await token3Contract.setTokenConverterTrusted(testIsolationModeWrapper.options.address, false);
         await expectThrow(
           dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
             solidOwner,
@@ -1255,7 +1255,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
             [],
             null,
           ),
-          `GenericTraderProxyBase: Wrapper trader not enabled <${testLiquidityWrapper.options.address.toLowerCase()}, ${market3.toFixed()}>`,
+          `GenericTraderProxyBase: Wrapper trader not enabled <${testIsolationModeWrapper.options.address.toLowerCase()}, ${market3.toFixed()}>`,
         );
       });
 
@@ -1535,9 +1535,9 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
         ]);
 
-        const freshUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
           dolomiteMargin,
-          testLiquidityTokenUnwrapperTraderJson,
+          testIsolationModeUnwrapperTraderJson,
           [token3, token4, dolomiteMargin.address],
         );
         await token3Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
@@ -1924,15 +1924,15 @@ const traderWithInvalidAddress: GenericTraderParam = {
   traderType: GenericTraderType.ExternalLiquidity,
   makerAccountIndex: 0,
   trader: ADDRESSES.ZERO,
-  tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x0']),
+  tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
 };
 
 function getUnwrapperTraderParam(): GenericTraderParam {
   return {
     traderType: GenericTraderType.IsolationModeUnwrapper,
     makerAccountIndex: 0,
-    trader: testLiquidityUnwrapper.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x0']),
+    trader: testIsolationModeUnwrapper.options.address,
+    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
   };
 }
 
@@ -1940,8 +1940,8 @@ function getWrapperTraderParam(): GenericTraderParam {
   return {
     traderType: GenericTraderType.IsolationModeWrapper,
     makerAccountIndex: 0,
-    trader: testLiquidityWrapper.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x0']),
+    trader: testIsolationModeWrapper.options.address,
+    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
   };
 }
 

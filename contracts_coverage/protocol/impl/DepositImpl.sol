@@ -33,7 +33,7 @@ library DepositImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "DepositImpl";
+    bytes32 private constant FILE = "DepositImpl";
 
     // ============ Account Actions ============
 

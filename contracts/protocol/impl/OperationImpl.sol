@@ -59,7 +59,7 @@ library OperationImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "OperationImpl";
+    bytes32 private constant FILE = "OperationImpl";
 
     // ============ Public Functions ============
 

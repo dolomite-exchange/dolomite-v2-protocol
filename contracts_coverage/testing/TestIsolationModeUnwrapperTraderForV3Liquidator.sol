@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { ILiquidityTokenUnwrapperTraderOld } from "../external/interfaces/ILiquidityTokenUnwrapperTraderOld.sol";
+import { IIsolationModeUnwrapperTraderForV3Liquidator } from "../external/interfaces/IIsolationModeUnwrapperTraderForV3Liquidator.sol"; // solium-disable-line max-len
 
 import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 
@@ -32,14 +32,14 @@ import { IDolomiteMargin } from "../protocol/interfaces/IDolomiteMargin.sol";
 import { TestToken } from "./TestToken.sol";
 
 
-contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld {
+contract TestIsolationModeUnwrapperTraderForV3Liquidator is IIsolationModeUnwrapperTraderForV3Liquidator {
 
-    bytes32 constant FILE = "TestLiquidityTokenUnwrapper";
+    bytes32 private constant FILE = "TestIsolationModeUnwrapperForV3";
 
     uint256 constant public ACTIONS_LENGTH = 1;
 
     IDolomiteMargin public DOLOMITE_MARGIN;
-    address public INPUT_TOKEN;
+    address public UNDERLYING_TOKEN;
     address public OUTPUT_TOKEN;
 
     constructor(
@@ -47,17 +47,13 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
         address _outputToken,
         address _dolomiteMargin
     ) public {
-        INPUT_TOKEN = _inputToken;
+        UNDERLYING_TOKEN = _inputToken;
         OUTPUT_TOKEN = _outputToken;
         DOLOMITE_MARGIN = IDolomiteMargin(_dolomiteMargin);
     }
 
     function token() external view returns (address) {
-        return INPUT_TOKEN;
-    }
-
-    function isValidOutputToken(address _outputToken) external view returns (bool) {
-        return _outputToken == OUTPUT_TOKEN;
+        return UNDERLYING_TOKEN;
     }
 
     function outputMarketId() external view returns (uint256) {
@@ -68,7 +64,7 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
         return ACTIONS_LENGTH;
     }
 
-    function createActionsForUnwrapping(
+    function createActionsForUnwrappingForLiquidation(
         uint256 _primaryAccountId,
         uint256,
         address,
@@ -81,8 +77,8 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
     external
     view
     returns (Actions.ActionArgs[] memory) {
-        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _inputMarket) { /* FOR COVERAGE TESTING */ }
-        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _inputMarket,
+        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN) == _inputMarket) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN) == _inputMarket,
             FILE,
             "Invalid input market",
             _inputMarket
@@ -126,14 +122,19 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
     )
     external
     returns (uint256) {
-        if (_takerToken == INPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
-        Require.that(_takerToken == INPUT_TOKEN,
+        if (_takerToken == UNDERLYING_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_takerToken == UNDERLYING_TOKEN,
             FILE,
             "Taker token must be UNDERLYING",
             _takerToken
         );
 
-        (uint256 amountOut,) = abi.decode(_orderData, (uint256, bytes));
+        (uint256 amountOut, bytes memory _extraOrderData) = abi.decode(_orderData, (uint256, bytes));
+        if (_extraOrderData.length == 0) { /* FOR COVERAGE TESTING */ }
+        Require.that(_extraOrderData.length == 0,
+            FILE,
+            "Extra order data not supported"
+        );
         TestToken(_makerToken).setBalance(address(this), amountOut);
         TestToken(_makerToken).approve(_receiver, amountOut);
         return amountOut;
@@ -148,8 +149,8 @@ contract TestLiquidityTokenUnwrapperTrader is ILiquidityTokenUnwrapperTraderOld 
     external
     view
     returns (uint256) {
-        if (_makerToken == INPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
-        Require.that(_makerToken == INPUT_TOKEN,
+        if (_makerToken == UNDERLYING_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_makerToken == UNDERLYING_TOKEN,
             FILE,
             "Maker token must be wrapper",
             _makerToken

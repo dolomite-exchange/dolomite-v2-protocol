@@ -37,7 +37,7 @@ library AccountBalanceLib {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "AccountBalanceLib";
+    bytes32 private constant FILE = "AccountBalanceLib";
 
     // ============ Types ============
 

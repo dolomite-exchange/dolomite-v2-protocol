@@ -39,7 +39,7 @@ contract TestAutoTrader is
 {
     // ============ Constants ============
 
-    bytes32 constant FILE = "TestAutoTrader";
+    bytes32 private constant FILE = "TestAutoTrader";
 
     // ============ Events ============
 

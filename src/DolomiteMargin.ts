@@ -39,7 +39,7 @@ import { LiquidatorProxyV1WithAmm } from './modules/LiquidatorProxyV1WithAmm';
 import { LiquidatorProxyV2WithExternalLiquidity } from './modules/LiquidatorProxyV2WithExternalLiquidity';
 import { LiquidatorProxyV3WithLiquidityToken } from './modules/LiquidatorProxyV3WithLiquidityToken';
 import { LiquidatorProxyV4WithGenericTrader } from './modules/LiquidatorProxyV4WithGenericTrader';
-import { LiquidityTokenUnwrapper } from './modules/LiquidityTokenUnwrapper';
+import { IsolationModeUnwrapper } from './modules/IsolationModeUnwrapper';
 import { Logs } from './modules/Logs';
 import { MultiCall } from './modules/MultiCall';
 import { Operation } from './modules/operate/Operation';
@@ -54,6 +54,7 @@ import { TransferProxy } from './modules/TransferProxy';
 import { WalletLogin } from './modules/WalletLogin';
 import { WETH } from './modules/WETH';
 import { address, DolomiteMarginOptions, EthereumAccount, Networks } from './types';
+import { IsolationModeWrapper } from './modules/IsolationModeWrapper';
 
 export class DolomiteMargin {
   public networkId: number;
@@ -176,12 +177,16 @@ export class DolomiteMargin {
     }
   }
 
-  getDolomiteAmmPair(pairAddress: address): DolomiteAmmPair {
+  public getDolomiteAmmPair(pairAddress: address): DolomiteAmmPair {
     return new DolomiteAmmPair(this.contracts, this.contracts.getDolomiteAmmPair(pairAddress));
   }
 
-  getTokenUnwrapper(unwrapperAddress: address): LiquidityTokenUnwrapper {
-    return new LiquidityTokenUnwrapper(this.contracts, this.contracts.getTokenUnwrapper(unwrapperAddress));
+  public getIsolationModeUnwrapper(unwrapperAddress: address): IsolationModeUnwrapper {
+    return new IsolationModeUnwrapper(this.contracts, this.contracts.getIsolationModeUnwrapper(unwrapperAddress));
+  }
+
+  public getIsolationModeWrapper(unwrapperAddress: address): IsolationModeWrapper {
+    return new IsolationModeWrapper(this.contracts, this.contracts.getIsolationModeWrapper(unwrapperAddress));
   }
 
   protected createContractsModule(

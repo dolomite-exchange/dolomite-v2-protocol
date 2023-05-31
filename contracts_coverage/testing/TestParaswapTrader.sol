@@ -33,7 +33,7 @@ import { ERC20Lib } from "../external/lib/ERC20Lib.sol";
 
 contract TestParaswapTrader is IExchangeWrapper, OnlyDolomiteMargin {
 
-    bytes32 constant FILE = "TestParaswapTrader";
+    bytes32 private constant FILE = "TestParaswapTrader";
 
     // ============ Storage ============
 

@@ -49,7 +49,7 @@ import { OnlyDolomiteMargin } from "../external/helpers/OnlyDolomiteMargin.sol";
 contract TestAmmRebalancerProxy is OnlyDolomiteMargin, Ownable {
     using SafeMath for uint;
 
-    bytes32 public constant FILE = "TestAmmRebalancerProxy";
+    bytes32 private constant FILE = "TestAmmRebalancerProxy";
 
     address public DOLOMITE_AMM_FACTORY;
 
