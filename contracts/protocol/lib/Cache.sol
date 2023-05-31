@@ -35,7 +35,7 @@ library Cache {
 
     // ============ Constants ============
 
-    bytes32 internal constant FILE = "Cache";
+    bytes32 private constant FILE = "Cache";
 
     // ============ Structs ============
 

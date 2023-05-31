@@ -9,10 +9,10 @@ import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 import { toBytesNoPadding } from '../../src/lib/BytesHelper';
 import { deployContract } from '../helpers/Deploy';
 import {
-  TestLiquidityTokenUnwrapperTrader
-} from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
+  TestIsolationModeUnwrapperTraderForV3Liquidator
+} from '../../build/testing_wrappers/TestIsolationModeUnwrapperTraderForV3Liquidator';
 import * as testLiquidityTokenUnwrapperTraderJson
-  from '../../build/contracts/TestLiquidityTokenUnwrapperTrader.json';
+  from '../../build/contracts/TestIsolationModeUnwrapperTraderForV3Liquidator.json';
 
 enum FailureType {
   None,
@@ -32,7 +32,7 @@ let token1: address;
 let token2: address;
 let token3: address;
 let token4: address;
-let testLiquidityUnwrapper: TestLiquidityTokenUnwrapperTrader;
+let testIsolationModeUnwrapper: TestIsolationModeUnwrapperTraderForV3Liquidator;
 let tokenForUnwrapper: address;
 let outputTokenForUnwrapper: address;
 
@@ -107,20 +107,20 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
     marketIdToTokenMap[market3.toFixed()] = token3;
     marketIdToTokenMap[market4.toFixed()] = token4;
 
-    testLiquidityUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+    testIsolationModeUnwrapper = await deployContract<TestIsolationModeUnwrapperTraderForV3Liquidator>(
       dolomiteMargin,
       testLiquidityTokenUnwrapperTraderJson,
       [token1, token2, dolomiteMargin.address],
     );
     await dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperTrader(
       market1,
-      testLiquidityUnwrapper.options.address,
+      testIsolationModeUnwrapper.options.address,
       { from: admin },
     );
     tokenForUnwrapper = token1;
     outputTokenForUnwrapper = token2;
     expect(await dolomiteMargin.liquidatorProxyV3WithLiquidityToken.getTokenUnwrapperByMarketId(market1))
-      .to.equal(testLiquidityUnwrapper.options.address);
+      .to.equal(testIsolationModeUnwrapper.options.address);
 
     await mineAvgBlock();
 
@@ -165,7 +165,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await expectThrow(
           dolomiteMargin.liquidatorProxyV3WithLiquidityToken.setMarketIdToTokenUnwrapperTrader(
             market1,
-            testLiquidityUnwrapper.options.address,
+            testIsolationModeUnwrapper.options.address,
             { from: solidOwner },
           ),
           `LiquidatorProxyV3: Only owner can call <${solidOwner.toLowerCase()}>`,
@@ -985,7 +985,7 @@ async function getExchangeCostForUnwrapper(
   heldAmount: Integer,
 ): Promise<Integer> {
   const costString = await dolomiteMargin.contracts.callConstantContractFunction(
-    testLiquidityUnwrapper.methods.getExchangeCost(
+    testIsolationModeUnwrapper.methods.getExchangeCost(
       tokenForUnwrapper,
       outputTokenForUnwrapper,
       heldAmount.toFixed(),

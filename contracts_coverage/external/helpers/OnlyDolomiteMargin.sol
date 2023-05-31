@@ -33,7 +33,7 @@ contract OnlyDolomiteMargin {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "OnlyDolomiteMargin";
+    bytes32 private constant FILE = "OnlyDolomiteMargin";
 
     // ============ Storage ============
 

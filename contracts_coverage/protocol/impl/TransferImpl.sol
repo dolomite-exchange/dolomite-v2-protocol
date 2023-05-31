@@ -32,7 +32,7 @@ library TransferImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "TransferImpl";
+    bytes32 private constant FILE = "TransferImpl";
 
     // ============ Account Actions ============
 

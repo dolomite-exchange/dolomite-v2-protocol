@@ -1,13 +1,13 @@
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import * as testIsolationModeTokenJson from '../../build/contracts/TestIsolationModeToken.json';
-import * as testLiquidityTokenUnwrapperTraderJson from '../../build/contracts/TestLiquidityTokenUnwrapperTrader.json';
-import * as testLiquidityTokenWrapperTraderJson from '../../build/contracts/TestLiquidityTokenWrapperTrader.json';
+import * as testIsolationModeUnwrapperTraderJson from '../../build/contracts/TestIsolationModeUnwrapperTrader.json';
+import * as testIsolationModeWrapperTraderJson from '../../build/contracts/TestIsolationModeWrapperTrader.json';
 import * as testTokenJson from '../../build/contracts/CustomTestToken.json';
 import { CustomTestToken as TestTokenContract } from '../../build/testing_wrappers/CustomTestToken';
 import { TestIsolationModeToken as TestIsolationModeTokenContract } from '../../build/testing_wrappers/TestIsolationModeToken';
-import { TestLiquidityTokenUnwrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenUnwrapperTrader';
-import { TestLiquidityTokenWrapperTrader } from '../../build/testing_wrappers/TestLiquidityTokenWrapperTrader';
+import { TestIsolationModeUnwrapperTrader } from '../../build/testing_wrappers/TestIsolationModeUnwrapperTrader';
+import { TestIsolationModeWrapperTrader } from '../../build/testing_wrappers/TestIsolationModeWrapperTrader';
 import { address, ADDRESSES, AmountDenomination, AmountReference, Integer, INTEGERS, TxResult } from '../../src';
 import {
   GenericExpiryParam,
@@ -42,8 +42,8 @@ let token3Contract: TestIsolationModeToken;
 let token4Contract: TestIsolationModeToken;
 let token5Contract: TestToken;
 let token6Contract: TestToken;
-let testLiquidityUnwrapper: TestLiquidityTokenUnwrapperTrader;
-let testLiquidityWrapper: TestLiquidityTokenWrapperTrader;
+let testLiquidityUnwrapper: TestIsolationModeUnwrapperTrader;
+let testLiquidityWrapper: TestIsolationModeWrapperTrader;
 
 const tradeAccountNumber = new BigNumber(111);
 const originalAccountNumber = new BigNumber(0);
@@ -107,14 +107,14 @@ describe('GenericTraderProxyV1', () => {
     marketIdToTokenMap[market5.toFixed()] = token5;
     marketIdToTokenMap[market6.toFixed()] = token6;
 
-    testLiquidityUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+    testLiquidityUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
       dolomiteMargin,
-      testLiquidityTokenUnwrapperTraderJson,
+      testIsolationModeUnwrapperTraderJson,
       [token3, token2, dolomiteMargin.address],
     );
-    testLiquidityWrapper = await deployContract<TestLiquidityTokenWrapperTrader>(
+    testLiquidityWrapper = await deployContract<TestIsolationModeWrapperTrader>(
       dolomiteMargin,
-      testLiquidityTokenWrapperTraderJson,
+      testIsolationModeWrapperTraderJson,
       [token2, token3, dolomiteMargin.address],
     );
 
@@ -285,9 +285,9 @@ describe('GenericTraderProxyV1', () => {
       });
 
       it('should succeed for a simple swap that unwraps into a wrapper', async () => {
-        const freshUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
           dolomiteMargin,
-          testLiquidityTokenUnwrapperTraderJson,
+          testIsolationModeUnwrapperTraderJson,
           [token3, token4, dolomiteMargin.address],
         );
         await token3Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
@@ -1031,9 +1031,9 @@ describe('GenericTraderProxyV1', () => {
       });
 
       it('should succeed for a simple swap that unwraps into a wrapper', async () => {
-        const freshUnwrapper = await deployContract<TestLiquidityTokenUnwrapperTrader>(
+        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
           dolomiteMargin,
-          testLiquidityTokenUnwrapperTraderJson,
+          testIsolationModeUnwrapperTraderJson,
           [token3, token4, dolomiteMargin.address],
         );
         await token3Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
@@ -1752,7 +1752,7 @@ const traderWithInvalidAddress: GenericTraderParam = {
   traderType: GenericTraderType.ExternalLiquidity,
   makerAccountIndex: 0,
   trader: ADDRESSES.ZERO,
-  tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x0']),
+  tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
 };
 
 function getUnwrapperTraderParam(): GenericTraderParam {
@@ -1760,7 +1760,7 @@ function getUnwrapperTraderParam(): GenericTraderParam {
     traderType: GenericTraderType.IsolationModeUnwrapper,
     makerAccountIndex: 0,
     trader: testLiquidityUnwrapper.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x0']),
+    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
   };
 }
 
@@ -1769,7 +1769,7 @@ function getWrapperTraderParam(): GenericTraderParam {
     traderType: GenericTraderType.IsolationModeWrapper,
     makerAccountIndex: 0,
     trader: testLiquidityWrapper.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x0']),
+    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
   };
 }
 

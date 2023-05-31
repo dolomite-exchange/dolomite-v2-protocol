@@ -33,7 +33,7 @@ library WithdrawalImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "WithdrawalImpl";
+    bytes32 private constant FILE = "WithdrawalImpl";
 
     // ============ Account Actions ============
 

@@ -35,8 +35,8 @@ import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 import { IIsolationModeToken } from "../interfaces/IIsolationModeToken.sol";
 import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry.sol";
-import { ILiquidityTokenUnwrapperTrader } from "../interfaces/ILiquidityTokenUnwrapperTrader.sol";
-import { ILiquidityTokenWrapperTrader } from "../interfaces/ILiquidityTokenWrapperTrader.sol";
+import {IIsolationModeUnwrapperTrader} from "../interfaces/IIsolationModeUnwrapperTrader.sol";
+import {IIsolationModeWrapperTrader} from "../interfaces/IIsolationModeWrapperTrader.sol";
 import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
@@ -219,7 +219,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         uint256 _index
     ) internal view {
         if (TraderType.IsolationModeUnwrapper == _traderParam.traderType) {
-            ILiquidityTokenUnwrapperTrader unwrapperTrader = ILiquidityTokenUnwrapperTrader(_traderParam.trader);
+            IIsolationModeUnwrapperTrader unwrapperTrader = IIsolationModeUnwrapperTrader(_traderParam.trader);
             address isolationModeToken = _cache.dolomiteMargin.getMarketTokenAddress(_marketId);
             if (unwrapperTrader.token() == isolationModeToken) { /* FOR COVERAGE TESTING */ }
             Require.that(unwrapperTrader.token() == isolationModeToken,
@@ -243,7 +243,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 _marketId
             );
         } else if (TraderType.IsolationModeWrapper == _traderParam.traderType) {
-            ILiquidityTokenWrapperTrader wrapperTrader = ILiquidityTokenWrapperTrader(_traderParam.trader);
+            IIsolationModeWrapperTrader wrapperTrader = IIsolationModeWrapperTrader(_traderParam.trader);
             address isolationModeToken = _cache.dolomiteMargin.getMarketTokenAddress(_nextMarketId);
             if (wrapperTrader.isValidInputToken(_cache.dolomiteMargin.getMarketTokenAddress(_marketId))) { /* FOR COVERAGE TESTING */ }
             Require.that(wrapperTrader.isValidInputToken(_cache.dolomiteMargin.getMarketTokenAddress(_marketId)),
@@ -339,9 +339,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         uint256 actionsLength = 0;
         for (uint256 i = 0; i < _tradersPath.length; i++) {
             if (TraderType.IsolationModeUnwrapper == _tradersPath[i].traderType) {
-                actionsLength += ILiquidityTokenUnwrapperTrader(_tradersPath[i].trader).actionsLength();
+                actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
             } else if (TraderType.IsolationModeWrapper == _tradersPath[i].traderType) {
-                actionsLength += ILiquidityTokenUnwrapperTrader(_tradersPath[i].trader).actionsLength();
+                actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
             } else {
                 actionsLength += 1;
             }
@@ -383,7 +383,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _tradersPath[i].tradeData
                 );
             } else if (_tradersPath[i].traderType == TraderType.IsolationModeUnwrapper) {
-                ILiquidityTokenUnwrapperTrader unwrapperTrader = ILiquidityTokenUnwrapperTrader(_tradersPath[i].trader);
+                IIsolationModeUnwrapperTrader unwrapperTrader = IIsolationModeUnwrapperTrader(_tradersPath[i].trader);
                 Actions.ActionArgs[] memory unwrapperActions = unwrapperTrader.createActionsForUnwrapping(
                     TRADE_ACCOUNT_INDEX,
                     TRADE_ACCOUNT_INDEX,
@@ -392,7 +392,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
                     /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
                     /* _minOutputAmount = */ _amountWeisPath[i + 1], // solium-disable-line indentation
-                    /* _inputAmount = */ _amountWeisPath[i] // solium-disable-line indentation
+                    /* _inputAmount = */ _amountWeisPath[i], // solium-disable-line indentation,
+                    _tradersPath[i].tradeData
                 );
                 for (uint256 j = 0; j < unwrapperActions.length; j++) {
                     _actions[_cache.actionsCursor++] = unwrapperActions[j];
@@ -401,7 +402,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 // Panic if the developer messed up the `else` statement here
               /*assert(_tradersPath[i].traderType == TraderType.IsolationModeWrapper);*/
 
-                ILiquidityTokenWrapperTrader wrapperTrader = ILiquidityTokenWrapperTrader(_tradersPath[i].trader);
+                IIsolationModeWrapperTrader wrapperTrader = IIsolationModeWrapperTrader(_tradersPath[i].trader);
                 Actions.ActionArgs[] memory wrapperActions = wrapperTrader.createActionsForWrapping(
                     TRADE_ACCOUNT_INDEX,
                     TRADE_ACCOUNT_INDEX,
@@ -410,7 +411,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
                     /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
                     /* _minOutputAmount = */ _amountWeisPath[i + 1], // solium-disable-line indentation
-                    /* _inputAmount = */ _amountWeisPath[i] // solium-disable-line indentation
+                    /* _inputAmount = */ _amountWeisPath[i], // solium-disable-line indentation
+                    _tradersPath[i].tradeData
                 );
                 for (uint256 j = 0; j < wrapperActions.length; j++) {
                     _actions[_cache.actionsCursor++] = wrapperActions[j];

@@ -30,7 +30,7 @@ import { DolomiteAmmPair } from "./DolomiteAmmPair.sol";
 
 contract DolomiteAmmFactory is IDolomiteAmmFactory {
 
-    bytes32 internal constant FILE = "DolomiteAmmFactory";
+    bytes32 private constant FILE = "DolomiteAmmFactory";
 
     address public feeTo;
     address public feeToSetter;

@@ -37,7 +37,7 @@ library TradeImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "TradeImpl";
+    bytes32 private constant FILE = "TradeImpl";
 
     // ============ Account Actions ============
 

@@ -32,7 +32,7 @@ library CallImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "CallImpl";
+    bytes32 private constant FILE = "CallImpl";
 
     // ============ Account Actions ============
 

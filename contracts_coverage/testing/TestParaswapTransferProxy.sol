@@ -25,7 +25,7 @@ import { TestToken } from "./TestToken.sol";
 
 contract TestParaswapTransferProxy {
 
-    bytes32 internal constant FILE = "TestParaswapTransferProxy";
+    bytes32 private constant FILE = "TestParaswapTransferProxy";
 
     /**
      * This function is called blindly by `LiquidatorProxyV2WithExternalLiquidity` via the pass through "_paraswapCalldata" variable

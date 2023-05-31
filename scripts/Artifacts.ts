@@ -29,7 +29,8 @@ import IArbitrumGasInfo from '../build/contracts/IArbitrumGasInfo.json';
 import IERC20 from '../build/contracts/IERC20.json';
 import IAccountRiskOverrideSetter from '../build/contracts/IAccountRiskOverrideSetter.json';
 import IInterestSetter from '../build/contracts/IInterestSetter.json';
-import ILiquidityTokenUnwrapperTrader from '../build/contracts/ILiquidityTokenUnwrapperTrader.json';
+import IIsolationModeUnwrapperTrader from '../build/contracts/IIsolationModeUnwrapperTrader.json';
+import IIsolationModeWrapperTrader from '../build/contracts/IIsolationModeWrapperTrader.json';
 import ILiquidityTokenWrapperTrader from '../build/contracts/ILiquidityTokenWrapperTrader.json';
 import IOracleSentinel from '../build/contracts/IOracleSentinel.json';
 import IPriceOracle from '../build/contracts/IPriceOracle.json';
@@ -83,7 +84,8 @@ export default {
   IArbitrumGasInfo,
   IERC20,
   IInterestSetter,
-  ILiquidityTokenUnwrapperTrader,
+  IIsolationModeUnwrapperTrader,
+  IIsolationModeWrapperTrader,
   ILiquidityTokenWrapperTrader,
   IOracleSentinel,
   IPriceOracle,

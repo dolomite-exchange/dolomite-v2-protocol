@@ -40,7 +40,7 @@ contract PayableProxy is OnlyDolomiteMargin, ReentrancyGuard {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "PayableProxy";
+    bytes32 private constant FILE = "PayableProxy";
 
     // ============ Storage ============
 

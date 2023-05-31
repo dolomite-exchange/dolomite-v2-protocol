@@ -34,7 +34,7 @@ library DolomiteMarginMath {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "Math";
+    bytes32 private constant FILE = "Math";
 
     // ============ Library Functions ============
 

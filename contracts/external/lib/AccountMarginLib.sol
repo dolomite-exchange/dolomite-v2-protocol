@@ -32,7 +32,7 @@ library AccountMarginLib {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "AccountMarginHelper";
+    bytes32 private constant FILE = "AccountMarginHelper";
 
     // ============ Functions ============
 

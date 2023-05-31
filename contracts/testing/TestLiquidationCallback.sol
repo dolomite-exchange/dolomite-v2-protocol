@@ -26,7 +26,7 @@ import { Types } from "../protocol/lib/Types.sol";
 
 contract TestLiquidationCallback is OnlyDolomiteMargin {
 
-    bytes32 public constant FILE = "TestLiquidationCallback";
+    bytes32 private constant FILE = "TestLiquidationCallback";
 
     event LogOnLiquidateInputs(
         uint accountNumber,

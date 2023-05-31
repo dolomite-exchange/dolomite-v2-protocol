@@ -59,7 +59,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "LiquidatorProxyV1WithAmm";
+    bytes32 private constant FILE = "LiquidatorProxyV1WithAmm";
 
     // ============ Events ============
 

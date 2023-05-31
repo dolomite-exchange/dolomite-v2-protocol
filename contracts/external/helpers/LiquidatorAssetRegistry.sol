@@ -39,7 +39,7 @@ contract LiquidatorAssetRegistry is ILiquidatorAssetRegistry, OnlyDolomiteMargin
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "LiquidatorAssetRegistry";
+    bytes32 private constant FILE = "LiquidatorAssetRegistry";
 
     // ============ Storage ============
 

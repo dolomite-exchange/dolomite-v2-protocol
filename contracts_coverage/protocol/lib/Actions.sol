@@ -33,7 +33,7 @@ library Actions {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "Actions";
+    bytes32 private constant FILE = "Actions";
 
     // ============ Enums ============
 

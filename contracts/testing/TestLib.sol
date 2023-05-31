@@ -47,7 +47,7 @@ contract TestLib {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "TestLib";
+    bytes32 private constant FILE = "TestLib";
 
     // ============ Field Values ============
 

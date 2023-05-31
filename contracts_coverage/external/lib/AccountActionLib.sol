@@ -41,7 +41,7 @@ library AccountActionLib {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "AccountActionLib";
+    bytes32 private constant FILE = "AccountActionLib";
 
     uint256 constant ALL = uint256(-1);
 

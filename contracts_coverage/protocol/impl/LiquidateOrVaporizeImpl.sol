@@ -48,7 +48,7 @@ library LiquidateOrVaporizeImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "LiquidateOrVaporizeImpl";
+    bytes32 private constant FILE = "LiquidateOrVaporizeImpl";
 
     // ============ Account Functions ============
 

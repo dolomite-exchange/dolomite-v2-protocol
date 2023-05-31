@@ -50,7 +50,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "DepositWithdrawalProxy";
+    bytes32 private constant FILE = "DepositWithdrawalProxy";
 
     // ============ Field Variables ============
 

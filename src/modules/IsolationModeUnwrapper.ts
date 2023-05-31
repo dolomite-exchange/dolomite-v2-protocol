@@ -1,17 +1,14 @@
 import { Contracts } from '../lib/Contracts';
 import { ActionArgs, address, Integer } from '../types';
-import { hexStringToBytes } from '../lib/BytesHelper';
-import { ILiquidityTokenUnwrapperTrader } from '../../build/wrappers/ILiquidityTokenUnwrapperTrader';
+import { hexStringToBytes, toBytesNoPadding } from '../lib/BytesHelper';
+import { IIsolationModeUnwrapperTrader } from '../../build/wrappers/IIsolationModeUnwrapperTrader';
 import BigNumber from 'bignumber.js';
 
-export class LiquidityTokenUnwrapper {
+export class IsolationModeUnwrapper {
+  public unwrapperContract: IIsolationModeUnwrapperTrader;
   private contracts: Contracts;
-  public unwrapperContract: ILiquidityTokenUnwrapperTrader;
 
-  constructor(
-    contracts: Contracts,
-    unwrapperContract: ILiquidityTokenUnwrapperTrader,
-  ) {
+  constructor(contracts: Contracts, unwrapperContract: IIsolationModeUnwrapperTrader) {
     this.contracts = contracts;
     this.unwrapperContract = unwrapperContract;
   }
@@ -21,15 +18,11 @@ export class LiquidityTokenUnwrapper {
   }
 
   public async token(): Promise<address> {
-    return this.contracts.callConstantContractFunction(
-      this.unwrapperContract.methods.token()
-    );
+    return this.contracts.callConstantContractFunction(this.unwrapperContract.methods.token());
   }
 
   public async actionsLength(): Promise<Integer> {
-    const result = await this.contracts.callConstantContractFunction(
-      this.unwrapperContract.methods.actionsLength()
-    );
+    const result = await this.contracts.callConstantContractFunction(this.unwrapperContract.methods.actionsLength());
     return new BigNumber(result);
   }
 
@@ -38,10 +31,11 @@ export class LiquidityTokenUnwrapper {
     liquidAccountId: Integer,
     solidAccountOwner: address,
     liquidAccountOwner: address,
-    owedMarket: Integer,
-    heldMarket: Integer,
-    owedAmount: Integer,
-    heldAmountWithReward: Integer,
+    outputMarket: Integer,
+    inputMarket: Integer,
+    minOutputAmount: Integer,
+    inputAmount: Integer,
+    orderDataHexString: string,
   ): Promise<ActionArgs[]> {
     return this.contracts.callConstantContractFunction(
       this.unwrapperContract.methods.createActionsForUnwrapping(
@@ -49,11 +43,12 @@ export class LiquidityTokenUnwrapper {
         liquidAccountId.toFixed(),
         solidAccountOwner,
         liquidAccountOwner,
-        owedMarket.toFixed(),
-        heldMarket.toFixed(),
-        owedAmount.toFixed(),
-        heldAmountWithReward.toFixed(),
-      )
+        outputMarket.toFixed(),
+        inputMarket.toFixed(),
+        minOutputAmount.toFixed(),
+        inputAmount.toFixed(),
+        toBytesNoPadding(orderDataHexString),
+      ),
     );
   }
 
@@ -69,7 +64,7 @@ export class LiquidityTokenUnwrapper {
         takerToken,
         desiredMakerToken.toFixed(),
         hexStringToBytes(orderData),
-      )
+      ),
     );
     return new BigNumber(result);
   }
