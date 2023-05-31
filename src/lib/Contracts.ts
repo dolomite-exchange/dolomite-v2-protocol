@@ -46,16 +46,12 @@ import genericTraderProxyV1Json from '../../build/published_contracts/GenericTra
 import interestSetterJson from '../../build/published_contracts/IInterestSetter.json';
 import isolationModeUnwrapperJson from '../../build/published_contracts/IIsolationModeUnwrapperTrader.json';
 import isolationModeWrapperJson from '../../build/published_contracts/IIsolationModeWrapperTrader.json';
-import marginPositionRegistryJson from '../../build/published_contracts/MarginPositionRegistry.json';
-import priceOracleJson from '../../build/published_contracts/IPriceOracle.json';
 import liquidatorAssetRegistryJson from '../../build/published_contracts/LiquidatorAssetRegistry.json';
 import liquidatorProxyV1Json from '../../build/published_contracts/LiquidatorProxyV1.json';
 import liquidatorProxyV1WithAmmJson from '../../build/published_contracts/LiquidatorProxyV1WithAmm.json';
 import liquidatorProxyV2WithExternalLiquidityJson from '../../build/published_contracts/LiquidatorProxyV2WithExternalLiquidity.json';
 import liquidatorProxyV3WithLiquidityTokenJson from '../../build/published_contracts/LiquidatorProxyV3WithLiquidityToken.json';
 import liquidatorProxyV4WithGenericTraderJson from '../../build/published_contracts/LiquidatorProxyV4WithGenericTrader.json';
-import liquidityTokenUnwrapperJson from '../../build/published_contracts/ILiquidityTokenUnwrapperTrader.json';
-import liquidityTokenWrapperJson from '../../build/published_contracts/ILiquidityTokenWrapperTrader.json';
 import marginPositionRegistryJson from '../../build/published_contracts/MarginPositionRegistry.json';
 import multiCallJson from '../../build/published_contracts/MultiCall.json';
 import oracleSentinelJson from '../../build/published_contracts/IOracleSentinel.json';
@@ -88,12 +84,10 @@ import { GenericTraderProxyV1 } from '../../build/wrappers/GenericTraderProxyV1'
 import { IAccountRiskOverrideSetter } from '../../build/wrappers/IAccountRiskOverrideSetter';
 import { IArbitrumGasInfo } from '../../build/wrappers/IArbitrumGasInfo';
 import { IERC20 as ERC20 } from '../../build/wrappers/IERC20';
-import { ILiquidityTokenUnwrapperTrader } from '../../build/wrappers/ILiquidityTokenUnwrapperTrader';
-import { ILiquidityTokenWrapperTrader } from '../../build/wrappers/ILiquidityTokenWrapperTrader';
-import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
 import { IInterestSetter as InterestSetter } from '../../build/wrappers/IInterestSetter';
 import { IIsolationModeUnwrapperTrader } from '../../build/wrappers/IIsolationModeUnwrapperTrader';
 import { IIsolationModeWrapperTrader } from '../../build/wrappers/IIsolationModeWrapperTrader';
+import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
 import { IPriceOracle as PriceOracle } from '../../build/wrappers/IPriceOracle';
 import { LiquidatorAssetRegistry } from '../../build/wrappers/LiquidatorAssetRegistry';
 import { LiquidatorProxyV1 } from '../../build/wrappers/LiquidatorProxyV1';
@@ -273,16 +267,6 @@ export class Contracts {
       isolationModeWrapperJson.abi,
       contractAddress,
     ) as IIsolationModeWrapperTrader;
-    unwrapper.setProvider(this.provider);
-    unwrapper.options.from = this.dolomiteMargin.options.from;
-    return unwrapper;
-  }
-
-  public getTokenWrapper(contractAddress: address): ILiquidityTokenWrapperTrader {
-    const unwrapper = new this.web3.eth.Contract(
-      liquidityTokenWrapperJson.abi,
-      contractAddress,
-    ) as ILiquidityTokenWrapperTrader;
     unwrapper.setProvider(this.provider);
     unwrapper.options.from = this.dolomiteMargin.options.from;
     return unwrapper;

@@ -9,12 +9,8 @@ import "../interfaces/IUniswapV2Pair.sol";
 library UniswapV2Library {
     using SafeMath for uint;
 
-    bytes32 private constant PAIR_INIT_CODE_HASH = 0x279b748427a44583137a0014f36a15464ce6abd64c8db3ce336c0f84d0be25a7;
-
     function getPairInitCodeHash(address factory) internal pure returns (bytes32) {
-        return PAIR_INIT_CODE_HASH == bytes32(0)
-            ? IUniswapV2Factory(factory).getPairInitCodeHash()
-            : PAIR_INIT_CODE_HASH;
+        return IUniswapV2Factory(factory).getPairInitCodeHash();
     }
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
