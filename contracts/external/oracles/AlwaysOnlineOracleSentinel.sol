@@ -27,6 +27,7 @@ import { IOracleSentinel } from "../../protocol/interfaces/IOracleSentinel.sol";
  * @author Dolomite
  *
  * An implementation of the IOracleSentinel interface that always returns `true` for its implementation functions.
+ * Useful for deployments on networks that don't need an oracle sentinel.
  */
 contract AlwaysOnlineOracleSentinel is IOracleSentinel {
 
