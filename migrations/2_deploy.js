@@ -127,6 +127,7 @@ const TestUniswapV3MultiRouter = artifacts.require('TestUniswapV3MultiRouter');
 const TransferProxy = artifacts.require('TransferProxy');
 
 // Oracle Sentinels
+const AlwaysOnlineOracleSentinel = artifacts.require('AlwaysOnlineOracleSentinel');
 const ChainlinkOracleSentinel = artifacts.require('ChainlinkOracleSentinel');
 
 // Interest Setters
@@ -276,10 +277,26 @@ async function deployBaseProtocol(deployer, network) {
     await dolomiteMargin.link('TestOperationImpl', TestOperationImpl.address);
   }
 
+  if (shouldOverwrite(AlwaysOnlineOracleSentinel, network)) {
+    await deployer.deploy(AlwaysOnlineOracleSentinel);
+  } else {
+    await deployer.deploy(AlwaysOnlineOracleSentinel, getNoOverwriteParams());
+  }
+
   if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
     await deployer.deploy(ChainlinkOracleSentinel, getChainlinkFlags(network, TestChainlinkFlags));
   } else {
     await deployer.deploy(ChainlinkOracleSentinel, getNoOverwriteParams());
+  }
+
+  let oracleSentinel;
+  if (
+    isDevNetwork(network) ||
+    isArbitrumNetwork(network)
+  ) {
+    oracleSentinel = ChainlinkOracleSentinel;
+  } else {
+    oracleSentinel = AlwaysOnlineOracleSentinel;
   }
 
   if (shouldOverwrite(dolomiteMargin, network)) {
@@ -292,7 +309,7 @@ async function deployBaseProtocol(deployer, network) {
       riskParams.earningsRate,
       riskParams.minBorrowedValue,
       riskParams.accountMaxNumberOfMarketsWithBalances,
-      ChainlinkOracleSentinel.address,
+      oracleSentinel.address,
     );
   } else {
     await deployer.deploy(dolomiteMargin, getNoOverwriteParams());

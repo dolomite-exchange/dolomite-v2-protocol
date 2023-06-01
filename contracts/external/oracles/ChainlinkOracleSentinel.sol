@@ -35,8 +35,7 @@ contract ChainlinkOracleSentinel is IOracleSentinel {
 
     // ========================== Constants ========================
 
-    // solium-disable-next-line max-len
-    address private constant FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1)));
+    address private constant FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1))); // solium-disable-line max-len
 
     // ========================= Storage =========================
 

@@ -5,6 +5,7 @@
 import AAVECopyCatAltCoinInterestSetter from '../build/contracts/AAVECopyCatAltCoinInterestSetter.json';
 import AAVECopyCatStableCoinInterestSetter from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
 import AdminImpl from '../build/contracts/AdminImpl.json';
+import AlwaysOnlineOracleSentinel from '../build/contracts/AlwaysOnlineOracleSentinel.json';
 import AmmRebalancerProxyV1 from '../build/contracts/AmmRebalancerProxyV1.json';
 import AmmRebalancerProxyV2 from '../build/contracts/AmmRebalancerProxyV2.json';
 import ArbitrumMultiCall from '../build/contracts/ArbitrumMultiCall.json';
@@ -59,6 +60,7 @@ export default {
   AAVECopyCatAltCoinInterestSetter,
   AAVECopyCatStableCoinInterestSetter,
   AdminImpl,
+  AlwaysOnlineOracleSentinel,
   AmmRebalancerProxyV1,
   AmmRebalancerProxyV2,
   ArbitrumMultiCall,

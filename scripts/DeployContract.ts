@@ -1,6 +1,6 @@
-import { abi, bytecode, contractName } from '../build/contracts/LiquidatorProxyV1WithAmm.json';
+import { abi, bytecode, contractName } from '../build/contracts/LiquidatorAssetRegistry.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
-import { LiquidatorProxyV1WithAmm } from '../build/wrappers/LiquidatorProxyV1WithAmm';
+import { LiquidatorAssetRegistry } from '../build/wrappers/LiquidatorAssetRegistry';
 import { execSync } from 'child_process';
 import deployed from '../migrations/deployed.json';
 import { promisify } from 'es6-promisify';
@@ -27,15 +27,12 @@ async function deploy(): Promise<void> {
   const provider = truffle.networks[network].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const deployer = (await dolomiteMargin.web3.eth.getAccounts())[0];
-  const contract = new dolomiteMargin.web3.eth.Contract(abi) as LiquidatorProxyV1WithAmm;
+  const contract = new dolomiteMargin.web3.eth.Contract(abi) as LiquidatorAssetRegistry;
   const txResult = await dolomiteMargin.contracts.callContractFunction(
     contract.deploy({
       data: bytecode,
       arguments: [
         dolomiteMargin.address,
-        dolomiteMargin.dolomiteAmmRouterProxy.address,
-        dolomiteMargin.expiry.address,
-        dolomiteMargin.liquidatorAssetRegistry.address,
       ],
     }),
     { confirmationType: ConfirmationType.Confirmed, gas: '30000000', gasPrice: '100000000', from: deployer },

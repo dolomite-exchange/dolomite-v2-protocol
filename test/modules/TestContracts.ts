@@ -23,6 +23,8 @@ import malformedTokenJson from '../../build/testing_contracts/MalformedToken.jso
 import omiseTokenJson from '../../build/testing_contracts/OmiseToken.json';
 
 // JSON - Contracts
+import alwaysOnlineOracleSentinelJson from '../../build/published_contracts/AlwaysOnlineOracleSentinel.json';
+import chainlinkOracleSentinelJson from '../../build/published_contracts/ChainlinkOracleSentinel.json';
 import testAccountRiskOverrideSetterJson from '../../build/testing_contracts/TestAccountRiskOverrideSetter.json';
 import testAmmRebalancerProxyJson from '../../build/testing_contracts/TestAmmRebalancerProxy.json';
 import testAutoTraderJson from '../../build/testing_contracts/TestAutoTrader.json';
@@ -55,6 +57,7 @@ import testUniswapV2PairJson from '../../build/testing_contracts/UniswapV2Pair.j
 import testUniswapV2RouterJson from '../../build/testing_contracts/UniswapV2Router02.json';
 
 // Contracts
+import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
 import { TestAccountRiskOverrideSetter } from '../../build/testing_wrappers/TestAccountRiskOverrideSetter';
 import { TestAmmRebalancerProxy } from '../../build/testing_wrappers/TestAmmRebalancerProxy';
 import { TestAutoTrader } from '../../build/testing_wrappers/TestAutoTrader';
@@ -98,6 +101,8 @@ export class TestContracts extends Contracts {
   public omiseToken: TestToken;
 
   // Testing contract instances
+  public alwaysOnlineOracleSentinel: IOracleSentinel;
+  public chainlinkOracleSentinel: IOracleSentinel;
   public testAccountRiskOverrideSetter: TestAccountRiskOverrideSetter;
   public testAmmRebalancerProxy: TestAmmRebalancerProxy;
   public testAutoTrader: TestAutoTrader;
@@ -134,6 +139,12 @@ export class TestContracts extends Contracts {
     this.weth = new this.web3.eth.Contract(testWeth.abi) as TestWETH;
 
     // Testing Contracts
+    this.alwaysOnlineOracleSentinel = new this.web3.eth.Contract(
+      alwaysOnlineOracleSentinelJson.abi
+    ) as IOracleSentinel;
+    this.chainlinkOracleSentinel = new this.web3.eth.Contract(
+      chainlinkOracleSentinelJson.abi
+    ) as IOracleSentinel;
     this.chainlinkPriceOracleV1 = new this.web3.eth.Contract(
       testChainlinkPriceOracleJson.abi
     ) as TestChainlinkPriceOracleV1;
@@ -206,6 +217,8 @@ export class TestContracts extends Contracts {
       { contract: this.omiseToken, json: omiseTokenJson },
       { contract: this.weth, json: testWeth },
       // test contracts
+      { contract: this.alwaysOnlineOracleSentinel, json: alwaysOnlineOracleSentinelJson },
+      { contract: this.chainlinkOracleSentinel, json: chainlinkOracleSentinelJson },
       { contract: this.chainlinkPriceOracleV1, json: testChainlinkPriceOracleJson },
       { contract: this.dolomiteMargin, json: testDolomiteMarginJson },
       { contract: this.testAmmRebalancerProxy, json: testAmmRebalancerProxyJson },
@@ -255,6 +268,8 @@ export class TestContracts extends Contracts {
     this.malformedToken.options.from = account;
     this.omiseToken.options.from = account;
     // // Test Contracts
+    this.alwaysOnlineOracleSentinel.options.from = account;
+    this.chainlinkOracleSentinel.options.from = account;
     this.testAccountRiskOverrideSetter.options.from = account;
     this.testAmmRebalancerProxy.options.from = account;
     this.testAutoTrader.options.from = account;

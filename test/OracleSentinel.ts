@@ -5,6 +5,7 @@ import { setupMarkets } from './helpers/DolomiteMarginHelpers';
 import { resetEVM, snapshot } from './helpers/EVM';
 import { expectThrow } from './helpers/Expect';
 import { TestDolomiteMargin } from './modules/TestDolomiteMargin';
+import { OracleSentinel } from '../src/modules/OracleSentinel';
 
 let owner: address;
 let dolomiteMargin: TestDolomiteMargin;
@@ -17,6 +18,8 @@ const amount = new BigNumber(100);
 
 describe('OracleSentinel', () => {
   let snapshotId: string;
+  let oracleSentinel: OracleSentinel;
+  let alwaysOnlineOracleSentinel: OracleSentinel;
 
   before(async () => {
     const r = await getDolomiteMargin();
@@ -36,6 +39,10 @@ describe('OracleSentinel', () => {
       dolomiteMargin.testing.tokenA.setMaximumDolomiteMarginAllowance(owner),
     ]);
 
+    oracleSentinel = await dolomiteMargin.getters.getOracleSentinel();
+    expect(oracleSentinel.address).to.eql(dolomiteMargin.contracts.chainlinkOracleSentinel.options.address);
+
+    alwaysOnlineOracleSentinel = new OracleSentinel(dolomiteMargin.contracts, dolomiteMargin.contracts.alwaysOnlineOracleSentinel.options.address);
     snapshotId = await snapshot();
   });
 
@@ -48,12 +55,16 @@ describe('OracleSentinel', () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
 
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
+      expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
+      expect(await oracleSentinel.isBorrowAllowed()).to.eql(true);
     });
 
     it('Should return false when the sequencer is online', async () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
 
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
+      expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
+      expect(await oracleSentinel.isBorrowAllowed()).to.eql(false);
     });
   });
 
@@ -62,12 +73,16 @@ describe('OracleSentinel', () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
 
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
+      expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
+      expect(await oracleSentinel.isBorrowAllowed()).to.eql(true);
     });
 
     it('Should return false when the sequencer is online', async () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
 
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
+      expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
+      expect(await oracleSentinel.isBorrowAllowed()).to.eql(false);
     });
   });
 

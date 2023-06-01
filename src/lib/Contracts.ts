@@ -129,10 +129,10 @@ export class Contracts {
   public arbitrumMultiCall: ArbitrumMultiCall;
   public borrowPositionProxyV1: BorrowPositionProxyV1;
   public borrowPositionProxyV2: BorrowPositionProxyV2;
+  public chainlinkPriceOracleV1: ChainlinkPriceOracleV1;
   public depositProxy: DepositWithdrawalProxy;
   public dolomiteAmmRouterProxy: DolomiteAmmRouterProxy;
   public dolomiteAmmFactory: DolomiteAmmFactory;
-  public chainlinkPriceOracleV1: ChainlinkPriceOracleV1;
   public dolomiteMargin: DolomiteMargin;
   public doubleExponentInterestSetter: DoubleExponentInterestSetter;
   public erc20: ERC20;
