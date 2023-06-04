@@ -32,8 +32,8 @@ import { HasLiquidatorRegistry } from "../helpers/HasLiquidatorRegistry.sol";
 import { LiquidatorProxyBase } from "../helpers/LiquidatorProxyBase.sol";
 
 import { IExpiry } from "../interfaces/IExpiry.sol";
-import {IIsolationModeUnwrapperTrader} from "../interfaces/IIsolationModeUnwrapperTrader.sol";
-import {IIsolationModeWrapperTrader} from "../interfaces/IIsolationModeWrapperTrader.sol";
+import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
+import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 

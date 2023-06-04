@@ -19,20 +19,20 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import {IIsolationModeUnwrapperTrader} from "../external/interfaces/IIsolationModeUnwrapperTrader.sol";
+import { IIsolationModeUnwrapperTrader } from "../external/interfaces/IIsolationModeUnwrapperTrader.sol";
 
-import {AccountActionLib} from "../external/lib/AccountActionLib.sol";
+import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 
-import {ICallee} from "../protocol/interfaces/ICallee.sol";
+import { ICallee } from "../protocol/interfaces/ICallee.sol";
 
-import {Account} from "../protocol/lib/Account.sol";
-import {Actions} from "../protocol/lib/Actions.sol";
-import {DolomiteMarginMath} from "../protocol/lib/DolomiteMarginMath.sol";
-import {Require} from "../protocol/lib/Require.sol";
+import { Account } from "../protocol/lib/Account.sol";
+import { Actions } from "../protocol/lib/Actions.sol";
+import { DolomiteMarginMath } from "../protocol/lib/DolomiteMarginMath.sol";
+import { Require } from "../protocol/lib/Require.sol";
 
-import {IDolomiteMargin} from "../protocol/interfaces/IDolomiteMargin.sol";
+import { IDolomiteMargin } from "../protocol/interfaces/IDolomiteMargin.sol";
 
-import {TestToken} from "./TestToken.sol";
+import { TestToken } from "./TestToken.sol";
 
 
 contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICallee {

@@ -227,6 +227,10 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         );
     }
 
+    function otherAccountIndex() public pure returns (uint256) {
+        return 0;
+    }
+
     // ============ Internal Functions ============
 
     function _validateTransferParams(
