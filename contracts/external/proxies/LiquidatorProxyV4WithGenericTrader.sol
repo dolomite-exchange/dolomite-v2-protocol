@@ -182,6 +182,10 @@ contract LiquidatorProxyV4WithGenericTrader is
         genericCache.dolomiteMargin.operate(accounts, actions);
     }
 
+    function otherAccountIndex() public pure returns (uint256) {
+        return 1;
+    }
+
     // ============ Internal Functions ============
 
     function _appendLiquidationAction(
