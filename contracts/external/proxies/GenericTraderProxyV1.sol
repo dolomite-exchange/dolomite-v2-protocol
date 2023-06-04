@@ -35,8 +35,8 @@ import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 
 import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyV1 } from "../interfaces/IGenericTraderProxyV1.sol";
-import {IIsolationModeUnwrapperTrader} from "../interfaces/IIsolationModeUnwrapperTrader.sol";
-import {IIsolationModeWrapperTrader} from "../interfaces/IIsolationModeWrapperTrader.sol";
+import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
+import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
 import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";

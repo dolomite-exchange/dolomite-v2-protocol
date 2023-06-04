@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import {OnlyDolomiteMargin} from "../external/helpers/OnlyDolomiteMargin.sol";
+import { OnlyDolomiteMargin } from "../external/helpers/OnlyDolomiteMargin.sol";
 import { ICallee } from "../protocol/interfaces/ICallee.sol";
 import { IAutoTrader } from "../protocol/interfaces/IAutoTrader.sol";
 import { Account } from "../protocol/lib/Account.sol";

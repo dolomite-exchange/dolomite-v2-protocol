@@ -19,20 +19,20 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import {IIsolationModeUnwrapperTrader} from "../external/interfaces/IIsolationModeUnwrapperTrader.sol";
+import { IIsolationModeUnwrapperTrader } from "../external/interfaces/IIsolationModeUnwrapperTrader.sol";
 
-import {AccountActionLib} from "../external/lib/AccountActionLib.sol";
+import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 
-import {ICallee} from "../protocol/interfaces/ICallee.sol";
+import { ICallee } from "../protocol/interfaces/ICallee.sol";
 
-import {Account} from "../protocol/lib/Account.sol";
-import {Actions} from "../protocol/lib/Actions.sol";
-import {DolomiteMarginMath} from "../protocol/lib/DolomiteMarginMath.sol";
-import {Require} from "../protocol/lib/Require.sol";
+import { Account } from "../protocol/lib/Account.sol";
+import { Actions } from "../protocol/lib/Actions.sol";
+import { DolomiteMarginMath } from "../protocol/lib/DolomiteMarginMath.sol";
+import { Require } from "../protocol/lib/Require.sol";
 
-import {IDolomiteMargin} from "../protocol/interfaces/IDolomiteMargin.sol";
+import { IDolomiteMargin } from "../protocol/interfaces/IDolomiteMargin.sol";
 
-import {TestToken} from "./TestToken.sol";
+import { TestToken } from "./TestToken.sol";
 
 
 contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICallee {
@@ -42,7 +42,7 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
     uint256 constant public ACTIONS_LENGTH = 2;
 
     IDolomiteMargin public DOLOMITE_MARGIN;
-    address public INPUT_TOKEN;
+    address public UNDERLYING_TOKEN;
     address public OUTPUT_TOKEN;
 
     constructor(
@@ -50,7 +50,7 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
         address _outputToken,
         address _dolomiteMargin
     ) public {
-        INPUT_TOKEN = _inputToken;
+        UNDERLYING_TOKEN = _inputToken;
         OUTPUT_TOKEN = _outputToken;
         DOLOMITE_MARGIN = IDolomiteMargin(_dolomiteMargin);
     }
@@ -79,7 +79,7 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
     }
 
     function token() external view returns (address) {
-        return INPUT_TOKEN;
+        return UNDERLYING_TOKEN;
     }
 
     function isValidOutputToken(address _outputToken) external view returns (bool) {
@@ -101,7 +101,7 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
     view
     returns (Actions.ActionArgs[] memory) {
         Require.that(
-            DOLOMITE_MARGIN.getMarketIdByTokenAddress(INPUT_TOKEN) == _inputMarket,
+            DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN) == _inputMarket,
             FILE,
             "Invalid input market",
             _inputMarket
@@ -151,7 +151,7 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
     view
     returns (uint256) {
         Require.that(
-            _makerToken == INPUT_TOKEN,
+            _makerToken == UNDERLYING_TOKEN,
             FILE,
             "Maker token must be wrapper",
             _makerToken
@@ -173,9 +173,9 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
     // ========================= Public Functions =========================
 
     function callFunction(
-        address sender,
-        Account.Info memory accountInfo,
-        bytes memory data
+        address /* _sender */,
+        Account.Info memory /* _accountInfo */,
+        bytes memory _data
     )
     public {
         Require.that(
@@ -185,7 +185,7 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICal
             msg.sender
         );
         Require.that(
-            data.length == 0,
+            _data.length == 0,
             FILE,
             "callFunction should be noop"
         );

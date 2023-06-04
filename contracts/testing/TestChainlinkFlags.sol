@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IChainlinkFlags} from "../external/interfaces/IChainlinkFlags.sol";
+import { IChainlinkFlags } from "../external/interfaces/IChainlinkFlags.sol";
 
 
 contract TestChainlinkFlags is IChainlinkFlags {
