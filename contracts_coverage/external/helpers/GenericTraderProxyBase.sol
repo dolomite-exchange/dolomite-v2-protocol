@@ -35,8 +35,8 @@ import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 import { IIsolationModeToken } from "../interfaces/IIsolationModeToken.sol";
 import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry.sol";
-import {IIsolationModeUnwrapperTrader} from "../interfaces/IIsolationModeUnwrapperTrader.sol";
-import {IIsolationModeWrapperTrader} from "../interfaces/IIsolationModeWrapperTrader.sol";
+import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
+import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
 import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";

@@ -19,7 +19,7 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import {IIsolationModeWrapperTrader} from "../external/interfaces/IIsolationModeWrapperTrader.sol";
+import { IIsolationModeWrapperTrader } from "../external/interfaces/IIsolationModeWrapperTrader.sol";
 
 import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 

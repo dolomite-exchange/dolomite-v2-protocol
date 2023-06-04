@@ -43,8 +43,7 @@ contract IIsolationModeUnwrapperTrader is IExchangeWrapper {
     function isValidOutputToken(address _outputToken) external view returns (bool);
 
     /**
-     * @return  The number of Actions used to unwrap the LP token into `outputMarketId`. If `owedMarketId` equals
-     *          `outputMarketId`, there is no need to chain additional actions on, since the debt will be paid off.
+     * @return  The number of actions used to unwrap the Isolation Mode token into a valid output token.
      */
     function actionsLength() external pure returns (uint256);
 

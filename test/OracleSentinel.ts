@@ -72,17 +72,17 @@ describe('OracleSentinel', () => {
     it('Should return true when the sequencer is online', async () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
 
-      expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
-      expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
-      expect(await oracleSentinel.isBorrowAllowed()).to.eql(true);
+      expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
+      expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
+      expect(await oracleSentinel.isLiquidationAllowed()).to.eql(true);
     });
 
     it('Should return false when the sequencer is online', async () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
 
-      expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
-      expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
-      expect(await oracleSentinel.isBorrowAllowed()).to.eql(false);
+      expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
+      expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
+      expect(await oracleSentinel.isLiquidationAllowed()).to.eql(false);
     });
   });
 

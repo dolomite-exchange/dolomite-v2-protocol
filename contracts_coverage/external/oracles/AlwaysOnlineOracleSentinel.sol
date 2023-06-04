@@ -1,6 +1,6 @@
 /*
 
-    Copyright 2022 Dolomite.
+    Copyright 2020 Dolomite.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -19,26 +19,23 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IChainlinkFlags } from "../external/interfaces/IChainlinkFlags.sol";
+import { IOracleSentinel } from "../../protocol/interfaces/IOracleSentinel.sol";
 
 
-contract TestChainlinkFlags is IChainlinkFlags {
+/**
+ * @title AlwaysOnlineOracleSentinel
+ * @author Dolomite
+ *
+ * An implementation of the IOracleSentinel interface that always returns `true` for its implementation functions.
+ * Useful for deployments on networks that don't need an oracle sentinel.
+ */
+contract AlwaysOnlineOracleSentinel is IOracleSentinel {
 
-    bool private shouldReturnOffline = false;
-
-    function setShouldReturnOffline(
-        bool _shouldReturnOffline
-    )
-        external
-    {
-        shouldReturnOffline = _shouldReturnOffline;
+    function isBorrowAllowed() external view returns (bool) {
+        return true;
     }
 
-    function getFlag(address) external view returns (bool) {
-        if (shouldReturnOffline) {
-            return true;
-        } else {
-            return false;
-        }
+    function isLiquidationAllowed() external view returns (bool) {
+        return true;
     }
 }
