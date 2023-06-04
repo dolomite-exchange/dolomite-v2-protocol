@@ -120,16 +120,14 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             _tradeAccountNumber
         );
 
-        uint256 traderActionsLength = _getActionsLengthForTraderParams(_tradersPath);
-        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](traderActionsLength);
+        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](_getActionsLengthForTraderParams(_tradersPath));
         _appendTraderActions(
             accounts,
             actions,
             cache,
             _marketIdsPath,
             _amountWeisPath,
-            _tradersPath,
-            traderActionsLength
+            _tradersPath
         );
 
         cache.dolomiteMargin.operate(accounts, actions);
@@ -183,10 +181,11 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             number: cache.otherAccountNumber
         });
 
-        uint256 traderActionsLength = _getActionsLengthForTraderParams(_tradersPath);
         uint256 transferActionsLength = _getActionsLengthForTransferCollateralParam(_transferCollateralParams);
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](
-            traderActionsLength + transferActionsLength + _getActionsLengthForExpiryParam(_expiryParams)
+            _getActionsLengthForTraderParams(_tradersPath)
+                + transferActionsLength
+                + _getActionsLengthForExpiryParam(_expiryParams)
         );
         _appendTraderActions(
             accounts,
@@ -194,8 +193,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             cache,
             _marketIdsPath,
             _amountWeisPath,
-            _tradersPath,
-            traderActionsLength
+            _tradersPath
         );
         _appendTransferActions(
             actions,

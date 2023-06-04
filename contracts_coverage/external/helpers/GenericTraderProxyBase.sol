@@ -355,13 +355,12 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         GenericTraderProxyCache memory _cache,
         uint256[] memory _marketIdsPath,
         uint256[] memory _amountWeisPath,
-        TraderParam[] memory _tradersPath,
-        uint256 _traderActionsLength
+        TraderParam[] memory _tradersPath
     )
         internal
         view
     {
-        for (uint256 i = 0; i < _traderActionsLength; i++) {
+        for (uint256 i = 0; i < _tradersPath.length; i++) {
             if (_tradersPath[i].traderType == TraderType.ExternalLiquidity) {
                 _actions[_cache.actionsCursor++] = AccountActionLib.encodeExternalSellAction(
                     TRADE_ACCOUNT_INDEX,

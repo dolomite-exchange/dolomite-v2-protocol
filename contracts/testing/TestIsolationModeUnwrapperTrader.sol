@@ -19,24 +19,27 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IIsolationModeUnwrapperTrader } from "../external/interfaces/IIsolationModeUnwrapperTrader.sol";
+import {IIsolationModeUnwrapperTrader} from "../external/interfaces/IIsolationModeUnwrapperTrader.sol";
 
-import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
+import {AccountActionLib} from "../external/lib/AccountActionLib.sol";
 
-import { Actions } from "../protocol/lib/Actions.sol";
-import { DolomiteMarginMath } from "../protocol/lib/DolomiteMarginMath.sol";
-import { Require } from "../protocol/lib/Require.sol";
+import {ICallee} from "../protocol/interfaces/ICallee.sol";
 
-import { IDolomiteMargin } from "../protocol/interfaces/IDolomiteMargin.sol";
+import {Account} from "../protocol/lib/Account.sol";
+import {Actions} from "../protocol/lib/Actions.sol";
+import {DolomiteMarginMath} from "../protocol/lib/DolomiteMarginMath.sol";
+import {Require} from "../protocol/lib/Require.sol";
 
-import { TestToken } from "./TestToken.sol";
+import {IDolomiteMargin} from "../protocol/interfaces/IDolomiteMargin.sol";
+
+import {TestToken} from "./TestToken.sol";
 
 
-contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader {
+contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader, ICallee {
 
     bytes32 private constant FILE = "TestIsolationModeUnwrapperTrader";
 
-    uint256 constant public ACTIONS_LENGTH = 1;
+    uint256 constant public ACTIONS_LENGTH = 2;
 
     IDolomiteMargin public DOLOMITE_MARGIN;
     address public INPUT_TOKEN;
@@ -52,20 +55,35 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader {
         DOLOMITE_MARGIN = IDolomiteMargin(_dolomiteMargin);
     }
 
+    function exchange(
+        address,
+        address _receiver,
+        address _makerToken,
+        address _takerToken,
+        uint256,
+        bytes calldata _orderData
+    )
+    external
+    returns (uint256) {
+        Require.that(
+            _takerToken == UNDERLYING_TOKEN,
+            FILE,
+            "Taker token must be UNDERLYING",
+            _takerToken
+        );
+
+        (uint256 amountOut,) = abi.decode(_orderData, (uint256, bytes));
+        TestToken(_makerToken).setBalance(address(this), amountOut);
+        TestToken(_makerToken).approve(_receiver, amountOut);
+        return amountOut;
+    }
+
     function token() external view returns (address) {
         return INPUT_TOKEN;
     }
 
     function isValidOutputToken(address _outputToken) external view returns (bool) {
         return _outputToken == OUTPUT_TOKEN;
-    }
-
-    function outputMarketId() external view returns (uint256) {
-        return DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN);
-    }
-
-    function actionsLength() external pure returns (uint256) {
-        return ACTIONS_LENGTH;
     }
 
     function createActionsForUnwrapping(
@@ -114,30 +132,13 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader {
             amountOut,
             _orderData
         );
-        return actions;
-    }
-
-    function exchange(
-        address,
-        address _receiver,
-        address _makerToken,
-        address _takerToken,
-        uint256,
-        bytes calldata _orderData
-    )
-    external
-    returns (uint256) {
-        Require.that(
-            _takerToken == INPUT_TOKEN,
-            FILE,
-            "Taker token must be UNDERLYING",
-            _takerToken
+        // Unwrappers can have length > 1 so we encode a no-op to simulate there being more than one actions
+        actions[1] = AccountActionLib.encodeCallAction(
+            _primaryAccountId,
+            address(this),
+            bytes("")
         );
-
-        (uint256 amountOut,) = abi.decode(_orderData, (uint256, bytes));
-        TestToken(_makerToken).setBalance(address(this), amountOut);
-        TestToken(_makerToken).approve(_receiver, amountOut);
-        return amountOut;
+        return actions;
     }
 
     function getExchangeCost(
@@ -163,5 +164,30 @@ contract TestIsolationModeUnwrapperTrader is IIsolationModeUnwrapperTrader {
         uint256 takerPrice = DOLOMITE_MARGIN.getMarketPrice(takerMarketId).value;
 
         return DolomiteMarginMath.getPartial(_desiredMakerToken, makerPrice, takerPrice);
+    }
+
+    function actionsLength() external pure returns (uint256) {
+        return ACTIONS_LENGTH;
+    }
+
+    // ========================= Public Functions =========================
+
+    function callFunction(
+        address sender,
+        Account.Info memory accountInfo,
+        bytes memory data
+    )
+    public {
+        Require.that(
+            msg.sender == address(DOLOMITE_MARGIN),
+            FILE,
+            "Invalid caller",
+            msg.sender
+        );
+        Require.that(
+            data.length == 0,
+            FILE,
+            "callFunction should be noop"
+        );
     }
 }

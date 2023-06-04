@@ -102,7 +102,8 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
      *
      * @param _solidAccount         The account that will do the liquidating
      * @param _liquidAccount        The account that will be liquidated
-     * @param _minLiquidatorRatio   The minimum collateralization ratio to leave the solidAccount at
+     * @param _minLiquidatorRatio   The minimum collateralization ratio to leave the solidAccount at. Setting this value
+     *                              to `150000000000000000` is analogous to a 115% collateralization ratio.
      * @param _owedPreferences      Ordered list of markets to repay first
      * @param _heldPreferences      Ordered list of markets to receive payout for first
      */

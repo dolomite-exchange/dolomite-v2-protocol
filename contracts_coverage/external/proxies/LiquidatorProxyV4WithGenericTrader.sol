@@ -161,9 +161,8 @@ contract LiquidatorProxyV4WithGenericTrader is
         // `traderAccountCursor` index
         accounts[1] = _liquidAccount;
 
-        uint256 traderActionsLength = _getActionsLengthForTraderParams(_tradersPath);
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](
-            /* liquidationActionsLength = */ 1 + traderActionsLength
+            /* liquidationActionsLength = */ 1 + _getActionsLengthForTraderParams(_tradersPath)
         );
         _appendLiquidationAction(
             actions,
@@ -177,8 +176,7 @@ contract LiquidatorProxyV4WithGenericTrader is
             genericCache,
             _marketIdsPath,
             _amountWeisPath,
-            _tradersPath,
-            traderActionsLength
+            _tradersPath
         );
 
         genericCache.dolomiteMargin.operate(accounts, actions);

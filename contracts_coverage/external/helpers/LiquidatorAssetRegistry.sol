@@ -44,8 +44,6 @@ contract LiquidatorAssetRegistry is ILiquidatorAssetRegistry, OnlyDolomiteMargin
     // ============ Storage ============
 
     mapping(uint256 => OpenZeppelinEnumerableSet.AddressSet) private _marketIdToLiquidatorWhitelistMap;
-    mapping(uint256 => OpenZeppelinEnumerableSet.AddressSet) private _marketIdToUnwrapperMap;
-    mapping(uint256 => OpenZeppelinEnumerableSet.AddressSet) private _marketIdToWrapperMap;
 
     // ============ Constructor ============
 

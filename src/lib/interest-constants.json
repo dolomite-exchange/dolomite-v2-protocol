@@ -83,6 +83,9 @@
     },
     "8": {
       "interestRateModel": "AlwaysZero"
+    },
+    "9": {
+      "interestRateModel": "AlwaysZero"
     }
   },
   "421611": {

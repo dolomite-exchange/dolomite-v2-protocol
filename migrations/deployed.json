@@ -364,8 +364,8 @@
     "LiquidatorProxyV1": {
         "42161": {
             "links": {},
-            "address": "0x84b027f8fcefe40d044ccf9ccb54cc6e48c53450",
-            "transactionHash": "0x8fdbb4829ee20722e7510502ba6b7a450c3dbe9b623b21eb3e589f71c0f6945c"
+            "address": "0x8c6e337dA1bD534548c5A9b6aC3d9e4D15Fa715A",
+            "transactionHash": "0x25ec230f87adde64b081eaec616428a472b806a1da20aecdf64075b778b97c6e"
         },
         "80001": {
             "links": {},
@@ -789,8 +789,8 @@
     "LiquidatorAssetRegistry": {
         "42161": {
             "links": {},
-            "address": "0x89324260096f1e7D3678Bf0ec9E3b8c7530111b2",
-            "transactionHash": "0x8023408ca5d1408a4d887eb11674da54dcb910affd091e9f0e9a13f04f7a3b53"
+            "address": "0x10d98759762EFaC656BD4bE7F2f5599208F44FAc",
+            "transactionHash": "0xe23f3782e75b1b8bc4efdae28212f7d6012ca53a6c0e0fcdb14aacc38486ba03"
         },
         "421613": {
             "links": {},
@@ -815,6 +815,13 @@
             "links": {},
             "address": "0x2536ef4105a6173683C7fFCE9547091960F6d939",
             "transactionHash": "0xe5d59294ad68866954d5c737aa7bb766783526922e839efc2de7a0d3d71eec15"
+        }
+    },
+    "LiquidatorProxyV4WithGenericTrader": {
+        "42161": {
+            "links": {},
+            "address": "0xfCFCe8d1899F0e4773ca5722592E4aA19FEc79B9",
+            "transactionHash": "0xc21619d99487ddb52472d72dba99b48cd922cfd885165a7f7234f8752615e2d3"
         }
     }
 }

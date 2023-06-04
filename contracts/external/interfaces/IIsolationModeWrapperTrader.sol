@@ -33,7 +33,7 @@ import { IExchangeWrapper } from "../../protocol/interfaces/IExchangeWrapper.sol
 contract IIsolationModeWrapperTrader is IExchangeWrapper {
 
     /**
-     * @return The liquidity token that this contract can wrap
+     * @return The isolation mode token that this contract can wrap (the output token)
      */
     function token() external view returns (address);
 
@@ -43,7 +43,7 @@ contract IIsolationModeWrapperTrader is IExchangeWrapper {
     function isValidInputToken(address _inputToken) external view returns (bool);
 
     /**
-     * @return  The number of Actions used to wrap an input token into a LP token.
+     * @return  The number of Actions used to wrap a valid input token into the this wrapper's Isolation Mode token.
      */
     function actionsLength() external pure returns (uint256);
 
