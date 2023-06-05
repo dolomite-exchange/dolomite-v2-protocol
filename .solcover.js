@@ -9,9 +9,9 @@ module.exports = {
     'external/interestsetters/',
     'external/multisig/',
     'external/rebalancers/',
+    'external/traders/',
     'external/uniswap-v2/',
-    'external/utils/MultiCall.sol',
-    'external/utils/ArbitrumMultiCall.sol',
+    'external/utils/',
     'testing/',
   ],
   measureFunctionCoverage: false, // done because of this error here: https://github.com/sc-forks/solidity-coverage/blob/master/docs/faq.md#running-out-of-memory
