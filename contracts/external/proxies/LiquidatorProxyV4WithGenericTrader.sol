@@ -25,6 +25,7 @@ import { IDolomiteMargin } from "../../protocol/interfaces/IDolomiteMargin.sol";
 
 import { Account } from "../../protocol/lib/Account.sol";
 import { Actions } from "../../protocol/lib/Actions.sol";
+import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
 import { GenericTraderProxyBase } from "../helpers/GenericTraderProxyBase.sol";
@@ -119,6 +120,7 @@ contract LiquidatorProxyV4WithGenericTrader is
             _makerAccounts,
             _tradersPath
         );
+        _validateAmountForFirstIndex(genericCache, _marketIdsPath[0], _amountWeisPath[0]);
 
         // put all values that will not change into a single struct
         LiquidatorProxyConstants memory constants;
@@ -187,6 +189,23 @@ contract LiquidatorProxyV4WithGenericTrader is
     }
 
     // ============ Internal Functions ============
+
+    function _validateAmountForFirstIndex(
+        GenericTraderProxyCache memory _cache,
+        uint256 _marketId,
+        uint256 _amountWei
+    ) internal view {
+        if (_isIsolationModeMarket(_cache, _marketId)) {
+            // For liquidations, the asset amount must match the amount of collateral transferred from liquid account
+            // to solid account. This is done via always selling the max amount of held collateral in the amountWeisPath
+            // variable.
+            Require.that(
+                _amountWei == uint256(-1),
+                FILE,
+                "Invalid amount for IsolationMode"
+            );
+        }
+    }
 
     function _appendLiquidationAction(
         Actions.ActionArgs[] memory _actions,

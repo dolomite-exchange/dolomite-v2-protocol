@@ -385,9 +385,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 IIsolationModeUnwrapperTrader unwrapperTrader = IIsolationModeUnwrapperTrader(_tradersPath[i].trader);
                 Actions.ActionArgs[] memory unwrapperActions = unwrapperTrader.createActionsForUnwrapping(
                     TRADE_ACCOUNT_INDEX,
-                    TRADE_ACCOUNT_INDEX,
+                    otherAccountIndex(),
                     _accounts[TRADE_ACCOUNT_INDEX].owner,
-                    _accounts[TRADE_ACCOUNT_INDEX].owner,
+                    _accounts[otherAccountIndex()].owner,
                     /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
                     /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
                     /* _minOutputAmount = */ _amountWeisPath[i + 1], // solium-disable-line indentation
@@ -404,9 +404,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 IIsolationModeWrapperTrader wrapperTrader = IIsolationModeWrapperTrader(_tradersPath[i].trader);
                 Actions.ActionArgs[] memory wrapperActions = wrapperTrader.createActionsForWrapping(
                     TRADE_ACCOUNT_INDEX,
-                    TRADE_ACCOUNT_INDEX,
+                    otherAccountIndex(),
                     _accounts[TRADE_ACCOUNT_INDEX].owner,
-                    _accounts[TRADE_ACCOUNT_INDEX].owner,
+                    _accounts[otherAccountIndex()].owner,
                     /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
                     /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
                     /* _minOutputAmount = */ _amountWeisPath[i + 1], // solium-disable-line indentation
@@ -420,12 +420,10 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         }
     }
 
-    // ============ Private Functions ============
-
     function _isIsolationModeMarket(
         GenericTraderProxyCache memory _cache,
         uint256 _marketId
-    ) private view returns (bool) {
+    ) internal view returns (bool) {
         (bool isSuccess, bytes memory returnData) = ExcessivelySafeCall.safeStaticCall(
             _cache.dolomiteMargin.getMarketTokenAddress(_marketId),
             IIsolationModeToken(address(0)).isIsolationAsset.selector,
@@ -433,4 +431,10 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         );
         return isSuccess && abi.decode(returnData, (bool));
     }
+
+    /**
+     * @return  The index of the account that is not the trade account. For the liquidation contract, this is
+     *          the account being liquidated. For the GenericTrader contract this is the same as the trader account.
+     */
+    function otherAccountIndex() public pure returns (uint256);
 }

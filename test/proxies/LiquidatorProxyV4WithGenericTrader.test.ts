@@ -513,7 +513,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(makerMarket2Balance).to.eql(par2.plus(amountWeisPath[0]));
       });
 
-      it('should succeed for a simple swap using unwrapper', async () => {
+      it('should succeed when unwrapping and amounts[0] is set to sell all', async () => {
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, INTEGERS.ZERO),
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market2, negPar.times('112.5')),
@@ -523,7 +523,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         ]);
 
         const marketIdsPath = [market3, market2];
-        const amountWeisPath = [par.times('236.25'), par.times('118.125')];
+        const amountWeisPath = [INTEGERS.MAX_UINT, par.times('118.125')];
         await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
           solidOwner,
           solidNumber,
@@ -549,7 +549,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(solidMarket3Balance).to.eql(par3);
 
         expect(liquidMarket2Balance).to.eql(INTEGERS.ZERO);
-        expect(liquidMarket3Balance).to.eql(par3.minus(amountWeisPath[0]));
+        expect(liquidMarket3Balance).to.eql(par3.minus(par.times('236.25')));
       });
 
       it('should succeed for a simple swap using wrapper', async () => {
@@ -609,7 +609,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         await token4Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
 
         const marketIdsPath = [market3, market4];
-        const amountWeisPath = [par.times('236.25'), par.times('47.25')];
+        const amountWeisPath = [INTEGERS.MAX_UINT, par.times('47.25')];
         const traderParam = getUnwrapperTraderParam();
         traderParam.trader = freshUnwrapper.options.address;
         await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
@@ -636,7 +636,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(solidMarket3Balance).to.eql(par3);
         expect(solidMarket4Balance).to.eql(par4.plus(amountWeisPath[1].minus(par.times('45'))));
 
-        expect(liquidMarket3Balance).to.eql(par3.minus(amountWeisPath[0]));
+        expect(liquidMarket3Balance).to.eql(par3.minus(par.times('236.25')));
         expect(liquidMarket4Balance).to.eql(INTEGERS.ZERO);
       });
 
@@ -1155,6 +1155,23 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         );
       });
 
+      it('should fail when amounts[0] for the unwrapper is invalid', async () => {
+        await expectThrow(
+          dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
+            solidOwner,
+            solidNumber,
+            liquidOwner,
+            liquidNumber,
+            [market3, market2],
+            simpleAmountWeisPath,
+            [getUnwrapperTraderParam()],
+            [],
+            null,
+          ),
+          'LiquidatorProxyV4: Invalid amount for IsolationMode',
+        );
+      });
+
       it('should fail when the input for the unwrapper is invalid', async () => {
         await expectThrow(
           dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
@@ -1446,7 +1463,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(makerMarket2Balance).to.eql(par2.plus(amountWeisPath[0]));
       });
 
-      it('should succeed for a simple swap using unwrapper', async () => {
+      it('should succeed when unwrapping and amounts[0] is set to sell all', async () => {
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, INTEGERS.ZERO),
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market2, negPar.times('100')),
@@ -1457,7 +1474,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
 
         const expiry = await setUpExpiration(market2);
         const marketIdsPath = [market3, market2];
-        const amountWeisPath = [par.times('210'), par.times('105')];
+        const amountWeisPath = [INTEGERS.MAX_UINT, par.times('105')];
         await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
           solidOwner,
           solidNumber,
@@ -1483,7 +1500,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(solidMarket3Balance).to.eql(par3);
 
         expect(liquidMarket2Balance).to.eql(INTEGERS.ZERO);
-        expect(liquidMarket3Balance).to.eql(par3.minus(amountWeisPath[0]));
+        expect(liquidMarket3Balance).to.eql(par3.minus(par.times('210')));
       });
 
       it('should succeed for a simple swap using wrapper', async () => {
@@ -1545,7 +1562,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
 
         const expiry = await setUpExpiration(market4);
         const marketIdsPath = [market3, market4];
-        const amountWeisPath = [par.times('210'), par.times('42')];
+        const amountWeisPath = [INTEGERS.MAX_UINT, par.times('42')];
         const traderParam = getUnwrapperTraderParam();
         traderParam.trader = freshUnwrapper.options.address;
         await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
@@ -1572,7 +1589,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(solidMarket3Balance).to.eql(par3);
         expect(solidMarket4Balance).to.eql(par4.plus(amountWeisPath[1].minus(par.times('40'))));
 
-        expect(liquidMarket3Balance).to.eql(par3.minus(amountWeisPath[0]));
+        expect(liquidMarket3Balance).to.eql(par3.minus(par.times('210')));
         expect(liquidMarket4Balance).to.eql(INTEGERS.ZERO);
       });
 

@@ -332,10 +332,15 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             );
         }
 
+        if (_amountWeisForSellActionsPath[0] == uint(-1)) {
+            // This is analogous to saying "sell all of the collateral I receive from the liquidation"
+            _amountWeisForSellActionsPath[0] = _cache.solidHeldUpdateWithReward;
+        }
+
         if (_amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1] == uint(-1)) {
             // minOutputAmount is equal to the value at `length - 1` of the array. The amount being liquidated should
             // always be covered by the sale of assets if the value was set to uint(-1). Setting the value to uint(-1)
-            // is analogous to saying "liquidated all"
+            // is analogous to saying "liquidate all"
             _amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1] = _cache.owedWeiToLiquidate;
         }
     }

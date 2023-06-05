@@ -420,18 +420,10 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         }
     }
 
-    /**
-     * @return  The index of the account that is not the trade account. For the liquidation contract, this is
-     *          the account being liquidated. For the GenericTrader contract this is the same as the trader account.
-     */
-    function otherAccountIndex() public pure returns (uint256);
-
-    // ============ Private Functions ============
-
     function _isIsolationModeMarket(
         GenericTraderProxyCache memory _cache,
         uint256 _marketId
-    ) private view returns (bool) {
+    ) internal view returns (bool) {
         (bool isSuccess, bytes memory returnData) = ExcessivelySafeCall.safeStaticCall(
             _cache.dolomiteMargin.getMarketTokenAddress(_marketId),
             IIsolationModeToken(address(0)).isIsolationAsset.selector,
@@ -439,4 +431,10 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         );
         return isSuccess && abi.decode(returnData, (bool));
     }
+
+    /**
+     * @return  The index of the account that is not the trade account. For the liquidation contract, this is
+     *          the account being liquidated. For the GenericTrader contract this is the same as the trader account.
+     */
+    function otherAccountIndex() public pure returns (uint256);
 }
