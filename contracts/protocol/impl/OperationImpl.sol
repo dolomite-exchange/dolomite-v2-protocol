@@ -203,7 +203,7 @@ library OperationImpl {
             }
         }
 
-        state.initializeCache(cache);
+        state.initializeCache(cache, /* fetchFreshIndex = */ false);
 
         for (uint i = 0; i < cache.getNumMarkets(); i++) {
             Events.logOraclePrice(cache.getAtIndex(i));

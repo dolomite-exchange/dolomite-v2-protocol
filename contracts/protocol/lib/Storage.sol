@@ -904,7 +904,8 @@ library Storage {
      */
     function initializeCache(
         Storage.State storage state,
-        Cache.MarketCache memory cache
+        Cache.MarketCache memory cache,
+        bool fetchFreshIndex
     ) internal view {
         cache.markets = new Cache.MarketInfo[](cache.marketsLength);
         uint counter = 0;
@@ -919,13 +920,14 @@ library Storage {
                 uint marketId = Bits.getMarketIdFromBit(i, nextSetBit);
                 address token = state.getToken(marketId);
                 Types.TotalPar memory totalPar = state.getTotalPar(marketId);
+                Interest.Index memory index = state.getIndex(marketId);
                 cache.markets[counter++] = Cache.MarketInfo({
                     marketId: marketId,
                     token: token,
                     isClosing: state.markets[marketId].isClosing,
                     borrowPar: totalPar.borrow,
                     supplyPar: totalPar.supply,
-                    index: state.getIndex(marketId),
+                    index: fetchFreshIndex ? state.fetchNewIndex(marketId, index) : index,
                     price: state.fetchPrice(marketId, token)
                 });
 
