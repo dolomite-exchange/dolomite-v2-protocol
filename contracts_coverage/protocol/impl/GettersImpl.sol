@@ -751,7 +751,7 @@ library GettersImpl {
         for (uint256 i = 0; i < markets.length; i++) {
             cache.set(markets[i]);
         }
-        state.initializeCache(cache);
+        state.initializeCache(cache, /* fetchFreshIndex = */ true);
 
         return state.getAccountValues(account, cache, adjustForLiquidity);
     }
