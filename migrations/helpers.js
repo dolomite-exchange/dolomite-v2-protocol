@@ -123,13 +123,13 @@ function getChainId(network) {
 
 async function getRiskLimits() {
   return {
-    marginRatioMax: decimalToString('2.00'),
-    liquidationSpreadMax: decimalToString('0.50'),
-    earningsRateMax: decimalToString('1.00'),
-    marginPremiumMax: decimalToString('2.00'),
-    liquidationSpreadPremiumMax: decimalToString('5.00'),
+    marginRatioMax: decimalToString('2.00'), // 200%
+    liquidationSpreadMax: decimalToString('0.50'), // 50%
+    earningsRateMax: decimalToString('1.00'), // 100%
+    marginPremiumMax: decimalToString('2.00'), // 200%
+    liquidationSpreadPremiumMax: decimalToString('5.00'), // 500%
     interestRateMax: decimalToString('100.00'), // 10,000%
-    minBorrowedValueMax: decimalToString('100.00'),
+    minBorrowedValueMax: '100000000000000000000000000000000000000', // $100
   };
 }
 
