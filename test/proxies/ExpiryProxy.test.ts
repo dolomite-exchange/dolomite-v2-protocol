@@ -34,7 +34,6 @@ const price1 = prices[0]; // $100
 const price2 = prices[1]; // $1
 const price3 = prices[2]; // $1
 const defaultIsClosing = false;
-const defaultIsRecyclable = false;
 const marketIdToTokenMap = {};
 
 describe('ExpiryProxy', () => {
@@ -71,8 +70,9 @@ describe('ExpiryProxy', () => {
       zero,
       zero,
       zero,
+      zero,
+      zero,
       defaultIsClosing,
-      defaultIsRecyclable,
       { from: admin },
     );
 
@@ -208,7 +208,7 @@ describe('ExpiryProxy', () => {
             marginPremium,
             { from: admin },
           ),
-          dolomiteMargin.admin.setSpreadPremium(
+          dolomiteMargin.admin.setLiquidationSpreadPremium(
             market1,
             spreadPremium,
             { from: admin },

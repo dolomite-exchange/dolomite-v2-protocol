@@ -134,7 +134,8 @@ contract ExpiryProxy is HasLiquidatorRegistry, OnlyDolomiteMargin, ReentrancyGua
 
         uint256 heldPrice = DOLOMITE_MARGIN.getMarketPrice(_heldMarket).value;
         uint256 owedPrice = DOLOMITE_MARGIN.getMarketPrice(_owedMarket).value;
-        (, Monetary.Price memory owedPriceAdj) = EXPIRY.getSpreadAdjustedPrices(
+        (, Monetary.Price memory owedPriceAdj) = EXPIRY.getLiquidationSpreadAdjustedPrices(
+            _liquidAccount.owner,
             _heldMarket,
             _owedMarket,
             _expirationTimestamp
