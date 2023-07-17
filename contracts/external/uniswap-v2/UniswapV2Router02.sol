@@ -25,6 +25,7 @@ contract UniswapV2Router02 {
     constructor(address _factory, address _WETH) public {
         factory = _factory;
         WETH = _WETH;
+        assert(UniswapV2Library.getPairInitCodeHash(_factory) == IUniswapV2Factory(_factory).getPairInitCodeHash());
     }
 
     function() external payable {

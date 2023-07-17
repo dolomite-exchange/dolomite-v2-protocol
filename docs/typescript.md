@@ -30,7 +30,7 @@ import { DolomiteMargin, Networks } from '@dolomite-exchange/dolomite-margin';
 // --- Initialize with Web3 provider ---
 const dolomiteMargin = new DolomiteMargin(
   provider,  // Valid web3 provider
-  Networks.ARBITRUM,
+  Networks.ARBITRUM_ONE,
   {
     defaultAccount: '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1', // Optional
     accounts: [
@@ -45,7 +45,7 @@ const dolomiteMargin = new DolomiteMargin(
 // --- OR Initialize with Web3 Provider node endpoint ---
 const dolomiteMargin = new DolomiteMargin(
   'https://arbitrum-mainnet.infura.io/v3/YOUR-PROJECT-ID',
-  Networks.ARBITRUM,
+  Networks.ARBITRUM_ONE,
   {
     defaultAccount: '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1', // Optional - but needed if using Infura
     accounts: [

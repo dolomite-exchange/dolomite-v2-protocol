@@ -18,6 +18,7 @@
 
 pragma solidity ^0.5.7;
 
+import { Require } from "../../protocol/lib/Require.sol";
 import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry.sol";
 
 
@@ -31,6 +32,18 @@ contract HasLiquidatorRegistry {
 
     ILiquidatorAssetRegistry public LIQUIDATOR_ASSET_REGISTRY;
 
+    // ============ Modifiers ============
+
+    modifier requireIsAssetWhitelistedForLiquidation(uint256 _marketId) {
+        _validateAssetForLiquidation(_marketId);
+        _;
+    }
+
+    modifier requireIsAssetsWhitelistedForLiquidation(uint256[] memory _marketIds) {
+        _validateAssetsForLiquidation(_marketIds);
+        _;
+    }
+
     // ============ Constructors ============
 
     constructor(
@@ -39,6 +52,29 @@ contract HasLiquidatorRegistry {
     public
     {
         LIQUIDATOR_ASSET_REGISTRY = ILiquidatorAssetRegistry(_liquidatorAssetRegistry);
+    }
+
+    // ============ Internal Functions ============
+
+    function _validateAssetForLiquidation(uint256 _marketId) internal view {
+        Require.that(
+            LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketId, address(this)),
+            FILE,
+            "Asset not whitelisted",
+            _marketId
+        );
+    }
+
+    function _validateAssetsForLiquidation(uint256[] memory _marketIds) internal view {
+        ILiquidatorAssetRegistry liquidatorAssetRegistry = LIQUIDATOR_ASSET_REGISTRY;
+        for (uint256 i = 0; i < _marketIds.length; i++) {
+            Require.that(
+                liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
+                FILE,
+                "Asset not whitelisted",
+                _marketIds[i]
+            );
+        }
     }
 
 }

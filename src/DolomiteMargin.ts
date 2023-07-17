@@ -55,6 +55,7 @@ import { WalletLogin } from './modules/WalletLogin';
 import { WETH } from './modules/WETH';
 import { address, DolomiteMarginOptions, EthereumAccount, Networks } from './types';
 import { IsolationModeWrapper } from './modules/IsolationModeWrapper';
+import { ExpiryProxy } from './modules/ExpiryProxy';
 
 export class DolomiteMargin {
   public networkId: number;
@@ -73,6 +74,7 @@ export class DolomiteMargin {
   public dolomiteAmmFactory: DolomiteAmmFactory;
   public dolomiteAmmRouterProxy: DolomiteAmmRouterProxy;
   public expiry: Expiry;
+  public expiryProxy: ExpiryProxy;
   public genericTraderProxyV1: GenericTraderProxyV1;
   public getters: Getters;
   public interest: Interest;
@@ -93,7 +95,7 @@ export class DolomiteMargin {
   public walletLogin: WalletLogin;
   public weth: WETH;
 
-  constructor(provider: Provider | string, networkId: number = Networks.ARBITRUM, options: DolomiteMarginOptions = {}) {
+  constructor(provider: Provider | string, networkId: number = Networks.ARBITRUM_ONE, options: DolomiteMarginOptions = {}) {
     let realProvider: Provider;
     if (typeof provider === 'string') {
       realProvider = new Web3.providers.HttpProvider(provider, options.ethereumNodeTimeout || 10000);
@@ -118,6 +120,7 @@ export class DolomiteMargin {
     this.dolomiteAmmFactory = new DolomiteAmmFactory(this.contracts);
     this.dolomiteAmmRouterProxy = new DolomiteAmmRouterProxy(this.contracts);
     this.expiry = new Expiry(this.contracts);
+    this.expiryProxy = new ExpiryProxy(this.contracts);
     this.genericTraderProxyV1 = new GenericTraderProxyV1(this.contracts);
     this.getters = new Getters(this.contracts);
     this.interest = new Interest(networkId);

@@ -609,7 +609,7 @@ describe('LiquidatorProxyV1WithAmm', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market2, defaultTokenPath, null, INTEGERS.ZERO, true),
-          `LiquidatorProxyBase: Asset not whitelisted <${market2.toFixed()}>`,
+          `HasLiquidatorRegistry: Asset not whitelisted <${market2.toFixed()}>`,
         );
       });
     });
@@ -1156,7 +1156,7 @@ describe('LiquidatorProxyV1WithAmm', () => {
         await setUpExpiration(market1);
         await expectThrow(
           liquidate(market1, market2, defaultTokenPath, INTEGERS.MAX_UINT_128),
-          `LiquidatorProxyBase: Asset not whitelisted <${market2.toFixed()}>`,
+          `HasLiquidatorRegistry: Asset not whitelisted <${market2.toFixed()}>`,
         );
       });
     });

@@ -24,6 +24,8 @@ import { IDolomiteMargin } from "../../protocol/interfaces/IDolomiteMargin.sol";
 import { Account } from "../../protocol/lib/Account.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
+import { AccountBalanceLib } from "../lib/AccountBalanceLib.sol";
+
 import { IGenericTraderProxyBase } from "./IGenericTraderProxyBase.sol";
 
 
@@ -60,6 +62,11 @@ contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
         uint32 expiryTimeDelta;
     }
 
+    struct UserConfig {
+        uint256 deadline;
+        AccountBalanceLib.BalanceCheckFlag balanceCheckFlag;
+    }
+
     // ============ Functions ============
 
     /**
@@ -69,21 +76,26 @@ contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
      * @param _tradeAccountNumber           The account number to use for msg.sender's trade
      * @param _marketIdsPath                The path of market IDs to use for each trade action. Length should be equal
      *                                      to `_tradersPath.length + 1`.
-     * @param _amountWeisPath               The path of amounts (in wei) to use for each trade action. Length should be
-     *                                      equal to `_tradersPath.length + 1`. Setting a value to `uint(-1)` will use
-     *                                      the user's full balance for the trade at that part in the path. Caution must
-     *                                      be taken when using this parameter for frontends that call this function.
+     * @param _inputAmountWei               The input amount (in wei) to use for the initial trade action. Setting this
+     *                                      value to `uint(-1)` will use the user's full balance.
+     * @param _minOutputAmountWei           The minimum output amount expected to be received by the user.
      * @param _tradersPath                  The path of traders to use for each trade action. Length should be equal to
      *                                      `_marketIdsPath.length - 1` and `_amountWeisPath.length - 1`.
      * @param _makerAccounts                The accounts that will be used for the maker side of the trades involving
      *                                      `TraderType.InternalLiquidity`.
+     * @param _userConfig                   The user configuration for the trade. Setting the `balanceCheckFlag` to
+     *                                      `BalanceCheckFlag.From` will check that the user's `_tradeAccountNumber`
+     *                                      is non-negative after the trade. Setting the `balanceCheckFlag` to
+     *                                      `BalanceCheckFlag.To` has no effect.
      */
     function swapExactInputForOutput(
         uint256 _tradeAccountNumber,
         uint256[] calldata _marketIdsPath,
-        uint256[] calldata _amountWeisPath,
-        IGenericTraderProxyBase.TraderParam[] calldata _tradersPath,
-        Account.Info[] calldata _makerAccounts
+        uint256 _inputAmountWei,
+        uint256 _minOutputAmountWei,
+        TraderParam[] calldata _tradersPath,
+        Account.Info[] calldata _makerAccounts,
+        UserConfig calldata _userConfig
     )
         external;
 
@@ -94,10 +106,9 @@ contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
      * @param _tradeAccountNumber           The account number to use for msg.sender's trade
      * @param _marketIdsPath                The path of market IDs to use for each trade action. Length should be equal
      *                                      to `_tradersPath.length + 1`.
-     * @param _amountWeisPath               The path of amounts (in wei) to use for each trade action. Length should be
-     *                                      equal to `_tradersPath.length + 1`. Setting a value to `uint(-1)` will use
-     *                                      the user's full balance for the trade at that part in the path. Caution must
-     *                                      be taken when using this parameter for frontends that call this function.
+     * @param _inputAmountWei               The input amount (in wei) to use for the initial trade action. Setting this
+     *                                      value to `uint(-1)` will use the user's full balance.
+     * @param _minOutputAmountWei           The minimum output amount expected to be received by the user.
      * @param _tradersPath                  The path of traders to use for each trade action. Length should be equal to
      *                                      `_marketIdsPath.length - 1` and `_amountWeisPath.length - 1`.
      * @param _makerAccounts                The accounts that will be used for the maker side of the trades involving
@@ -107,15 +118,23 @@ contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
      *                                      `_params.fromAccountNumber` or `_params.toAccountNumber` must be equal to
      *                                      `_tradeAccountNumber`.
      * @param _expiryParams                 The parameters for modifying the expiration of the debt in the position.
+     * @param _userConfig                   The user configuration for the trade. Setting the `balanceCheckFlag` to
+     *                                      `BalanceCheckFlag.From` will check that the user's balance for inputMarket
+     *                                      for `_tradeAccountNumber` is non-negative after the trade. Setting the
+     *                                      `balanceCheckFlag` to `BalanceCheckFlag.To` will check that the user's
+     *                                      balance for each `transferMarket` for `transferAccountNumber` is
+     *                                      non-negative after.
      */
     function swapExactInputForOutputAndModifyPosition(
         uint256 _tradeAccountNumber,
         uint256[] calldata _marketIdsPath,
-        uint256[] calldata _amountWeisPath,
+        uint256 _inputAmountWei,
+        uint256 _minOutputAmountWei,
         IGenericTraderProxyBase.TraderParam[] calldata _tradersPath,
         Account.Info[] calldata _makerAccounts,
         TransferCollateralParam calldata _transferCollateralParams,
-        ExpiryParam calldata _expiryParams
+        ExpiryParam calldata _expiryParams,
+        UserConfig calldata _userConfig
     )
         external;
 }

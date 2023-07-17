@@ -84,15 +84,6 @@ contract TestIsolationModeWrapperTrader is IIsolationModeWrapperTrader {
             "Invalid output market",
             _outputMarket
         );
-        uint256 amountOut;
-        uint256 inputPrice = DOLOMITE_MARGIN.getMarketPrice(_inputMarket).value;
-        uint256 outputPrice = DOLOMITE_MARGIN.getMarketPrice(_outputMarket).value;
-        amountOut = DolomiteMarginMath.getPartial(inputPrice, _inputAmount, outputPrice);
-        Require.that(
-            amountOut >= _minAmountOut,
-            FILE,
-            "Insufficient output amount"
-        );
 
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](ACTIONS_LENGTH);
         actions[0] = AccountActionLib.encodeExternalSellAction(
@@ -101,7 +92,7 @@ contract TestIsolationModeWrapperTrader is IIsolationModeWrapperTrader {
             _outputMarket,
             address(this),
             _inputAmount,
-            amountOut,
+            _minAmountOut,
             _orderData
         );
         return actions;
@@ -110,24 +101,40 @@ contract TestIsolationModeWrapperTrader is IIsolationModeWrapperTrader {
     function exchange(
         address,
         address _receiver,
-        address _makerToken,
-        address,
-        uint256,
+        address _outputToken,
+        address _inputToken,
+        uint256 _inputAmount,
         bytes calldata _orderData
     )
     external
     returns (uint256) {
         Require.that(
-            _makerToken == OUTPUT_TOKEN,
+            _outputToken == OUTPUT_TOKEN,
             FILE,
             "Maker token must be OUTPUT_TOKEN",
-            _makerToken
+            _outputToken
         );
 
-        (uint256 amountOut,) = abi.decode(_orderData, (uint256, bytes));
+        uint256 inputPrice = DOLOMITE_MARGIN.getMarketPrice(
+            DOLOMITE_MARGIN.getMarketIdByTokenAddress(_inputToken)
+        ).value;
+        uint256 outputPrice = DOLOMITE_MARGIN.getMarketPrice(
+            DOLOMITE_MARGIN.getMarketIdByTokenAddress(_outputToken)
+        ).value;
+        uint256 amountOut = DolomiteMarginMath.getPartial(inputPrice, _inputAmount, outputPrice);
+        // solium-disable indentation
+        {
+            (uint256 minAmountOut,) = abi.decode(_orderData, (uint256, bytes));
+            Require.that(
+                amountOut >= minAmountOut,
+                FILE,
+                "Insufficient output amount"
+            );
+        }
+        // solium-enable indentation
 
-        TestToken(_makerToken).setBalance(address(this), amountOut);
-        TestToken(_makerToken).approve(_receiver, amountOut);
+        TestToken(_outputToken).setBalance(address(this), amountOut);
+        TestToken(_outputToken).approve(_receiver, amountOut);
         return amountOut;
     }
 

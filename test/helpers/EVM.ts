@@ -4,6 +4,12 @@ export async function resetEVM(id?: string) {
   await dolomiteMargin.testing.evm.resetEVM(id || process.env.RESET_SNAPSHOT_ID);
 }
 
+export async function setTime(timestamp: number) {
+  // Increase time so that tests must update the index
+  await dolomiteMargin.testing.evm.setTime(timestamp);
+  await dolomiteMargin.testing.evm.mineBlock();
+}
+
 export async function mineAvgBlock() {
   // Increase time so that tests must update the index
   await dolomiteMargin.testing.evm.increaseTime(15);

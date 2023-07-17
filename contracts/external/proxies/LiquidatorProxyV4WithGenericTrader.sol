@@ -60,6 +60,7 @@ contract LiquidatorProxyV4WithGenericTrader is
     // ============ Constants ============
 
     bytes32 private constant FILE = "LiquidatorProxyV4";
+    uint256 private constant LIQUID_ACCOUNT_ID = 2;
 
     // ============ Storage ============
 
@@ -88,7 +89,8 @@ contract LiquidatorProxyV4WithGenericTrader is
         Account.Info memory _solidAccount,
         Account.Info memory _liquidAccount,
         uint256[] memory _marketIdsPath,
-        uint256[] memory _amountWeisPath,
+        uint256 _inputAmountWei,
+        uint256 _minOutputAmountWei,
         TraderParam[] memory _tradersPath,
         Account.Info[] memory _makerAccounts,
         uint256 _expiry
@@ -103,7 +105,7 @@ contract LiquidatorProxyV4WithGenericTrader is
             // unused for this function
             otherAccountNumber: 0,
             // traders go right after the liquid account ("other account")
-            traderAccountStartIndex: 2,
+            traderAccountStartIndex: LIQUID_ACCOUNT_ID + 1,
             actionsCursor: 0,
             // unused for this function
             inputBalanceWeiBeforeOperate: Types.zeroWei(),
@@ -113,14 +115,14 @@ contract LiquidatorProxyV4WithGenericTrader is
             transferBalanceWeiBeforeOperate: Types.zeroWei()
         });
         _validateMarketIdPath(_marketIdsPath);
-        _validateAmountWeisPath(_marketIdsPath, _amountWeisPath);
+        _validateAmountWeis(_inputAmountWei, _minOutputAmountWei);
         _validateTraderParams(
             genericCache,
             _marketIdsPath,
             _makerAccounts,
             _tradersPath
         );
-        _validateAmountForFirstIndex(genericCache, _marketIdsPath[0], _amountWeisPath[0]);
+        _validateInputAmountAndInputMarketForIsolationMode(genericCache, _marketIdsPath[0], _inputAmountWei);
 
         // put all values that will not change into a single struct
         LiquidatorProxyConstants memory constants;
@@ -151,7 +153,11 @@ contract LiquidatorProxyV4WithGenericTrader is
         // get the max liquidation amount
         _calculateAndSetMaxLiquidationAmount(liquidatorCache);
 
-        _calculateAndSetActualLiquidationAmount(_amountWeisPath, liquidatorCache);
+        (_inputAmountWei, _minOutputAmountWei) = _calculateAndSetActualLiquidationAmount(
+            _inputAmountWei,
+            _minOutputAmountWei,
+            liquidatorCache
+        );
 
         Account.Info[] memory accounts = _getAccounts(
             genericCache,
@@ -159,9 +165,10 @@ contract LiquidatorProxyV4WithGenericTrader is
             _solidAccount.owner,
             _solidAccount.number
         );
-        // the call to _getAccounts leaves accounts[1] null because it fills in the traders starting at the
-        // `traderAccountCursor` index
-        accounts[1] = _liquidAccount;
+        // the call to _getAccounts leaves accounts[LIQUID_ACCOUNT_ID] null because it fills in the traders starting at
+        // the `traderAccountCursor` index
+        accounts[LIQUID_ACCOUNT_ID] = _liquidAccount;
+        _validateZapAccount(genericCache, accounts[ZAP_ACCOUNT_ID], _marketIdsPath);
 
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](
             /* liquidationActionsLength = */ 1 + _getActionsLengthForTraderParams(_tradersPath)
@@ -177,30 +184,27 @@ contract LiquidatorProxyV4WithGenericTrader is
             actions,
             genericCache,
             _marketIdsPath,
-            _amountWeisPath,
+            _inputAmountWei,
+            _minOutputAmountWei,
             _tradersPath
         );
 
         genericCache.dolomiteMargin.operate(accounts, actions);
     }
 
-    function otherAccountIndex() public pure returns (uint256) {
-        return 1;
-    }
-
     // ============ Internal Functions ============
 
-    function _validateAmountForFirstIndex(
+    function _validateInputAmountAndInputMarketForIsolationMode(
         GenericTraderProxyCache memory _cache,
-        uint256 _marketId,
-        uint256 _amountWei
+        uint256 _inputMarketId,
+        uint256 _inputAmountWei
     ) internal view {
-        if (_isIsolationModeMarket(_cache, _marketId)) {
+        if (_isIsolationModeMarket(_cache, _inputMarketId)) {
             // For liquidations, the asset amount must match the amount of collateral transferred from liquid account
             // to solid account. This is done via always selling the max amount of held collateral in the amountWeisPath
             // variable.
             Require.that(
-                _amountWei == uint256(-1),
+                _inputAmountWei == uint256(-1),
                 FILE,
                 "Invalid amount for IsolationMode"
             );
@@ -219,8 +223,8 @@ contract LiquidatorProxyV4WithGenericTrader is
         // solidAccountId is always at index 0, liquidAccountId is always at index 1
         if (_constants.expiry > 0) {
             _actions[_genericCache.actionsCursor++] = AccountActionLib.encodeExpiryLiquidateAction(
-                /* _solidAccountId = */ 0,
-                /* _liquidAccountId = */ 1,
+                TRADE_ACCOUNT_ID,
+                LIQUID_ACCOUNT_ID,
                 _constants.owedMarket,
                 _constants.heldMarket,
                 address(_constants.expiryProxy),
@@ -231,12 +235,16 @@ contract LiquidatorProxyV4WithGenericTrader is
             );
         } else {
             _actions[_genericCache.actionsCursor++] = AccountActionLib.encodeLiquidateAction(
-                /* _solidAccountId = */ 0,
-                /* _liquidAccountId = */ 1,
+                TRADE_ACCOUNT_ID,
+                LIQUID_ACCOUNT_ID,
                 _constants.owedMarket,
                 _constants.heldMarket,
                 _liquidatorCache.owedWeiToLiquidate
             );
         }
+    }
+
+    function _otherAccountId() internal pure returns (uint256) {
+        return LIQUID_ACCOUNT_ID;
     }
 }

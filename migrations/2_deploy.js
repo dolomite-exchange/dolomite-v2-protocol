@@ -111,6 +111,7 @@ const BorrowPositionProxyV2 = artifacts.require('BorrowPositionProxyV2');
 const DepositWithdrawalProxy = artifacts.require('DepositWithdrawalProxy');
 const DolomiteAmmRouterProxy = artifacts.require('DolomiteAmmRouterProxy');
 const Expiry = artifacts.require('Expiry');
+const ExpiryProxy = artifacts.require('ExpiryProxy');
 const GenericTraderProxyV1 = artifacts.require('GenericTraderProxyV1');
 const LiquidatorAssetRegistry = artifacts.require('LiquidatorAssetRegistry');
 const LiquidatorProxyV1 = artifacts.require('LiquidatorProxyV1');
@@ -576,6 +577,18 @@ async function deploySecondLayer(deployer, network, accounts) {
     await deployer.deploy(liquidatorAssetRegistry, getNoOverwriteParams());
   }
 
+  const expiryProxy = ExpiryProxy;
+  if (shouldOverwrite(expiryProxy, network)) {
+    await deployer.deploy(
+      expiryProxy,
+      liquidatorAssetRegistry.address,
+      Expiry.address,
+      dolomiteMargin.address
+    );
+  } else {
+    await deployer.deploy(expiryProxy, getNoOverwriteParams());
+  }
+
   const liquidatorProxyV1 = LiquidatorProxyV1;
   if (shouldOverwrite(liquidatorProxyV1, network)) {
     await deployer.deploy(liquidatorProxyV1, liquidatorAssetRegistry.address, dolomiteMargin.address);
@@ -660,21 +673,22 @@ async function deploySecondLayer(deployer, network, accounts) {
   }
 
   await Promise.all([
-    dolomiteMargin.ownerSetGlobalOperator(PayableProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(SignedOperationProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmRouterProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmFactory.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
     dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV1.address, true),
     dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV2.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(ExpiryProxy.address, true),
     dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmFactory.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmRouterProxy.address, true),
     dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true),
     dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1.address, true),
     dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1WithAmm.address, true),
     dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV2WithExternalLiquidity.address, true),
     dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV3WithLiquidityToken.address, true),
     dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV4WithGenericTrader.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(PayableProxy.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(SignedOperationProxy.address, true),
+    dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
   ]);
 }
 

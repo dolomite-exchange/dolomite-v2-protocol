@@ -30,7 +30,7 @@ import { Types } from "../../protocol/lib/Types.sol";
  * @title AccountBalanceLib
  * @author Dolomite
  *
- * Library contract that checks a user's balance after transaction to be non-negative
+ * Library contract that checks a user's balance after an operation to be non-negative
  */
 library AccountBalanceLib {
     using Types for Types.Par;

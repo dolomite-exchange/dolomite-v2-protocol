@@ -27,7 +27,7 @@ import { Monetary } from "../../protocol/lib/Monetary.sol";
  * @title IExpiry
  * @author Dolomite
  */
-contract IExpiry {
+interface IExpiry {
 
     // ============ Enums ============
 
@@ -50,21 +50,25 @@ contract IExpiry {
         uint32 minTimeDelta;
     }
 
+    // ============ Functions ============
+
+    function g_expiryRampTime() external view returns (uint256);
+
     function getLiquidationSpreadAdjustedPrices(
         address liquidAccountOwner,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry
     )
-        public
+        external
         view
         returns (Monetary.Price memory heldPrice, Monetary.Price memory owedPriceAdj);
 
     function getExpiry(
-        Account.Info memory account,
+        Account.Info calldata account,
         uint256 marketId
     )
-        public
+        external
         view
         returns (uint32);
 

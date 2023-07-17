@@ -321,16 +321,22 @@ library AccountActionLib {
         uint256 _amountInWei,
         bytes memory _orderData
     ) internal pure returns (Actions.ActionArgs memory) {
+        // internal trades calculate inputAmount based on `_toAccountId` (the maker account), so the sign should be
+        // positive to reflect this
         return Actions.ActionArgs({
-            actionType : Actions.ActionType.Trade,
-            accountId : _fromAccountId,
-            // solium-disable-next-line arg-overflow
-            amount : Types.AssetAmount(true, Types.AssetDenomination.Wei, Types.AssetReference.Delta, _amountInWei),
-            primaryMarketId : _primaryMarketId,
-            secondaryMarketId : _secondaryMarketId,
-            otherAddress : _traderAddress,
-            otherAccountId : _toAccountId,
-            data : _orderData
+            actionType: Actions.ActionType.Trade,
+            accountId: _fromAccountId,
+            amount: Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: _amountInWei
+            }),
+            primaryMarketId: _primaryMarketId,
+            secondaryMarketId: _secondaryMarketId,
+            otherAddress: _traderAddress,
+            otherAccountId: _toAccountId,
+            data: _orderData
         });
     }
 
@@ -370,7 +376,6 @@ library AccountActionLib {
         return Actions.ActionArgs({
             actionType : Actions.ActionType.Sell,
             accountId : _fromAccountId,
-            // solium-disable-next-line arg-overflow
             amount : Types.AssetAmount({
                 sign : false,
                 denomination : Types.AssetDenomination.Wei,

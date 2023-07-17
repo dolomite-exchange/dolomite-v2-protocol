@@ -169,7 +169,7 @@ module.exports = {
           process.env.ARBITRUM_GOERLI_NODE_URL
         )
       },
-      gasPrice: 100000000, // 0.1 gwei
+      gasPrice: 1000000000, // 1 gwei
       gas: 25000000,
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,

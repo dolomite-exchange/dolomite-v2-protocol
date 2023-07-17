@@ -525,7 +525,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         await setUpBasicBalances(isOverCollateralized);
         await expectThrow(
           liquidate(market1, market2, null),
-          `LiquidatorProxyBase: Asset not whitelisted <${market2.toFixed()}>`,
+          `HasLiquidatorRegistry: Asset not whitelisted <${market2.toFixed()}>`,
         );
       });
     });
@@ -809,7 +809,7 @@ describe('LiquidatorProxyV3WithExternalLiquidityToken', () => {
         const expiry = await setUpExpiration(market1);
         await expectThrow(
           liquidate(market1, market2, expiry),
-          `LiquidatorProxyBase: Asset not whitelisted <${market2.toFixed()}>`,
+          `HasLiquidatorRegistry: Asset not whitelisted <${market2.toFixed()}>`,
         );
       });
     });

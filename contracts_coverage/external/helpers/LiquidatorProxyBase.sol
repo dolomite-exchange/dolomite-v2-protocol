@@ -100,39 +100,6 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
 
     // ============ Internal Functions ============
 
-    modifier requireIsAssetWhitelistedForLiquidation(uint256 _marketId) {
-        _validateAssetForLiquidation(_marketId);
-        _;
-    }
-
-    modifier requireIsAssetsWhitelistedForLiquidation(uint256[] memory _marketIds) {
-        _validateAssetsForLiquidation(_marketIds);
-        _;
-    }
-
-    // ============ Internal Functions ============
-
-    function _validateAssetForLiquidation(uint256 _marketId) internal view {
-        if (LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketId, address(this))) { /* FOR COVERAGE TESTING */ }
-        Require.that(LIQUIDATOR_ASSET_REGISTRY.isAssetWhitelistedForLiquidation(_marketId, address(this)),
-            FILE,
-            "Asset not whitelisted",
-            _marketId
-        );
-    }
-
-    function _validateAssetsForLiquidation(uint256[] memory _marketIds) internal view {
-        ILiquidatorAssetRegistry liquidatorAssetRegistry = LIQUIDATOR_ASSET_REGISTRY;
-        for (uint256 i = 0; i < _marketIds.length; i++) {
-            if (liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this))) { /* FOR COVERAGE TESTING */ }
-            Require.that(liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
-                FILE,
-                "Asset not whitelisted",
-                _marketIds[i]
-            );
-        }
-    }
-
     /**
      * Pre-populates cache values for some pair of markets.
      */
@@ -308,16 +275,18 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
     }
 
     function _calculateAndSetActualLiquidationAmount(
-        uint256[] memory _amountWeisForSellActionsPath,
+        uint256 _inputAmountWei,
+        uint256 _minOutputAmountWei,
         LiquidatorProxyCache memory _cache
     )
         internal
         pure
+        returns (uint256 _newInputAmountWei, uint256 _newMinOutputAmountWei)
     {
         // at this point, _cache.owedWeiToLiquidate should be the max amount that can be liquidated on the user.
       /*assert(_cache.owedWeiToLiquidate > 0);*/ // assert it was initialized
 
-        uint256 desiredLiquidationOwedAmount = _amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1];
+        uint256 desiredLiquidationOwedAmount = _minOutputAmountWei;
         if (
             desiredLiquidationOwedAmount < _cache.owedWeiToLiquidate
             && desiredLiquidationOwedAmount.mul(_cache.owedPriceAdj) < _cache.heldPrice.mul(_cache.liquidHeldWei.value)
@@ -332,16 +301,18 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             );
         }
 
-        if (_amountWeisForSellActionsPath[0] == uint(-1)) {
+        if (_inputAmountWei == uint(-1)) {
             // This is analogous to saying "sell all of the collateral I receive from the liquidation"
-            _amountWeisForSellActionsPath[0] = _cache.solidHeldUpdateWithReward;
+            _newInputAmountWei = _cache.solidHeldUpdateWithReward;
+        } else {
+            _newInputAmountWei = _inputAmountWei;
         }
 
-        if (_amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1] == uint(-1)) {
-            // minOutputAmount is equal to the value at `length - 1` of the array. The amount being liquidated should
-            // always be covered by the sale of assets if the value was set to uint(-1). Setting the value to uint(-1)
-            // is analogous to saying "liquidate all"
-            _amountWeisForSellActionsPath[_amountWeisForSellActionsPath.length - 1] = _cache.owedWeiToLiquidate;
+        if (_minOutputAmountWei == uint(-1)) {
+            // Setting the value to uint(-1) is analogous to saying "liquidate all"
+            _newMinOutputAmountWei = _cache.owedWeiToLiquidate;
+        } else {
+            _newMinOutputAmountWei = _minOutputAmountWei;
         }
     }
 

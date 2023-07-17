@@ -324,7 +324,7 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
             || _constants.dolomiteMargin.getIsLocalOperator(_constants.solidAccount.owner, msg.sender),
             FILE,
             "Sender not operator",
-            _constants.solidAccount.owner
+            msg.sender
         );
 
         // require that the liquidAccount is liquidatable

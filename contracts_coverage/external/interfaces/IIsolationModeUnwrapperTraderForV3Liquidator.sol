@@ -70,9 +70,9 @@ contract IIsolationModeUnwrapperTraderForV3Liquidator is IExchangeWrapper {
         uint256 _minOutputAmount,
         uint256 _inputAmount
     )
-    external
-    view
-    returns (Actions.ActionArgs[] memory);
+        external
+        view
+        returns (Actions.ActionArgs[] memory);
 
     /**
      * @return The liquidity token that this contract can unwrap (the input token).

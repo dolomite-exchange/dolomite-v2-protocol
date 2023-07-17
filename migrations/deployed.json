@@ -823,5 +823,31 @@
             "address": "0xac66E962A1C52B8a3B32AF432a60fFDBc99ebD0b",
             "transactionHash": "0x9affadb1e77b8eda3adfb6ca2add356b754d7c0963c8d0943e83259cbba49bad"
         }
+    },
+    "ExpiryProxy": {
+        "42161": {
+            "links": {},
+            "address": "0x40899E265A7899968f0f153410321B9175730B00",
+            "transactionHash": "0x254b701c8728e8ccf1362dc476f21e19a3e89d712050796abe1e2de3e45b9963"
+        },
+        "421613": {
+            "links": {},
+            "address": "0x971510F79E9bF9992772a46c900A2ADF3102b6C9",
+            "transactionHash": "0x7325ba981cb24a2e1e62d3b5ef171851a92537aa529271fb31cb999debf8119b"
+        }
+    },
+    "MarginPositionRegistry": {
+        "42161": {
+            "links": {},
+            "address": "0x7A952DfAb6edDb9A7f8e49D679f778be4bc626d0",
+            "transactionHash": "0x4c85b5140900f062d1727b888b436c1331758c668c3508d425a8203900e650cf"
+        }
+    },
+    "GenericTraderProxyV1": {
+        "42161": {
+            "links": {},
+            "address": "0x4f565c20a15F11Edd5dAD95C4CC9E4c3c82b6Fa6",
+            "transactionHash": "0x91486ac20e93e00495a8c73fedf4c4786d74eaa02045e7da491c2aa395e91a28"
+        }
     }
 }

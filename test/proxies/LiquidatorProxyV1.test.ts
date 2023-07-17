@@ -1040,7 +1040,7 @@ describe('LiquidatorProxyV1', () => {
         await setUpBasicBalances();
         await expectThrow(
           liquidate(),
-          `LiquidatorProxyBase: Asset not whitelisted <${market2.toFixed()}>`,
+          `HasLiquidatorRegistry: Asset not whitelisted <${market2.toFixed()}>`,
         );
       });
 

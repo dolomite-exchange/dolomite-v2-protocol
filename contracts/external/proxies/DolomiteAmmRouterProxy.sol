@@ -86,7 +86,9 @@ contract DolomiteAmmRouterProxy is IDolomiteAmmRouterProxy, ReentrancyGuard {
         DOLOMITE_MARGIN = IDolomiteMargin(_dolomiteMargin);
         DOLOMITE_AMM_FACTORY = IDolomiteAmmFactory(_dolomiteAmmFactory);
         EXPIRY = _expiry;
-        assert(DolomiteAmmLibrary.getPairInitCodeHash(address(0)) == DOLOMITE_AMM_FACTORY.getPairInitCodeHash());
+        assert(
+            DolomiteAmmLibrary.getPairInitCodeHash(_dolomiteAmmFactory) == DOLOMITE_AMM_FACTORY.getPairInitCodeHash()
+        );
     }
 
     // ==================== External Functions ====================

@@ -32,6 +32,11 @@ export interface GenericExpiryParam {
   expiryTimeDelta: Integer;
 }
 
+export interface GenericUserConfig {
+  deadline: number | string;
+  balanceCheckFlag: number | string;
+}
+
 interface GenericTraderCalldata {
   traderType: number | string;
   makerAccountIndex: number;
@@ -100,33 +105,37 @@ export class GenericTraderProxyV1 {
   /**
    * Executes a trade using the path of markets provided and the provided traders.
    *
-   * @param tradeAccountNumber  The account number msg.sender will trade from
+   * @param tradeAccountNumber  The account number `msg.sender` will trade from
    * @param marketIdsPath       The market IDs that will be traded, in order. The first marketId is the input and the
    *                            last is the output.
-   * @param amountWeisPath      The amounts to be traded for each market, in order. The first amountWei is the input
-   *                            amount and the last is the min output amount. The length should equal
-   *                            `marketIdsPath.length`.
+   * @param inputAmountWei      The amount of the input token to be traded, in wei.
+   * @param minOutputAmountWei  The minimum amount of the output token to be received, in wei.
    * @param traderParams        The traders to be used for each action. The length should be `marketIdsPath.length - 1`.
    * @param makerAccounts       The accounts that will be used as makers for each trade of type
    *                            `TradeType.InternalLiquidity`. The length should be equal to the number of unique maker
    *                            accounts needed to execute the trade with the provided `tradersPath`.
+   * @param userConfig          The user config to be used for the trade.
    * @param options             Additional options to be passed through to the web3 call.
    */
   public async swapExactInputForOutput(
     tradeAccountNumber: Integer,
     marketIdsPath: Integer[],
-    amountWeisPath: Integer[],
+    inputAmountWei: Integer,
+    minOutputAmountWei: Integer,
     traderParams: GenericTraderParam[],
     makerAccounts: AccountInfo[],
+    userConfig: GenericUserConfig,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
       this.contracts.genericTraderProxyV1.methods.swapExactInputForOutput(
         tradeAccountNumber.toFixed(0),
         marketIdsPath.map(marketId => marketId.toFixed(0)),
-        amountWeisPath.map(amountWei => amountWei.toFixed(0)),
+        inputAmountWei.toFixed(),
+        minOutputAmountWei.toFixed(),
         GenericTraderProxyV1.genericTraderParamsToCalldata(traderParams),
         makerAccounts,
+        userConfig,
       ),
       options,
     );
@@ -139,9 +148,8 @@ export class GenericTraderProxyV1 {
    * @param tradeAccountNumber      The account number msg.sender will trade from
    * @param marketIdsPath           The market IDs that will be traded, in order. The first marketId is the input and
    *                                the last is the output.
-   * @param amountWeisPath          The amounts to be traded for each market, in order. The first amountWei is the input
-   *                                amount and the last is the min output amount. The length should equal
-   *                                marketIdsPath.length.
+   * @param inputAmountWei          The amount of the input token to be traded, in wei.
+   * @param minOutputAmountWei      The minimum amount of the output token to be received, in wei.
    * @param traderParams            The traders to be used for each action. The length should be
    *                                `marketIdsPath.length - 1`.
    * @param makerAccounts           The accounts that will be used as makers for each trade of type
@@ -151,27 +159,32 @@ export class GenericTraderProxyV1 {
    *                                non-zero.
    * @param expiryParam             The expirations to be executed after the trades. Expirations can only be set on
    *                                negative amounts (debt).
+   * @param userConfig
    * @param options                 Additional options to be passed through to the web3 call.
    */
   public async swapExactInputForOutputAndModifyPosition(
     tradeAccountNumber: Integer,
     marketIdsPath: Integer[],
-    amountWeisPath: Integer[],
+    inputAmountWei: Integer,
+    minOutputAmountWei: Integer,
     traderParams: GenericTraderParam[],
     makerAccounts: AccountInfo[],
     transferCollateralParam: GenericTransferCollateralParam,
     expiryParam: GenericExpiryParam,
+    userConfig: GenericUserConfig,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
       this.contracts.genericTraderProxyV1.methods.swapExactInputForOutputAndModifyPosition(
         tradeAccountNumber.toFixed(0),
         marketIdsPath.map(marketId => marketId.toFixed(0)),
-        amountWeisPath.map(amountWei => amountWei.toFixed(0)),
+        inputAmountWei.toFixed(),
+        minOutputAmountWei.toFixed(),
         GenericTraderProxyV1.genericTraderParamsToCalldata(traderParams),
         makerAccounts,
         GenericTraderProxyV1.genericTransferParamToCalldata(transferCollateralParam),
         GenericTraderProxyV1.genericExpiryToCalldata(expiryParam),
+        userConfig,
       ),
       options,
     );

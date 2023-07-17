@@ -26,7 +26,7 @@ import { Actions } from "../../protocol/lib/Actions.sol";
 import { Require } from "../../protocol/lib/Require.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 
-import { IIsolationModeUnwrapperTraderForV3Liquidator } from "../interfaces/IIsolationModeUnwrapperTraderForV3Liquidator.sol";
+import { IIsolationModeUnwrapperTraderForV3Liquidator } from "../interfaces/IIsolationModeUnwrapperTraderForV3Liquidator.sol"; // solium-disable-line max-len
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
 import { LiquidatorProxyV2WithExternalLiquidity } from "./LiquidatorProxyV2WithExternalLiquidity.sol";
@@ -106,9 +106,9 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
         uint256 _liquidAccountId,
         bytes memory _paraswapCallData
     )
-    internal
-    view
-    returns (Actions.ActionArgs[] memory)
+        internal
+        view
+        returns (Actions.ActionArgs[] memory)
     {
         /// @dev This implementation is technically unfinished since it can't wrap the held token in an IsolationMode
         ///      token
