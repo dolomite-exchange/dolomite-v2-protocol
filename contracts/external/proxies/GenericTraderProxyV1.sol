@@ -151,6 +151,12 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         );
 
         cache.dolomiteMargin.operate(accounts, actions);
+        emit ZapExecuted(
+            msg.sender,
+            _tradeAccountNumber,
+            _marketIdsPath,
+            _tradersPath
+        );
 
         if (
             _userConfig.balanceCheckFlag == AccountBalanceLib.BalanceCheckFlag.Both
@@ -269,6 +275,12 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         );
 
         cache.dolomiteMargin.operate(accounts, actions);
+        emit ZapExecuted(
+            msg.sender,
+            _tradeAccountNumber,
+            _marketIdsPath,
+            _tradersPath
+        );
 
         _logEvents(
             cache,

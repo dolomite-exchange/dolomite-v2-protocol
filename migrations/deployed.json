@@ -820,8 +820,8 @@
     "LiquidatorProxyV4WithGenericTrader": {
         "42161": {
             "links": {},
-            "address": "0xac66E962A1C52B8a3B32AF432a60fFDBc99ebD0b",
-            "transactionHash": "0x9affadb1e77b8eda3adfb6ca2add356b754d7c0963c8d0943e83259cbba49bad"
+            "address": "0x7997a5E848fD5AA92E47f4D94011c6c9Aa5bcCdC",
+            "transactionHash": "0x4003ec28f01b76d2ee329a3551a969418a4c08b30b9f1a95748617d737b2a979"
         }
     },
     "ExpiryProxy": {
@@ -846,8 +846,8 @@
     "GenericTraderProxyV1": {
         "42161": {
             "links": {},
-            "address": "0x4f565c20a15F11Edd5dAD95C4CC9E4c3c82b6Fa6",
-            "transactionHash": "0x91486ac20e93e00495a8c73fedf4c4786d74eaa02045e7da491c2aa395e91a28"
+            "address": "0x3E647e1242A8CE0cE013cb967fBfF742d7846242",
+            "transactionHash": "0x71c9cc8652df13b2e80b9465d4d2528bd709256da5e4c4c066fb1bb0642fc2cf"
         }
     }
 }
