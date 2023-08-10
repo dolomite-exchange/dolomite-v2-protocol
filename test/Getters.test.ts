@@ -235,7 +235,7 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
 
-        await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+        await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       });
     });
@@ -244,7 +244,7 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
 
-        await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+        await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
       });
     });

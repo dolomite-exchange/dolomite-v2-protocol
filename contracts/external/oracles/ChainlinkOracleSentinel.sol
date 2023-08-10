@@ -23,8 +23,8 @@ import { Require } from "../../protocol/lib/Require.sol";
 
 import { IOracleSentinel } from "../../protocol/interfaces/IOracleSentinel.sol";
 
+import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 import { IChainlinkAggregator } from "../interfaces/IChainlinkAggregator.sol";
-import "../helpers/OnlyDolomiteMargin.sol";
 
 
 /**

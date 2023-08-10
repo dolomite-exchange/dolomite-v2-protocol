@@ -6,7 +6,7 @@ import TestAccountRiskOverrideSetter from '../build/contracts/TestAccountRiskOve
 import TestAmmRebalancerProxy from '../build/contracts/TestAmmRebalancerProxy.json';
 import TestAutoTrader from '../build/contracts/TestAutoTrader.json';
 import TestCallee from '../build/contracts/TestCallee.json';
-import TestChainlinkFlags from '../build/contracts/TestChainlinkFlags.json';
+import TestChainlinkAggregator from '../build/contracts/TestChainlinkAggregator.json';
 import TestChainlinkPriceOracleV1 from '../build/contracts/TestChainlinkPriceOracleV1.json';
 import TestCounter from '../build/contracts/TestCounter.json';
 import TestDolomiteAmmLibrary from '../build/contracts/TestDolomiteAmmLibrary.json';
@@ -25,6 +25,7 @@ import TestParaswapAugustusRouter from '../build/contracts/TestParaswapAugustusR
 import TestParaswapTrader from '../build/contracts/TestParaswapTrader.json';
 import TestPolynomialInterestSetter from '../build/contracts/TestPolynomialInterestSetter.json';
 import TestPriceOracle from '../build/contracts/TestPriceOracle.json';
+import TestSequencerUptimeFeedAggregator from '../build/contracts/TestSequencerUptimeFeedAggregator.json';
 import TestSimpleCallee from '../build/contracts/TestSimpleCallee.json';
 import TestUniswapV3MultiRouter from '../build/contracts/TestUniswapV3MultiRouter.json';
 import TestToken from '../build/contracts/TestToken.json';
@@ -48,7 +49,7 @@ export default {
   TestAmmRebalancerProxy,
   TestAutoTrader,
   TestCallee,
-  TestChainlinkFlags,
+  TestChainlinkAggregator,
   TestChainlinkPriceOracleV1,
   TestCounter,
   TestDolomiteAmmLibrary,
@@ -66,6 +67,7 @@ export default {
   TestParaswapTrader,
   TestPolynomialInterestSetter,
   TestPriceOracle,
+  TestSequencerUptimeFeedAggregator,
   TestSimpleCallee,
   TestUniswapV3MultiRouter,
   TestToken,

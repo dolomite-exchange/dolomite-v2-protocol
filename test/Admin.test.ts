@@ -1358,7 +1358,7 @@ describe('Admin', () => {
   describe('#ownerSetOracleSentinel', () => {
     async function deployChainlinkOracleSentinel(): Promise<OracleSentinel> {
       const contract = await deployContract(dolomiteMargin, chainlinkOracleSentinelJson, [
-        dolomiteMargin.contracts.testChainlinkFlags.options.address,
+        dolomiteMargin.contracts.testChainlinkPriceAggregator.options.address,
       ]);
       return new OracleSentinel(dolomiteMargin.contracts, contract.options.address);
     }
@@ -1380,7 +1380,7 @@ describe('Admin', () => {
 
     it('Fails for when borrowing not allowed or liquidations not allowed', async () => {
       const oracleSentinel = await deployChainlinkOracleSentinel();
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
       await expectThrow(
         dolomiteMargin.admin.setOracleSentinel(oracleSentinel.address, { from: admin }),
         'AdminImpl: Invalid oracle sentinel',

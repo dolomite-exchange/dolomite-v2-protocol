@@ -86,6 +86,18 @@ describe('ChainlinkPriceOracleV1', () => {
         `ChainlinkPriceOracleV1: Invalid token <${ADDRESSES.TEST_SAI_PRICE_ORACLE}>`,
       );
     });
+
+    it('reverts when the price is too low', async () => {
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(INTEGERS.MAX_UINT);
+      await chainlinkOracle()
+      await expectThrow(
+        dolomiteMargin.contracts.callConstantContractFunction(
+          chainlinkOracle().getPrice(ADDRESSES.TEST_SAI_PRICE_ORACLE),
+        ),
+      );
+    });
+
+    it('reverts when the price is too high', async () => {});
   });
 
   describe('#ownerSetStalenessThreshold', () => {

@@ -25,7 +25,7 @@ import { IChainlinkAccessControlAggregator } from "../external/interfaces/IChain
 import { IChainlinkAggregator } from "../external/interfaces/IChainlinkAggregator.sol";
 
 
-contract TestPriceAggregator is IChainlinkAggregator, IChainlinkAccessControlAggregator, Ownable {
+contract TestChainlinkAggregator is IChainlinkAggregator, IChainlinkAccessControlAggregator, Ownable {
 
     string public symbol;
     int256 internal _latestAnswer;

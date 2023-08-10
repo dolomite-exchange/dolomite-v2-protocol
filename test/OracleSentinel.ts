@@ -52,7 +52,7 @@ describe('OracleSentinel', () => {
 
   describe('#isBorrowAllowed', () => {
     it('Should return true when the sequencer is online', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(false);
 
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
       expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
@@ -60,7 +60,7 @@ describe('OracleSentinel', () => {
     });
 
     it('Should return false when the sequencer is online', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
 
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       expect(await alwaysOnlineOracleSentinel.isBorrowAllowed()).to.eql(true);
@@ -70,7 +70,7 @@ describe('OracleSentinel', () => {
 
   describe('#isLiquidationAllowed', () => {
     it('Should return true when the sequencer is online', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(false);
 
       expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
       expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
@@ -78,7 +78,7 @@ describe('OracleSentinel', () => {
     });
 
     it('Should return false when the sequencer is online', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
 
       expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
       expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
@@ -88,7 +88,7 @@ describe('OracleSentinel', () => {
 
   describe('#gracePeriodDuration', () => {
     it('Should return true when the sequencer is online', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(false);
 
       expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
       expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
@@ -96,7 +96,7 @@ describe('OracleSentinel', () => {
     });
 
     it('Should return false when the sequencer is online', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
 
       expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
       expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
@@ -106,7 +106,7 @@ describe('OracleSentinel', () => {
 
   describe('#borrows', () => {
     it('should succeed when borrowing is disabled but borrow is not touched', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, collateralMarket, amount);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, market, amount.times('-0.01'));
 
@@ -128,7 +128,7 @@ describe('OracleSentinel', () => {
     });
 
     it('should succeed when borrowing is disabled but borrow is repaid', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, collateralMarket, amount);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, market, amount.times('-0.01'));
 
@@ -145,7 +145,7 @@ describe('OracleSentinel', () => {
     });
 
     it('should fail when borrowing is disabled', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, collateralMarket, amount);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, market, INTEGERS.ZERO);
@@ -163,7 +163,7 @@ describe('OracleSentinel', () => {
     });
 
     it('should fail when borrowing is disabled and borrow size increased', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
       expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, collateralMarket, amount);
       await dolomiteMargin.testing.setAccountBalance(accounts[1], accountNumber2, market, new BigNumber('-1'));
@@ -183,7 +183,7 @@ describe('OracleSentinel', () => {
 
   describe('#liquidation', () => {
     it('should fail when liquidations are disabled', async () => {
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
       expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
       await dolomiteMargin.testing.setAccountBalance(accounts[0], accountNumber1, collateralMarket, amount.times(2));
       await dolomiteMargin.testing.setAccountBalance(accounts[0], accountNumber1, market, amount.times(2));
