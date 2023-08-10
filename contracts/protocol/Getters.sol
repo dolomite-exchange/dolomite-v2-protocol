@@ -140,6 +140,14 @@ contract Getters is
         return GettersImpl.getIsLiquidationAllowed(g_state);
     }
 
+    function getCallbackGasLimit()
+        public
+        view
+        returns (uint256)
+    {
+        return GettersImpl.getCallbackGasLimit(g_state);
+    }
+
     function getAccountRiskOverrideSetterByAccountOwner(
         address accountOwner
     )

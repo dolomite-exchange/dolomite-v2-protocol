@@ -31,11 +31,21 @@ import { IOracleSentinel } from "../../protocol/interfaces/IOracleSentinel.sol";
  */
 contract AlwaysOnlineOracleSentinel is IOracleSentinel {
 
+    function ownerSetGracePeriod(
+        uint256 /* _gracePeriod */
+    ) external {
+        revert("AlwaysOnlineOracleSentinel: Not implemented");
+    }
+
     function isBorrowAllowed() external view returns (bool) {
         return true;
     }
 
     function isLiquidationAllowed() external view returns (bool) {
         return true;
+    }
+
+    function gracePeriod() external view returns (uint256) {
+        return 0;
     }
 }

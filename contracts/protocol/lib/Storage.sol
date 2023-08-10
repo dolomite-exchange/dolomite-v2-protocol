@@ -130,7 +130,14 @@ library Storage {
         // The maximum number of markets a user can have a non-zero balance for a given account.
         uint256 accountMaxNumberOfMarketsWithBalances;
 
+        // The oracle sentinel used to disable borrowing/liquidations if the sequencer goes down
         IOracleSentinel oracleSentinel;
+
+        // The gas limit used for making callbacks via `IExternalCallback::onInternalBalanceChange` to smart contract
+        // wallets. Setting to 0 will effectively disable callbacks; setting it super large is not desired since it
+        // could lead to DOS attacks on the protocol; however, hard coding a max value isn't preferred since some chains
+        // can calculate gas usage differently (like ArbGas before Arbitrum rolled out nitro)
+        uint256 callbackGasLimit;
 
         // Certain addresses are allowed to borrow with different LTV requirements. When an account's risk is overrode,
         // the global risk parameters are ignored and the account's risk parameters are used instead.
@@ -180,13 +187,13 @@ library Storage {
         mapping (address => mapping (uint256 => Account.Storage)) accounts;
 
         // Addresses that can control other users accounts
-        mapping (address => mapping (address => bool)) operators;
+        mapping (address => mapping (address => uint256)) operators;
 
         // Addresses that can control all users accounts
-        mapping (address => bool) globalOperators;
+        mapping (address => uint256) globalOperators;
 
         // Addresses of auto traders that can only be called by global operators. IE for expirations
-        mapping (address => bool) specialAutoTraders;
+        mapping (address => uint256) specialAutoTraders;
 
         // mutable risk parameters of the system
         RiskParams riskParams;
@@ -463,6 +470,7 @@ library Storage {
         return price;
     }
 
+    // solium-disable-next-line security/no-assign-params
     function getAccountValues(
         Storage.State storage state,
         Account.Info memory account,
@@ -481,7 +489,7 @@ library Storage {
         adjustForLiquidity = adjustForLiquidity && marginRatioOverride.value == 0;
 
         uint256 numMarkets = cache.getNumMarkets();
-        for (uint256 i = 0; i < numMarkets; i++) {
+        for (uint256 i; i < numMarkets; ++i) {
             Types.Wei memory userWei = state.getWei(account, cache.getAtIndex(i).marketId, cache.getAtIndex(i).index);
 
             if (userWei.isZero()) {
@@ -557,7 +565,7 @@ library Storage {
         view
         returns (bool)
     {
-        return state.globalOperators[operator];
+        return state.globalOperators[operator] == 1;
     }
 
     function isAutoTraderSpecial(
@@ -568,7 +576,7 @@ library Storage {
         view
         returns (bool)
     {
-        return state.specialAutoTraders[autoTrader];
+        return state.specialAutoTraders[autoTrader] == 1;
     }
 
     function isLocalOperator(
@@ -580,7 +588,7 @@ library Storage {
         view
         returns (bool)
     {
-        return state.operators[owner][operator];
+        return state.operators[owner][operator] == 1;
     }
 
     function requireIsGlobalOperator(
@@ -752,7 +760,7 @@ library Storage {
     {
         bool hasNegative = false;
         uint256 numMarkets = cache.getNumMarkets();
-        for (uint256 i = 0; i < numMarkets; i++) {
+        for (uint256 i; i < numMarkets; ++i) {
             Types.Par memory par = state.getPar(account, cache.getAtIndex(i).marketId);
             if (par.isZero()) {
                 continue;
@@ -781,7 +789,7 @@ library Storage {
             "Spread too high"
         );
 
-        if (marginRatioOverride.value > 0 && liquidationSpreadOverride.value > 0) {
+        if (marginRatioOverride.value != 0 && liquidationSpreadOverride.value != 0) {
             Require.that(
                 liquidationSpreadOverride.value < marginRatioOverride.value,
                 FILE,
@@ -908,20 +916,20 @@ library Storage {
         bool fetchFreshIndex
     ) internal view {
         cache.markets = new Cache.MarketInfo[](cache.marketsLength);
-        uint counter = 0;
 
         // Really neat byproduct of iterating through a bitmap using the least significant bit, where each set flag
         // represents the marketId, --> the initialized `cache.markets` array is sorted in O(n)!
         // Meaning, this function call is O(n) where `n` is the number of markets in the cache
-        for (uint i = 0; i < cache.marketBitmaps.length; i++) {
-            uint bitmap = cache.marketBitmaps[i];
+        uint256 marketBitmapsLength = cache.marketBitmaps.length;
+        for (uint256 i; i < marketBitmapsLength; ++i) {
+            uint256 bitmap = cache.marketBitmaps[i];
             while (bitmap != 0) {
-                uint nextSetBit = Bits.getLeastSignificantBit(bitmap);
-                uint marketId = Bits.getMarketIdFromBit(i, nextSetBit);
+                uint256 nextSetBit = Bits.getLeastSignificantBit(bitmap);
+                uint256 marketId = Bits.getMarketIdFromBit(i, nextSetBit);
                 address token = state.getToken(marketId);
                 Types.TotalPar memory totalPar = state.getTotalPar(marketId);
                 Interest.Index memory index = state.getIndex(marketId);
-                cache.markets[counter++] = Cache.MarketInfo({
+                cache.markets[cache.counter++] = Cache.MarketInfo({
                     marketId: marketId,
                     token: token,
                     isClosing: state.markets[marketId].isClosing,
@@ -934,11 +942,11 @@ library Storage {
                 // unset the set bit
                 bitmap = Bits.unsetBit(bitmap, nextSetBit);
             }
-            if (counter == cache.marketsLength) {
+            if (cache.counter == cache.marketsLength) {
                 break;
             }
         }
 
-        assert(cache.marketsLength == counter);
+        assert(cache.marketsLength == cache.counter);
     }
 }

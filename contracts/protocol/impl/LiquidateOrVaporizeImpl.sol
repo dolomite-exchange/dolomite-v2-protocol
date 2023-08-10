@@ -21,7 +21,7 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { ILiquidationCallback } from "../interfaces/ILiquidationCallback.sol";
+import { IExternalCallback } from "../interfaces/IExternalCallback.sol";
 import { Account } from "../lib/Account.sol";
 import { Actions } from "../lib/Actions.sol";
 import { Cache } from "../lib/Cache.sol";
@@ -31,7 +31,7 @@ import { Interest } from "../lib/Interest.sol";
 import { DolomiteMarginMath } from "../lib/DolomiteMarginMath.sol";
 import { Monetary } from "../lib/Monetary.sol";
 import { Require } from "../lib/Require.sol";
-import { SafeLiquidationCallback } from "../lib/SafeLiquidationCallback.sol";
+import { SafeExternalCallback } from "../lib/SafeExternalCallback.sol";
 import { Storage } from "../lib/Storage.sol";
 import { Types } from "../lib/Types.sol";
 
@@ -121,14 +121,6 @@ library LiquidateOrVaporizeImpl {
             heldWei = maxHeldWei.negative();
             owedWei = _heldWeiToOwedWei(heldWei, heldPrice, owedPriceAdj);
 
-            SafeLiquidationCallback.callLiquidateCallbackIfNecessary(
-                args.liquidAccount,
-                args.heldMarket,
-                heldWei,
-                args.owedMarket,
-                owedWei
-            );
-
             state.setPar(
                 args.liquidAccount,
                 args.heldMarket,
@@ -141,14 +133,6 @@ library LiquidateOrVaporizeImpl {
                 owedWei
             );
         } else {
-            SafeLiquidationCallback.callLiquidateCallbackIfNecessary(
-                args.liquidAccount,
-                args.heldMarket,
-                heldWei,
-                args.owedMarket,
-                owedWei
-            );
-
             state.setPar(
                 args.liquidAccount,
                 args.owedMarket,
@@ -174,6 +158,26 @@ library LiquidateOrVaporizeImpl {
             args.heldMarket,
             heldIndex,
             heldWei.negative()
+        );
+
+        uint256 callbackGasLimit = state.riskParams.callbackGasLimit;
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.liquidAccount,
+            args.solidAccount,
+            args.heldMarket,
+            heldWei,
+            args.owedMarket,
+            owedWei,
+            callbackGasLimit
+        );
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.solidAccount,
+            args.liquidAccount,
+            args.heldMarket,
+            heldWei.negative(),
+            args.owedMarket,
+            owedWei.negative(),
+            callbackGasLimit
         );
 
         Events.logLiquidate(
@@ -259,14 +263,6 @@ library LiquidateOrVaporizeImpl {
             heldWei = maxHeldWei.negative();
             owedWei = _heldWeiToOwedWei(heldWei, heldPrice, owedPrice);
 
-            SafeLiquidationCallback.callLiquidateCallbackIfNecessary(
-                args.vaporAccount,
-                args.heldMarket,
-                Types.zeroWei(),
-                args.owedMarket,
-                owedWei
-            );
-
             state.setParFromDeltaWei(
                 args.vaporAccount,
                 args.owedMarket,
@@ -274,14 +270,6 @@ library LiquidateOrVaporizeImpl {
                 owedWei
             );
         } else {
-            SafeLiquidationCallback.callLiquidateCallbackIfNecessary(
-                args.vaporAccount,
-                args.heldMarket,
-                Types.zeroWei(),
-                args.owedMarket,
-                owedWei
-            );
-
             state.setPar(
                 args.vaporAccount,
                 args.owedMarket,
@@ -301,6 +289,26 @@ library LiquidateOrVaporizeImpl {
             args.heldMarket,
             cache.get(args.heldMarket).index,
             heldWei.negative()
+        );
+
+        uint256 callbackGasLimit = state.riskParams.callbackGasLimit;
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.vaporAccount,
+            args.solidAccount,
+            args.heldMarket,
+            Types.zeroWei(),
+            args.owedMarket,
+            owedWei,
+            callbackGasLimit
+        );
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.solidAccount,
+            args.vaporAccount,
+            args.heldMarket,
+            heldWei.negative(),
+            args.owedMarket,
+            owedWei.negative(),
+            callbackGasLimit
         );
 
         Events.logVaporize(

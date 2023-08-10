@@ -183,7 +183,7 @@ contract DelayedMultiSig is
         public
         ownerExists(msg.sender)
     {
-        for (uint256 i = 0; i < transactionIds.length; i++) {
+        for (uint256 i; i < transactionIds.length; ++i) {
             executeTransaction(transactionIds[i]);
         }
     }

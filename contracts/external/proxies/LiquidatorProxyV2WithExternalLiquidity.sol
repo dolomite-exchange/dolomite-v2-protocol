@@ -121,7 +121,7 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
             constants.dolomiteMargin.getAccountMarketsWithBalances(_solidAccount),
             constants.liquidMarkets
         );
-        constants.expiryProxy = _expiry > 0 ? EXPIRY_PROXY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
+        constants.expiryProxy = _expiry != 0 ? EXPIRY_PROXY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
         constants.expiry = uint32(_expiry);
 
         LiquidatorProxyCache memory cache = _initializeCache(constants);
@@ -175,7 +175,7 @@ contract LiquidatorProxyV2WithExternalLiquidity is ReentrancyGuard, ParaswapTrad
     {
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](2);
 
-        if (_constants.expiry > 0) {
+        if (_constants.expiry != 0) {
             // First action is a trade for closing the expired account
             // accountId is solidAccount; otherAccountId is liquidAccount
             actions[0] = AccountActionLib.encodeExpiryLiquidateAction(

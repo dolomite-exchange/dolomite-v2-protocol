@@ -121,6 +121,12 @@ interface IDolomiteMargin {
     function getIsLiquidationAllowed() external view returns (bool);
 
     /**
+     * @return  The gas limit used for making callbacks via `IExternalCallback::onInternalBalanceChange` to smart
+     *          contract wallets.
+     */
+    function getCallbackGasLimit() external view returns (uint256);
+
+    /**
      * Get the account risk override getter for an account owner. This contract enables e-mode for certain isolation
      * mode vaults.
      *
@@ -790,6 +796,17 @@ interface IDolomiteMargin {
     )
     external;
 
+    /**
+     * Sets the gas limit that's passed to any of the callback functions
+     */
+    function ownerSetCallbackGasLimit(
+        uint256 callbackGasLimit
+    )
+    external;
+
+    /**
+     * Sets the account risk override setter for a given wallet
+     */
     function ownerSetAccountRiskOverride(
         address accountOwner,
         IAccountRiskOverrideSetter accountRiskOverrideSetter

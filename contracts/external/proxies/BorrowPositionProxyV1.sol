@@ -61,19 +61,11 @@ contract BorrowPositionProxyV1 is IBorrowPositionProxyV1, OnlyDolomiteMargin {
         // Emit this before the call to DolomiteMargin so indexers get it before the Transfer events are emitted
         emit BorrowPositionOpen(msg.sender, _toAccountNumber);
 
-        AccountActionLib.transfer(
-            DOLOMITE_MARGIN,
-            /* _fromAccountOwner = */ msg.sender, // solium-disable-line
+        _transferBetweenAccounts(
             _fromAccountNumber,
-            /* _toAccountOwner = */ msg.sender, // solium-disable-line
             _toAccountNumber,
             _marketId,
-            Types.AssetAmount({
-                sign: false,
-                denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: _amountWei
-            }),
+            _amountWei,
             _balanceCheckFlag
         );
     }
@@ -87,8 +79,9 @@ contract BorrowPositionProxyV1 is IBorrowPositionProxyV1, OnlyDolomiteMargin {
         accounts[0] = Account.Info(msg.sender, _borrowAccountNumber);
         accounts[1] = Account.Info(msg.sender, _toAccountNumber);
 
-        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](_collateralMarketIds.length);
-        for (uint256 i = 0; i < _collateralMarketIds.length; i++) {
+        uint256 length = _collateralMarketIds.length;
+        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](length);
+        for (uint256 i; i < length; ++i) {
             actions[i] = AccountActionLib.encodeTransferAction(
                 /* _fromAccountId = */ 0, // solium-disable-line
                 /* _toAccountId = */ 1, // solium-disable-line
@@ -107,19 +100,11 @@ contract BorrowPositionProxyV1 is IBorrowPositionProxyV1, OnlyDolomiteMargin {
         uint256 _amountWei,
         AccountBalanceLib.BalanceCheckFlag _balanceCheckFlag
     ) external {
-        AccountActionLib.transfer(
-            DOLOMITE_MARGIN,
-            /* _fromAccountOwner = */ msg.sender, // solium-disable-line
+        _transferBetweenAccounts(
             _fromAccountNumber,
-            /* _toAccountOwner = */ msg.sender, // solium-disable-line
             _toAccountNumber,
             _marketId,
-            Types.AssetAmount({
-                sign: false,
-                denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: _amountWei
-            }),
+            _amountWei,
             _balanceCheckFlag
         );
     }
@@ -152,6 +137,32 @@ contract BorrowPositionProxyV1 is IBorrowPositionProxyV1, OnlyDolomiteMargin {
                 denomination: Types.AssetDenomination.Wei,
                 ref: Types.AssetReference.Target,
                 value: 0
+            }),
+            _balanceCheckFlag
+        );
+    }
+
+    // ==================== Internal Functions ====================
+
+    function _transferBetweenAccounts(
+        uint256 _fromAccountNumber,
+        uint256 _toAccountNumber,
+        uint256 _marketId,
+        uint256 _amountWei,
+        AccountBalanceLib.BalanceCheckFlag _balanceCheckFlag
+    ) internal {
+        AccountActionLib.transfer(
+            DOLOMITE_MARGIN,
+            /* _fromAccountOwner = */ msg.sender, // solium-disable-line
+            _fromAccountNumber,
+            /* _toAccountOwner = */ msg.sender, // solium-disable-line
+            _toAccountNumber,
+            _marketId,
+            Types.AssetAmount({
+                sign: false,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: _amountWei
             }),
             _balanceCheckFlag
         );

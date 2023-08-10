@@ -56,7 +56,8 @@ contract DolomiteMargin is
         Decimal.D256 memory earningsRate,
         Monetary.Value memory minBorrowedValue,
         uint256 accountMaxNumberOfMarketsWithBalances,
-        IOracleSentinel oracleSentinel
+        IOracleSentinel oracleSentinel,
+        uint256 callbackGasLimit
     )
         public
     {
@@ -67,5 +68,6 @@ contract DolomiteMargin is
         AdminImpl.ownerSetMinBorrowedValue(g_state, minBorrowedValue);
         AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(g_state, accountMaxNumberOfMarketsWithBalances);
         AdminImpl.ownerSetOracleSentinel(g_state, oracleSentinel);
+        AdminImpl.ownerSetCallbackGasLimit(g_state, callbackGasLimit);
     }
 }

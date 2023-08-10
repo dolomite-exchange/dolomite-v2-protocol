@@ -209,6 +209,16 @@ export class Admin {
     );
   }
 
+  public async setCallbackGasLimit(
+    callbackGasLimit: Integer,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.dolomiteMargin.methods.ownerSetCallbackGasLimit(callbackGasLimit.toFixed()),
+      options,
+    );
+  }
+
   public async setAccountRiskOverride(
     accountOwner: address,
     accountRiskOverrideSetter: address,

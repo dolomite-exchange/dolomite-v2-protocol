@@ -67,45 +67,98 @@ describe('ChainlinkPriceOracleV1', () => {
     });
 
     it('reverts when an invalid address is passed in', async () => {
-      const pricePromise = dolomiteMargin.contracts.callConstantContractFunction(
-        chainlinkOracle().getPrice(ADDRESSES.ZERO),
+      await expectThrow(
+        dolomiteMargin.contracts.callConstantContractFunction(
+          chainlinkOracle().getPrice(ADDRESSES.ZERO),
+        ),
+        `ChainlinkPriceOracleV1: Invalid token <${ADDRESSES.ZERO}>`,
       );
-      await expectThrow(pricePromise, `ChainlinkPriceOracleV1: invalid token <${ADDRESSES.ZERO}>`);
+      await expectThrow(
+        dolomiteMargin.contracts.callConstantContractFunction(
+          chainlinkOracle().getPrice(ADDRESSES.ONE),
+        ),
+        `ChainlinkPriceOracleV1: Invalid token <${ADDRESSES.ONE}>`,
+      );
+      await expectThrow(
+        dolomiteMargin.contracts.callConstantContractFunction(
+          chainlinkOracle().getPrice(ADDRESSES.TEST_SAI_PRICE_ORACLE),
+        ),
+        `ChainlinkPriceOracleV1: Invalid token <${ADDRESSES.TEST_SAI_PRICE_ORACLE}>`,
+      );
     });
   });
 
-  describe('integration', () => {
+  describe('#ownerSetStalenessThreshold', () => {
+    it('works normally', async () => {
+      const stalenessThreshold = INTEGERS.ONE_DAY_IN_SECONDS.plus(1234);
+      await dolomiteMargin.chainlinkPriceOracle.ownerSetStalenessThreshold(
+        stalenessThreshold,
+        { from: admin },
+      );
+      expect(await dolomiteMargin.chainlinkPriceOracle.getStalenessThreshold()).to.eql(stalenessThreshold);
+    });
+
+    it('fails when invoked by non-admin', async () => {
+      const stalenessThreshold = INTEGERS.ONE_DAY_IN_SECONDS;
+      await expectThrow(
+        dolomiteMargin.chainlinkPriceOracle.ownerSetStalenessThreshold(
+          stalenessThreshold,
+          { from: user },
+        ),
+      );
+    });
+
+    it('fails when too low', async () => {
+      const stalenessThreshold = INTEGERS.ONE_DAY_IN_SECONDS.minus(1);
+      await expectThrow(
+        dolomiteMargin.chainlinkPriceOracle.ownerSetStalenessThreshold(
+          stalenessThreshold,
+          { from: admin },
+        ),
+        `ChainlinkPriceOracleV1: Staleness threshold too low <${stalenessThreshold.toFixed()}>`,
+      );
+    });
+
+    it('fails when too high', async () => {
+      const stalenessThreshold = INTEGERS.ONE_DAY_IN_SECONDS.times(7).plus(1);
+      await expectThrow(
+        dolomiteMargin.chainlinkPriceOracle.ownerSetStalenessThreshold(
+          stalenessThreshold,
+          { from: admin },
+        ),
+        `ChainlinkPriceOracleV1: Staleness threshold too high <${stalenessThreshold.toFixed()}>`,
+      );
+    });
+  });
+
+  describe('#ownerInsertOrUpdateOracleToken', () => {
     it('can insert a new oracle', async () => {
       const tokenAddress = dolomiteMargin.testing.erroringToken.address;
-      await dolomiteMargin.chainlinkPriceOracle.insertOrUpdateOracleToken(
+      await dolomiteMargin.chainlinkPriceOracle.ownerInsertOrUpdateOracleToken(
         tokenAddress,
        18,
         ADDRESSES.TEST_SAI_PRICE_ORACLE,
-        8,
         ADDRESSES.ZERO,
         { from: admin },
       );
       expect(await dolomiteMargin.chainlinkPriceOracle.getTokenDecimalsByToken(tokenAddress)).to.eql(18);
       expect(await dolomiteMargin.chainlinkPriceOracle.getAggregatorByToken(tokenAddress))
         .to.eql(ADDRESSES.TEST_SAI_PRICE_ORACLE);
-      expect(await dolomiteMargin.chainlinkPriceOracle.getAggregatorDecimalsByToken(tokenAddress)).to.eql(8);
       expect(await dolomiteMargin.chainlinkPriceOracle.getCurrencyPairingByToken(tokenAddress)).to.eql(ADDRESSES.ZERO);
     });
 
     it('can update an existing oracle', async () => {
       const tokenAddress = dolomiteMargin.testing.tokenA.address;
-      await dolomiteMargin.chainlinkPriceOracle.insertOrUpdateOracleToken(
+      await dolomiteMargin.chainlinkPriceOracle.ownerInsertOrUpdateOracleToken(
         tokenAddress,
        9,
         ADDRESSES.TEST_SAI_PRICE_ORACLE,
-        18,
         ADDRESSES.TEST_UNISWAP,
         { from: admin },
       );
       expect(await dolomiteMargin.chainlinkPriceOracle.getTokenDecimalsByToken(tokenAddress)).to.eql(9);
       expect(await dolomiteMargin.chainlinkPriceOracle.getAggregatorByToken(tokenAddress))
         .to.eql(ADDRESSES.TEST_SAI_PRICE_ORACLE);
-      expect(await dolomiteMargin.chainlinkPriceOracle.getAggregatorDecimalsByToken(tokenAddress)).to.eql(18);
       expect(await dolomiteMargin.chainlinkPriceOracle.getCurrencyPairingByToken(tokenAddress))
         .to.eql(ADDRESSES.TEST_UNISWAP);
     });
@@ -113,14 +166,28 @@ describe('ChainlinkPriceOracleV1', () => {
     it('fails when invoked by non-admin', async () => {
       const tokenAddress = dolomiteMargin.testing.tokenA.address;
       await expectThrow(
-        dolomiteMargin.chainlinkPriceOracle.insertOrUpdateOracleToken(
+        dolomiteMargin.chainlinkPriceOracle.ownerInsertOrUpdateOracleToken(
           tokenAddress,
           9,
           ADDRESSES.TEST_SAI_PRICE_ORACLE,
-          18,
           ADDRESSES.TEST_UNISWAP,
           { from: user },
         ),
+        `OnlyDolomiteMargin: Only Dolomite owner can call <${user.toLowerCase()}>`
+      );
+    });
+
+    it('fails when non-zero paired token does not have an aggregator', async () => {
+      const tokenAddress = dolomiteMargin.testing.tokenA.address;
+      await expectThrow(
+        dolomiteMargin.chainlinkPriceOracle.ownerInsertOrUpdateOracleToken(
+          tokenAddress,
+          9,
+          ADDRESSES.TEST_SAI_PRICE_ORACLE,
+          ADDRESSES.TEST_UNISWAP,
+          { from: admin },
+        ),
+        `ChainlinkPriceOracleV1: Invalid token pair <${ADDRESSES.TEST_UNISWAP.toLowerCase()}>`
       );
     });
 

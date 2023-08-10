@@ -78,12 +78,12 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         pure
     {
         Require.that(
-            _inputAmountWei > 0,
+            _inputAmountWei != 0,
             FILE,
             "Invalid inputAmountWei"
         );
         Require.that(
-            _minOutputAmountWei > 0,
+            _minOutputAmountWei != 0,
             FILE,
             "Invalid minOutputAmountWei"
         );
@@ -104,7 +104,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
             "Invalid traders params length"
         );
 
-        for (uint256 i = 0; i < _traderParamsPath.length; i++) {
+        for (uint256 i; i < _traderParamsPath.length; ++i) {
             _validateTraderParam(
                 _cache,
                 _marketIdsPath,
@@ -290,7 +290,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         Account.Info memory _account,
         uint256[] memory _marketIdsPath
     ) internal view {
-        for (uint i = 0; i < _marketIdsPath.length; i++) {
+        for (uint256 i; i < _marketIdsPath.length; ++i) {
             // Panic if we're zapping to an account that has any value in it. Why? Because we don't want execute trades
             // where we sell ALL if there's already value in the account. That would mess up the user's holdings and
             // unintentionally sell assets the user does not want to sell.
@@ -329,7 +329,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         internal
         pure
     {
-        for (uint256 i = 0; i < _makerAccounts.length; i++) {
+        for (uint256 i; i < _makerAccounts.length; ++i) {
             Account.Info memory account = _accounts[_cache.traderAccountStartIndex + i];
             assert(account.owner == address(0) && account.number == 0);
 
@@ -348,7 +348,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         returns (uint256)
     {
         uint256 actionsLength = 2; // start at 2 for the zap in/out of the zap account (2 transfer actions)
-        for (uint256 i = 0; i < _tradersPath.length; i++) {
+        for (uint256 i; i < _tradersPath.length; ++i) {
             if (TraderType.IsolationModeUnwrapper == _tradersPath[i].traderType) {
                 actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
             } else if (TraderType.IsolationModeWrapper == _tradersPath[i].traderType) {
@@ -380,7 +380,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
             _inputAmountWei
         );
 
-        for (uint256 i = 0; i < _tradersPath.length; i++) {
+        for (uint256 i; i < _tradersPath.length; ++i) {
             if (_tradersPath[i].traderType == TraderType.ExternalLiquidity) {
                 _actions[_cache.actionsCursor++] = AccountActionLib.encodeExternalSellAction(
                     ZAP_ACCOUNT_ID,

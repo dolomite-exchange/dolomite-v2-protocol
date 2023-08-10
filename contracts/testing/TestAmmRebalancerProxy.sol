@@ -121,7 +121,7 @@ contract TestAmmRebalancerProxy is OnlyDolomiteMargin, Ownable {
             dolomiteAmountIn,
             dolomitePath
         );
-        for (uint i = 0; i < dolomitePools.length; i++) {
+        for (uint256 i; i < dolomitePools.length; ++i) {
             Require.that(
                 accounts[i + 1].owner == dolomitePools[i],
                 FILE,
@@ -187,7 +187,7 @@ contract TestAmmRebalancerProxy is OnlyDolomiteMargin, Ownable {
     ) internal view returns (uint[] memory) {
         IDolomiteMargin dolomiteMargin = DOLOMITE_MARGIN;
         uint[] memory marketPath = new uint[](path.length);
-        for (uint i = 0; i < path.length; i++) {
+        for (uint256 i; i < path.length; ++i) {
             marketPath[i] = dolomiteMargin.getMarketIdByTokenAddress(path[i]);
         }
         return marketPath;

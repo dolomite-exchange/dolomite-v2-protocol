@@ -6,7 +6,6 @@ const {
   isMumbaiMatic,
   isArbitrumOne,
   isArbitrumGoerli,
-  isArbitrumRinkeby,
 } = require('./helpers');
 
 function getDaiAddress(network, TokenB) {
@@ -27,9 +26,6 @@ function getDaiAddress(network, TokenB) {
   }
   if (isArbitrumOne(network)) {
     return '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1';
-  }
-  if (isArbitrumRinkeby(network)) {
-    return '0x362eD516f2E8eEab895043AF976864126BdD9C7b';
   }
   if (isArbitrumGoerli(network)) {
     return '0xE65A051E0ae02eB66a11c73B2BA14021B5aadAEE';
@@ -56,9 +52,6 @@ function getLinkAddress(network, TokenE) {
   if (isArbitrumOne(network)) {
     return '0xf97f4df75117a78c1A5a0DBb814Af92458539FB4';
   }
-  if (isArbitrumRinkeby(network)) {
-    return '0x615fBe6372676474d9e6933d310469c9b68e9726';
-  }
   if (isArbitrumGoerli(network)) {
     return '0x2d3B3F17d6694d5AA643Cb89A82Ac9214a41536d';
   }
@@ -80,9 +73,6 @@ function getLrcAddress(network, TokenF) {
   }
   if (isArbitrumOne(network)) {
     return '0x46d0cE7de6247b0A95f67b43B589b4041BaE7fbE'
-  }
-  if (isArbitrumRinkeby(network)) {
-    throw new Error('Cannot find LRC for Arbitrum Test');
   }
   throw new Error('Cannot find LRC');
 }
@@ -106,9 +96,6 @@ function getMaticAddress(network, artifact) {
   if (isArbitrumOne(network)) {
     throw new Error('MATIC is not supported on Arbitrum');
   }
-  if (isArbitrumRinkeby(network)) {
-    throw new Error('Cannot find MATIC for Arbitrum Test');
-  }
   throw new Error('Cannot find MATIC');
 }
 
@@ -130,9 +117,6 @@ function getUsdcAddress(network, TokenA) {
   }
   if (isArbitrumOne(network)) {
     return '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8';
-  }
-  if (isArbitrumRinkeby(network)) {
-    return '0xf5ba7ca17aF300F52112C4CC8A7AB1A0482e84D5';
   }
   if (isArbitrumGoerli(network)) {
     return '0x7317eb743583250739862644cef74B982708eBB4';
@@ -166,9 +150,6 @@ function getWbtcAddress(network, TokenD) {
   if (isArbitrumOne(network)) {
     return '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
   }
-  if (isArbitrumRinkeby(network)) {
-    return '0x48c40e8B9F45E199238e3131B232ADf12d88eA2C';
-  }
   if (isArbitrumGoerli(network)) {
     return '0x6fA07522F1dd8D8cb5b400c957418b4bD2C96F80';
   }
@@ -193,9 +174,6 @@ function getWethAddress(network, WETH) {
   }
   if (isArbitrumOne(network)) {
     return '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
-  }
-  if (isArbitrumRinkeby(network)) {
-    return '0x267dc5f342e139b5E407684e3A731aeaE8A71E3e';
   }
   if (isArbitrumGoerli(network)) {
     return '0xC033378c6eEa969C001CE9438973ca4d6460999a';

@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { ADDRESSES } from '../../lib/Constants';
 import { Contracts } from '../../lib/Contracts';
 import { address, ContractCallOptions, ContractConstantCallOptions, Integer, TxResult, } from '../../types';
 
@@ -12,21 +11,31 @@ export class ChainlinkPriceOracleV1 {
 
   // ============ Admin ============
 
-  public async insertOrUpdateOracleToken(
+  public async ownerInsertOrUpdateOracleToken(
     token: address,
     tokenDecimals: number,
     chainlinkAggregator: address,
-    aggregatorDecimals: number,
     tokenPair: address,
     options?: ContractCallOptions,
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.insertOrUpdateOracleToken(
+      this.contracts.chainlinkPriceOracleV1.methods.ownerInsertOrUpdateOracleToken(
         token,
         tokenDecimals,
         chainlinkAggregator,
-        aggregatorDecimals,
         tokenPair,
+      ),
+      options,
+    );
+  }
+
+  public async ownerSetStalenessThreshold(
+    stalenessThreshold: Integer,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.chainlinkPriceOracleV1.methods.ownerSetStalenessThreshold(
+        stalenessThreshold.toFixed(),
       ),
       options,
     );
@@ -34,20 +43,20 @@ export class ChainlinkPriceOracleV1 {
 
   // ============ Getters ============
 
-  public async getOwner(
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
-    return this.contracts.callConstantContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.owner(),
+  public async getStalenessThreshold(options?: ContractConstantCallOptions): Promise<Integer> {
+    const stalenessThreshold = await this.contracts.callConstantContractFunction(
+      this.contracts.chainlinkPriceOracleV1.methods.stalenessThreshold(),
       options,
     );
+    return new BigNumber(stalenessThreshold);
   }
 
   public async getPrice(
+    token: address,
     options?: ContractConstantCallOptions,
   ): Promise<Integer> {
     const price = await this.contracts.callConstantContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.getPrice(ADDRESSES.ZERO),
+      this.contracts.chainlinkPriceOracleV1.methods.getPrice(token),
       options,
     );
     return new BigNumber(price.value);
@@ -58,7 +67,7 @@ export class ChainlinkPriceOracleV1 {
     options?: ContractConstantCallOptions,
   ): Promise<address> {
     return this.contracts.callConstantContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.tokenToAggregatorMap(token),
+      this.contracts.chainlinkPriceOracleV1.methods.getAggregatorByToken(token),
       options,
     );
   }
@@ -68,7 +77,7 @@ export class ChainlinkPriceOracleV1 {
     options?: ContractConstantCallOptions,
   ): Promise<number> {
     const decimals = await this.contracts.callConstantContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.tokenToDecimalsMap(token),
+      this.contracts.chainlinkPriceOracleV1.methods.getDecimalsByToken(token),
       options,
     );
     return Number.parseInt(decimals, 10);
@@ -82,21 +91,9 @@ export class ChainlinkPriceOracleV1 {
     options?: ContractConstantCallOptions,
   ): Promise<address> {
     return this.contracts.callConstantContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.tokenToPairingMap(token),
+      this.contracts.chainlinkPriceOracleV1.methods.getTokenPairByToken(token),
       options,
     );
-  }
-
-  public async getAggregatorDecimalsByToken(
-    token: address,
-    options?: ContractConstantCallOptions,
-  ): Promise<number> {
-    const decimalsString = await this.contracts.callConstantContractFunction(
-      this.contracts.chainlinkPriceOracleV1.methods.tokenToAggregatorDecimalsMap(token),
-      options,
-    );
-    const decimals = Number.parseInt(decimalsString, 10);
-    return decimals === 0 ? 8 : decimals;
   }
 
   /**

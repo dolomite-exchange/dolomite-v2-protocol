@@ -6,7 +6,6 @@ const {
   isMaticProd,
   isArbitrumOne,
   isArbitrumGoerli,
-  isArbitrumRinkeby,
   isArbitrumNetwork,
 } = require('./helpers');
 const {
@@ -34,9 +33,6 @@ function getBtcUsdAggregatorAddress(network, TestBtcUsdChainlinkAggregator) {
   if (isArbitrumOne(network)) {
     return '0x6ce185860a4963106506c203335a2910413708e9';
   }
-  if (isArbitrumRinkeby(network)) {
-    return '0x0c9973e7a27d00e656B9f153348dA46CaD70d03d';
-  }
   if (isArbitrumGoerli(network)) {
     return '0x6550bc2301936011c1334555e62A87705A81C12C';
   }
@@ -55,9 +51,6 @@ function getDaiUsdAggregatorAddress(network, TestDaiUsdChainlinkAggregator) {
   }
   if (isArbitrumOne(network)) {
     return '0xc5c8e77b397e531b8ec06bfb0048328b30e9ecfb';
-  }
-  if (isArbitrumRinkeby(network)) {
-    return '0xcAE7d280828cf4a0869b26341155E4E9b864C7b2';
   }
   if (isArbitrumGoerli(network)) {
     return '0x103b53E977DA6E4Fa92f76369c8b7e20E7fb7fe1';
@@ -84,9 +77,6 @@ function getEthUsdAggregatorAddress(network, TestEthUsdChainlinkAggregator) {
   if (isArbitrumOne(network)) {
     return '0x639fe6ab55c921f74e7fac1ee960c0b6293ba612';
   }
-  if (isArbitrumRinkeby(network)) {
-    return '0x5f0423B1a6935dc5596e7A24d98532b67A0AeFd8';
-  }
   if (isArbitrumGoerli(network)) {
     return '0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08';
   }
@@ -108,9 +98,6 @@ function getLinkUsdAggregatorAddress(network, TestLinkUsdChainlinkAggregator) {
   }
   if (isArbitrumOne(network)) {
     return '0x86e53cf1b870786351da77a57575e79cb55812cb';
-  }
-  if (isArbitrumRinkeby(network)) {
-    return '0x52C9Eb2Cc68555357221CAe1e5f2dD956bC194E5';
   }
   if (isArbitrumGoerli(network)) {
     return '0xd28Ba6CA3bB72bF371b80a2a0a33cBcf9073C954';
@@ -153,9 +140,6 @@ function getUsdcUsdAggregatorAddress(network) {
   if (isArbitrumOne(network)) {
     return '0x50834f3163758fcc1df9973b6e91f0f0f0434ad3';
   }
-  if (isArbitrumRinkeby(network)) {
-    return '0xe020609A0C31f4F96dCBB8DF9882218952dD95c4';
-  }
   if (isArbitrumGoerli(network)) {
     return '0x1692Bdd32F31b831caAc1b0c9fAF68613682813b';
   }
@@ -197,25 +181,25 @@ function getChainlinkPriceOracleContract(network, artifacts) {
 function getChainlinkPriceOracleV1Params(network, tokens, aggregators) {
   if (isArbitrumNetwork(network)) {
     const pairs = [
-      [getDaiAddress(network), getDaiUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8],
-      [getLinkAddress(network), getLinkUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8],
-      [getUsdcAddress(network), getUsdcUsdAggregatorAddress(network), 6, ADDRESSES.ZERO, 8],
-      [getWethAddress(network), getEthUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8],
-      [getWbtcAddress(network), getBtcUsdAggregatorAddress(network), 8, ADDRESSES.ZERO, 8],
+      [getDaiAddress(network), getDaiUsdAggregatorAddress(network), 18, ADDRESSES.ZERO],
+      [getLinkAddress(network), getLinkUsdAggregatorAddress(network), 18, ADDRESSES.ZERO],
+      [getUsdcAddress(network), getUsdcUsdAggregatorAddress(network), 6, ADDRESSES.ZERO],
+      [getWethAddress(network), getEthUsdAggregatorAddress(network), 18, ADDRESSES.ZERO],
+      [getWbtcAddress(network), getBtcUsdAggregatorAddress(network), 8, ADDRESSES.ZERO],
     ];
     if (isArbitrumOne(network)) {
-      pairs.push([getUsdtAddress(network), getUsdtUsdAggregatorAddress(network), 6, ADDRESSES.ZERO, 8]);
+      pairs.push([getUsdtAddress(network), getUsdtUsdAggregatorAddress(network), 6, ADDRESSES.ZERO]);
     }
     return mapPairsToParams(pairs);
   } else if (isMaticProd(network)) {
     const pairs = mapPairsToParams([
-      [getDaiAddress(network), getDaiUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8],
-      [getMaticAddress(network), getMaticUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8],
-      [getUsdcAddress(network), getUsdcUsdAggregatorAddress(network), 6, ADDRESSES.ZERO, 8],
-      [getWethAddress(network), getEthUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8],
+      [getDaiAddress(network), getDaiUsdAggregatorAddress(network), 18, ADDRESSES.ZERO],
+      [getMaticAddress(network), getMaticUsdAggregatorAddress(network), 18, ADDRESSES.ZERO],
+      [getUsdcAddress(network), getUsdcUsdAggregatorAddress(network), 6, ADDRESSES.ZERO],
+      [getWethAddress(network), getEthUsdAggregatorAddress(network), 18, ADDRESSES.ZERO],
     ]);
     if (isMaticProd(network)) {
-      pairs.push([getLinkAddress(network), getLinkUsdAggregatorAddress(network), 18, ADDRESSES.ZERO, 8]);
+      pairs.push([getLinkAddress(network), getLinkUsdAggregatorAddress(network), 18, ADDRESSES.ZERO]);
     }
     return pairs;
   } else if (isDevNetwork(network)) {
@@ -239,9 +223,11 @@ function getChainlinkPriceOracleV1Params(network, tokens, aggregators) {
 
     return mapPairsToParams([
       // eslint-disable-next-line max-len
-      [getDaiAddress(network, TokenB), getDaiUsdAggregatorAddress(network, daiUsdAggregator), 18, ADDRESSES.ZERO, 8],
+      [getWethAddress(network, TestWETH), getEthUsdAggregatorAddress(network, ethUsdAggregator), 18, ADDRESSES.ZERO],
       // eslint-disable-next-line max-len
-      [getLinkAddress(network, TokenE), getLinkUsdAggregatorAddress(network, linkUsdAggregator), 18, ADDRESSES.ZERO, 8],
+      [getDaiAddress(network, TokenB), getDaiUsdAggregatorAddress(network, daiUsdAggregator), 18, ADDRESSES.ZERO],
+      // eslint-disable-next-line max-len
+      [getLinkAddress(network, TokenE), getLinkUsdAggregatorAddress(network, linkUsdAggregator), 18, ADDRESSES.ZERO],
       // eslint-disable-next-line max-len
       [
         getLrcAddress(network, TokenF),
@@ -251,11 +237,9 @@ function getChainlinkPriceOracleV1Params(network, tokens, aggregators) {
         18,
       ],
       // eslint-disable-next-line max-len
-      [getUsdcAddress(network, TokenA), getUsdcEthAggregatorAddress(network, usdcUsdAggregator), 6, ADDRESSES.ZERO, 8],
+      [getUsdcAddress(network, TokenA), getUsdcEthAggregatorAddress(network, usdcUsdAggregator), 6, ADDRESSES.ZERO],
       // eslint-disable-next-line max-len
-      [getWbtcAddress(network, TokenD), getBtcUsdAggregatorAddress(network, btcUsdAggregator), 8, ADDRESSES.ZERO, 8],
-      // eslint-disable-next-line max-len
-      [getWethAddress(network, TestWETH), getEthUsdAggregatorAddress(network, ethUsdAggregator), 18, ADDRESSES.ZERO, 8],
+      [getWbtcAddress(network, TokenD), getBtcUsdAggregatorAddress(network, btcUsdAggregator), 8, ADDRESSES.ZERO],
     ]);
   }
 
@@ -268,7 +252,6 @@ function mapPairsToParams(pairs) {
     aggregators: pairs.map(pair => pair[1]),
     tokenDecimals: pairs.map(pair => pair[2]),
     tokenPairs: pairs.map(pair => pair[3]),
-    aggregatorDecimals: pairs.map(pair => pair[4]),
   };
 }
 

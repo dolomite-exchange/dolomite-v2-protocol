@@ -19,9 +19,12 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
+import { Require } from "../../protocol/lib/Require.sol";
+
 import { IOracleSentinel } from "../../protocol/interfaces/IOracleSentinel.sol";
 
-import { IChainlinkFlags } from "../interfaces/IChainlinkFlags.sol";
+import { IChainlinkAggregator } from "../interfaces/IChainlinkAggregator.sol";
+import "../helpers/OnlyDolomiteMargin.sol";
 
 
 /**
@@ -31,38 +34,82 @@ import { IChainlinkFlags } from "../interfaces/IChainlinkFlags.sol";
  * An implementation of the IOracleSentinel interface that gets data from the sequencer using Chainlink to check if it
  * is online.
  */
-contract ChainlinkOracleSentinel is IOracleSentinel {
+contract ChainlinkOracleSentinel is IOracleSentinel, OnlyDolomiteMargin {
 
     // ========================== Constants ========================
 
-    address private constant FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1))); // solium-disable-line max-len
+    bytes32 private constant FILE = "ChainlinkOracleSentinel";
 
     // ========================= Storage =========================
 
-    IChainlinkFlags public CHAINLINK_FLAGS;
+    IChainlinkAggregator public SEQUENCER_UPTIME_FEED;
+    uint256 public gracePeriod;
 
     // ======================= Constructor =======================
 
     /**
-     * @param _chainlinkFlags   The contract for layer-2 that denotes whether or not Chainlink oracles are currently
-     *                          offline, meaning data is stale and any critical operations should not occur.
+     * @param _sequencerUptimeFeed  The contract for layer-2 that denotes whether or not the sequencer is currently
+     *                              online.
      */
-    constructor(address _chainlinkFlags) public {
-        CHAINLINK_FLAGS = IChainlinkFlags(_chainlinkFlags);
+    constructor(
+        address _sequencerUptimeFeed,
+        address _dolomiteMargin
+    )
+        public
+        OnlyDolomiteMargin(_dolomiteMargin)
+    {
+        SEQUENCER_UPTIME_FEED = IChainlinkAggregator(_sequencerUptimeFeed);
     }
 
-    // ===================== Public Functions =====================
+    // ===================== Admin Functions =====================
+
+    function ownerSetGracePeriod(
+        uint256 _gracePeriod
+    ) external onlyDolomiteMarginOwner(msg.sender) {
+        _ownerSetGracePeriod(_gracePeriod);
+    }
+
+    // ===================== Getter Functions =====================
 
     function isBorrowAllowed() external view returns (bool) {
-        return _isSequencerOnline();
+        return _getIsSequencerOnlineAndGracePeriodHasPassed();
     }
 
     function isLiquidationAllowed() external view returns (bool) {
-        return _isSequencerOnline();
+        return _getIsSequencerOnlineAndGracePeriodHasPassed();
     }
 
-    function _isSequencerOnline() internal view returns (bool) {
-        // https://docs.chain.link/docs/l2-sequencer-flag/
-        return !CHAINLINK_FLAGS.getFlag(FLAG_ARBITRUM_SEQ_OFFLINE); // !offline == online
+    // ===================== Internal Functions =====================
+
+    function _ownerSetGracePeriod(
+        uint256 _gracePeriod
+    ) internal {
+        Require.that(
+            _gracePeriod > 10 minutes,
+            FILE,
+            "Grace period too low"
+        );
+        Require.that(
+            _gracePeriod < 24 hours,
+            FILE,
+            "Grace period too high"
+        );
+        gracePeriod = _gracePeriod;
+        emit GracePeriodSet(_gracePeriod);
+    }
+
+    function _getIsSequencerOnlineAndGracePeriodHasPassed() internal view returns (bool) {
+        (
+            /* uint80 roundID */,
+            int256 answer,
+            uint256 startedAt,
+            /* uint256 updatedAt */,
+            /* uint80 answeredInRound */
+        ) = SEQUENCER_UPTIME_FEED.latestRoundData();
+
+        // Answer == 0: Sequencer is up
+        // Answer == 1: Sequencer is down
+        // logic is taken from the Chainlink docs: https://docs.chain.link/data-feeds/l2-sequencer-feeds
+        return answer == 0 && startedAt + gracePeriod < block.timestamp;
     }
 }

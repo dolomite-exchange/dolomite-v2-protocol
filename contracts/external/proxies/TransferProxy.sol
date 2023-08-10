@@ -96,7 +96,7 @@ contract TransferProxy is ITransferProxy, AuthorizationBase, ReentrancyGuard {
     {
         IDolomiteMargin dolomiteMargin = DOLOMITE_MARGIN;
         uint256[] memory markets = new uint256[](_tokens.length);
-        for (uint256 i = 0; i < markets.length; i++) {
+        for (uint256 i; i < markets.length; ++i) {
             markets[i] = dolomiteMargin.getMarketIdByTokenAddress(_tokens[i]);
         }
 
@@ -151,7 +151,7 @@ contract TransferProxy is ITransferProxy, AuthorizationBase, ReentrancyGuard {
         accounts[1] = Account.Info(_to, _toAccountNumber);
 
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](_markets.length);
-        for (uint i = 0; i < _markets.length; i++) {
+        for (uint256 i; i < _markets.length; ++i) {
             actions[i] = AccountActionLib.encodeTransferAction(
                 /* _fromAccountId = */ 0, // solhint-disable-line indent
                 /* _fromAccountId = */ 1, // solhint-disable-line indent

@@ -88,7 +88,7 @@ library Token {
         (bool success, bytes memory returnData) = token.call(data);
         require(success, error);
 
-        if (returnData.length > 0) {
+        if (returnData.length != 0) {
             // Return data is optional
             require(abi.decode(returnData, (bool)), error);
         }

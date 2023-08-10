@@ -139,12 +139,12 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
         uint amount1 = balance1.sub(_reserve1);
 
         Require.that(
-            amount0 > 0,
+            amount0 != 0,
             FILE,
             "invalid mint amount 0"
         );
         Require.that(
-            amount1 > 0,
+            amount1 != 0,
             FILE,
             "invalid mint amount 1"
         );
@@ -161,7 +161,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
         }
 
         Require.that(
-            liquidity > 0,
+            liquidity != 0,
             FILE,
             "insufficient liquidity minted"
         );
@@ -208,7 +208,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
             // using balances ensures pro-rata distribution
             amount1Wei = (liquidity.mul(balance1) / _totalSupply).getPartialRoundHalfUp(token1Index, INDEX_BASE);
             Require.that(
-                amount0Wei > 0 && amount1Wei > 0,
+                amount0Wei != 0 && amount1Wei != 0,
                 FILE,
                 "insufficient liquidity burned"
             );
@@ -399,7 +399,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
             (uint amountOutWei) = abi.decode(data, ((uint)));
 
             Require.that(
-                amountOutWei > 0,
+                amountOutWei != 0,
                 FILE,
                 "insufficient output amount"
             );
@@ -441,7 +441,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
             ? cache.balance1Wei - (_reserve1 - amount1OutWei) : 0;
 
             Require.that(
-                amount0InWei > 0 || amount1InWei > 0,
+                amount0InWei != 0 || amount1InWei != 0,
                 FILE,
                 "insufficient input amount"
             );
@@ -477,7 +477,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
             sign : false,
             denomination : Types.AssetDenomination.Wei,
             ref : Types.AssetReference.Delta,
-            value : amount0OutWei > 0 ? amount0OutWei : amount1OutWei
+            value : amount0OutWei != 0 ? amount0OutWei : amount1OutWei
         });
     }
 
@@ -495,7 +495,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returnData) = token.excessivelySafeStaticCall(gasleft(), 256, data);
 
-        if (success && returnData.length > 0) {
+        if (success && returnData.length != 0) {
             // Return data is optional
             return abi.decode(returnData, (string));
         } else {
@@ -519,7 +519,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
         uint32 blockTimestamp = uint32(block.timestamp % 2 ** 32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast;
         // overflow is desired
-        if (timeElapsed > 0 && reserve0 != 0 && reserve1 != 0) {
+        if (timeElapsed != 0 && reserve0 != 0 && reserve1 != 0) {
             // * never overflows, and + overflow is desired
             price0CumulativeLast += uint(UQ112x112.encode(reserve1).uqdiv(reserve0)) * timeElapsed;
             price1CumulativeLast += uint(UQ112x112.encode(reserve0).uqdiv(reserve1)) * timeElapsed;
@@ -549,7 +549,7 @@ contract DolomiteAmmPair is IDolomiteAmmPair, DolomiteAmmERC20, IAutoTrader {
                     uint numerator = totalSupply.mul(rootK.sub(rootKLast));
                     uint denominator = rootK.mul(2).add(rootKLast);
                     uint liquidity = numerator / denominator;
-                    if (liquidity > 0) _mint(feeTo, liquidity);
+                    if (liquidity != 0) _mint(feeTo, liquidity);
                 }
             }
         } else if (_kLast != 0) {

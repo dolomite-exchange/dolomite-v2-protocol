@@ -51,9 +51,9 @@ library GettersImpl {
 
     // ============ Constants ============
 
-    bytes32 constant FILE = "GettersImpl";
+    bytes32 internal constant FILE = "GettersImpl";
 
-    uint256 constant SECONDS_PER_YEAR = 365 days;
+    uint256 internal constant SECONDS_PER_YEAR = 365 days;
 
     // ============ Public Functions ============
 
@@ -150,6 +150,16 @@ library GettersImpl {
         returns (bool)
     {
         return state.riskParams.oracleSentinel.isLiquidationAllowed();
+    }
+
+    function getCallbackGasLimit(
+        Storage.State storage state
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return state.riskParams.callbackGasLimit;
     }
 
     function getAccountRiskOverrideSetterByAccountOwner(
@@ -651,7 +661,8 @@ library GettersImpl {
         Types.Par[] memory pars = new Types.Par[](markets.length);
         Types.Wei[] memory weis = new Types.Wei[](markets.length);
 
-        for (uint256 i = 0; i < markets.length; i++) {
+        uint256 length = markets.length;
+        for (uint256 i; i < length; ++i) {
             tokens[i] = getMarketTokenAddress(state, markets[i]);
             pars[i] = getAccountPar(state, account, markets[i]);
             weis[i] = getAccountWei(state, account, markets[i]);
@@ -748,7 +759,8 @@ library GettersImpl {
 
         // populate cache
         Cache.MarketCache memory cache = Cache.create(markets.length);
-        for (uint256 i = 0; i < markets.length; i++) {
+        uint256 length = markets.length;
+        for (uint256 i; i < length; ++i) {
             cache.set(markets[i]);
         }
         state.initializeCache(cache, /* fetchFreshIndex = */ true);

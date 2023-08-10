@@ -25,13 +25,12 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IAutoTrader } from "../../protocol/interfaces/IAutoTrader.sol";
 import { ICallee } from "../../protocol/interfaces/ICallee.sol";
 import { IDolomiteMargin } from "../../protocol/interfaces/IDolomiteMargin.sol";
-import { ILiquidationCallback } from "../../protocol/interfaces/ILiquidationCallback.sol";
+import { IExternalCallback } from "../../protocol/interfaces/IExternalCallback.sol";
 import { Account } from "../../protocol/lib/Account.sol";
 import { Decimal } from "../../protocol/lib/Decimal.sol";
 import { DolomiteMarginMath } from "../../protocol/lib/DolomiteMarginMath.sol";
 import { Monetary } from "../../protocol/lib/Monetary.sol";
 import { Require } from "../../protocol/lib/Require.sol";
-import { SafeLiquidationCallback } from "../../protocol/lib/SafeLiquidationCallback.sol";
 import { Time } from "../../protocol/lib/Time.sol";
 import { Types } from "../../protocol/lib/Types.sol";
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
@@ -292,7 +291,7 @@ contract Expiry is
 
         assert(callType == CallFunctionType.SetExpiry);
 
-        for (uint256 i = 0; i < expiries.length; i++) {
+        for (uint256 i; i < expiries.length; ++i) {
             SetExpiryArg memory exp = expiries[i];
             if (exp.account.owner != sender) {
                 // don't do anything if sender is not approved for this action
@@ -428,14 +427,6 @@ contract Expiry is
             maxOutputWei.value
         );
         assert(output.sign != maxOutputWei.sign);
-
-        SafeLiquidationCallback.callLiquidateCallbackIfNecessary(
-            makerAccount,
-            owedMarketId == inputMarketId ? outputMarketId : inputMarketId,
-            owedMarketId == inputMarketId ? Types.Wei(output.sign, output.value) : inputWei,
-            owedMarketId,
-            owedMarketId == inputMarketId ? inputWei : Types.Wei(output.sign, output.value)
-        );
 
         return output;
     }

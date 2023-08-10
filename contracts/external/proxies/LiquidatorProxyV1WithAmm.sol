@@ -161,7 +161,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             constants.dolomiteMargin.getAccountMarketsWithBalances(_solidAccount),
             constants.liquidMarkets
         );
-        constants.expiryProxy = _expiry > 0 ? EXPIRY_PROXY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
+        constants.expiryProxy = _expiry != 0 ? EXPIRY_PROXY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
         constants.expiry = uint32(_expiry);
 
         LiquidatorProxyCache memory cache = _initializeCache(constants);
@@ -295,7 +295,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
     returns (Account.Info[] memory)
     {
         Account.Info[] memory accounts = new Account.Info[](_accountsForTrade.length + 1);
-        for (uint256 i = 0; i < _accountsForTrade.length; i++) {
+        for (uint256 i; i < _accountsForTrade.length; ++i) {
             accounts[i] = _accountsForTrade[i];
         }
         assert(
@@ -320,7 +320,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
     {
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](_actionsForTrade.length + 1);
 
-        if (_constants.expiry > 0) {
+        if (_constants.expiry != 0) {
             // First action is a trade for closing the expired account
             // accountId is solidAccount; otherAccountId is liquidAccount
             actions[0] = AccountActionLib.encodeExpiryLiquidateAction(
@@ -346,7 +346,7 @@ contract LiquidatorProxyV1WithAmm is ReentrancyGuard, LiquidatorProxyBase {
             );
         }
 
-        for (uint256 i = 0; i < _actionsForTrade.length; i++) {
+        for (uint256 i; i < _actionsForTrade.length; ++i) {
             actions[i + 1] = _actionsForTrade[i];
         }
 

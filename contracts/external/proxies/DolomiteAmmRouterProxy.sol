@@ -659,7 +659,7 @@ contract DolomiteAmmRouterProxy is IDolomiteAmmRouterProxy, ReentrancyGuard {
         ModifyPositionCache memory _cache
     ) internal view returns (uint[] memory) {
         uint[] memory marketPath = new uint[](_cache.params.tokenPath.length);
-        for (uint256 i = 0; i < _cache.params.tokenPath.length; i++) {
+        for (uint256 i; i < _cache.params.tokenPath.length; ++i) {
             marketPath[i] = _cache.dolomiteMargin.getMarketIdByTokenAddress(_cache.params.tokenPath[i]);
         }
         return marketPath;
@@ -689,7 +689,7 @@ contract DolomiteAmmRouterProxy is IDolomiteAmmRouterProxy, ReentrancyGuard {
 
         accounts[0] = Account.Info(_cache.account, _cache.params.tradeAccountNumber);
 
-        for (uint256 i = 0; i < _pools.length; i++) {
+        for (uint256 i; i < _pools.length; ++i) {
             accounts[i + 1] = Account.Info(_pools[i], 0);
         }
 
@@ -754,7 +754,7 @@ contract DolomiteAmmRouterProxy is IDolomiteAmmRouterProxy, ReentrancyGuard {
             }
         }
 
-        for (uint256 i = 0; i < _pools.length; i++) {
+        for (uint256 i; i < _pools.length; ++i) {
             assert(_accounts[i + 1].owner == _pools[i]);
             // use _cache.params.tradeAccountId for the trade
             actions[i] = AccountActionLib.encodeInternalTradeAction(

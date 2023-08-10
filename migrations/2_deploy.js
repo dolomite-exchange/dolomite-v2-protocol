@@ -36,8 +36,7 @@ const {
   isMaticProd,
   isMumbaiMatic,
   isArbitrumOne,
-  isArbitrumRinkeby,
-  getChainlinkFlags,
+  getChainlinkSequencerUptimeFeed,
   getUniswapV3MultiRouter,
   shouldOverwrite,
   getNoOverwriteParams,
@@ -87,7 +86,7 @@ const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
 const TestAutoTrader = artifacts.require('TestAutoTrader');
 const TestBtcUsdChainlinkAggregator = artifacts.require('TestBtcUsdChainlinkAggregator');
 const TestCallee = artifacts.require('TestCallee');
-const TestChainlinkFlags = artifacts.require('TestChainlinkFlags');
+const TestSequencerUptimeFeedAggregator = artifacts.require('TestSequencerUptimeFeedAggregator');
 const TestDoubleExponentInterestSetter = artifacts.require('TestDoubleExponentInterestSetter');
 const TestDaiUsdChainlinkAggregator = artifacts.require('TestDaiUsdChainlinkAggregator');
 const TestEthUsdChainlinkAggregator = artifacts.require('TestEthUsdChainlinkAggregator');
@@ -179,7 +178,7 @@ async function deployTestContracts(deployer, network) {
       // Test Contracts
       deployer.deploy(TestAccountRiskOverrideSetter),
       deployer.deploy(TestAutoTrader),
-      deployer.deploy(TestChainlinkFlags),
+      deployer.deploy(TestSequencerUptimeFeedAggregator),
       deployer.deploy(TestDolomiteAmmLibrary),
       deployer.deploy(TestDoubleExponentInterestSetter, getDoubleExponentParams(network)),
       deployer.deploy(TestExchangeWrapper),
@@ -261,7 +260,6 @@ async function deployBaseProtocol(deployer, network) {
     isMaticProd(network) ||
     isMumbaiMatic(network) ||
     isArbitrumOne(network) ||
-    isArbitrumRinkeby(network) ||
     isArbitrumGoerli(network)
   ) {
     dolomiteMargin = DolomiteMargin;
@@ -284,22 +282,6 @@ async function deployBaseProtocol(deployer, network) {
     await deployer.deploy(AlwaysOnlineOracleSentinel, getNoOverwriteParams());
   }
 
-  if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
-    await deployer.deploy(ChainlinkOracleSentinel, getChainlinkFlags(network, TestChainlinkFlags));
-  } else {
-    await deployer.deploy(ChainlinkOracleSentinel, getNoOverwriteParams());
-  }
-
-  let oracleSentinel;
-  if (
-    isDevNetwork(network) ||
-    isArbitrumNetwork(network)
-  ) {
-    oracleSentinel = ChainlinkOracleSentinel;
-  } else {
-    oracleSentinel = AlwaysOnlineOracleSentinel;
-  }
-
   if (shouldOverwrite(dolomiteMargin, network)) {
     const riskParams = await getRiskParams(network);
     await deployer.deploy(
@@ -310,10 +292,28 @@ async function deployBaseProtocol(deployer, network) {
       riskParams.earningsRate,
       riskParams.minBorrowedValue,
       riskParams.accountMaxNumberOfMarketsWithBalances,
-      oracleSentinel.address,
+      AlwaysOnlineOracleSentinel.address,
+      riskParams.callbackGasLimit,
     );
   } else {
     await deployer.deploy(dolomiteMargin, getNoOverwriteParams());
+  }
+
+  if (isDevNetwork(network) || isArbitrumNetwork(network)) {
+    if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
+      await deployer.deploy(
+        ChainlinkOracleSentinel,
+        getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggregator),
+        dolomiteMargin.address,
+      );
+    } else {
+      await deployer.deploy(ChainlinkOracleSentinel, getNoOverwriteParams());
+    }
+
+    dolomiteMargin = await getDolomiteMargin(network);
+    if ((await dolomiteMargin.getOracleSentinel()).toLowerCase() !== ChainlinkOracleSentinel.address.toLowerCase()) {
+      await dolomiteMargin.ownerSetOracleSentinel(ChainlinkOracleSentinel.address);
+    }
   }
 }
 
@@ -396,13 +396,14 @@ async function deployPriceOracles(deployer, network) {
   const params = getChainlinkPriceOracleV1Params(network, tokens, aggregators);
 
   if (shouldOverwrite(oracleContract, network)) {
+    const dolomiteMargin = await getDolomiteMargin(network);
     await deployer.deploy(
       oracleContract,
       params.tokens,
       params.aggregators,
       params.tokenDecimals,
       params.tokenPairs,
-      params.aggregatorDecimals,
+      dolomiteMargin.address,
     );
   } else {
     await deployer.deploy(oracleContract, getNoOverwriteParams());
@@ -492,7 +493,7 @@ async function deploySecondLayer(deployer, network, accounts) {
     await deployer.deploy(dolomiteAmmRouterProxy, getNoOverwriteParams());
   }
 
-  if (isDevNetwork(network) || isMumbaiMatic(network) || isArbitrumRinkeby(network) || isArbitrumGoerli(network)) {
+  if (isDevNetwork(network) || isMumbaiMatic(network) || isArbitrumGoerli(network)) {
     await deployer.deploy(TestAmmRebalancerProxy, dolomiteMargin.address, dolomiteAmmFactory.address);
     await deployer.deploy(TestUniswapAmmRebalancerProxy);
   }
@@ -522,7 +523,7 @@ async function deploySecondLayer(deployer, network, accounts) {
     }
   }
 
-  if (isDevNetwork(network) || isMumbaiMatic(network) || isArbitrumRinkeby(network) || isArbitrumGoerli(network)) {
+  if (isDevNetwork(network) || isMumbaiMatic(network) || isArbitrumGoerli(network)) {
     await deployer.deploy(
       TestAmmRebalancerProxy,
       dolomiteMargin.address,
@@ -553,12 +554,7 @@ async function deploySecondLayer(deployer, network, accounts) {
 
   const genericTraderProxyV1 = GenericTraderProxyV1;
   if (shouldOverwrite(genericTraderProxyV1, network)) {
-    await deployer.deploy(
-      genericTraderProxyV1,
-      Expiry.address,
-      marginPositionRegistry.address,
-      dolomiteMargin.address
-    );
+    await deployer.deploy(genericTraderProxyV1, Expiry.address, marginPositionRegistry.address, dolomiteMargin.address);
   } else {
     await deployer.deploy(genericTraderProxyV1, getNoOverwriteParams());
   }
@@ -579,12 +575,7 @@ async function deploySecondLayer(deployer, network, accounts) {
 
   const expiryProxy = ExpiryProxy;
   if (shouldOverwrite(expiryProxy, network)) {
-    await deployer.deploy(
-      expiryProxy,
-      liquidatorAssetRegistry.address,
-      Expiry.address,
-      dolomiteMargin.address
-    );
+    await deployer.deploy(expiryProxy, liquidatorAssetRegistry.address, Expiry.address, dolomiteMargin.address);
   } else {
     await deployer.deploy(expiryProxy, getNoOverwriteParams());
   }

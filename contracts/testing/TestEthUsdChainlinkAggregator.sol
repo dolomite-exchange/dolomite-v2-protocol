@@ -19,16 +19,42 @@
 pragma solidity ^0.5.7;
 
 import { IChainlinkAggregator } from "../external/interfaces/IChainlinkAggregator.sol";
+import { IChainlinkAccessControlAggregator } from "../external/interfaces/IChainlinkAccessControlAggregator.sol";
 
 
 /**
  * @dev Gets the latest price from the Chainlink Oracle Network. Amount of decimals depends on the base.
  */
-contract TestEthUsdChainlinkAggregator is IChainlinkAggregator {
+contract TestEthUsdChainlinkAggregator is IChainlinkAggregator, IChainlinkAccessControlAggregator {
 
-    function latestAnswer() public view returns (int256) {
-        // $211.40
-        return 21140000000;
+    function aggregator() external view returns (IChainlinkAccessControlAggregator) {
+        // For the sake of simplicity, we implement the IChainlinkAccessControlAggregator interface here
+        return IChainlinkAccessControlAggregator(address(this));
     }
 
+    function decimals() external view returns (uint8) {
+        return 8;
+    }
+
+    function maxAnswer() external view returns (int192) {
+        return 95780971304118053647396689196894323976171195136475135;
+    }
+
+    function minAnswer() external view returns (int192) {
+        return 1;
+    }
+
+    function latestRoundData()
+    external
+    view
+    returns (
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) {
+        // $211.40
+        return (0, 21140000000, 0, 0, 0);
+    }
 }

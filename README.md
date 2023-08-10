@@ -58,17 +58,18 @@ margin systems in DeFi. The detailed changes are outlined below:
 - Added a `getPartialRoundHalfUp` function that's used when converting between `Wei` & `Par` values. The reason for
   this change is that there would be truncation issues when using `getPartial` or `getPartialRoundUp`, which would lead
   to lossy conversions to and from `Wei` and `Par` that would be incorrect by 1 unit.
-- Added a `numberOfMarketsWithBorrow` field to `Account.Storage`, which makes checking collateralization for accounts
-  that do not have an active borrow much more gas efficient. If `numberOfMarketsWithBorrow`
+- Added a `numberOfMarketsWithDebt` field to [Account.Storage](contracts/protocol/lib/Account.sol), which makes checking
+  collateralization for accounts that do not have an active borrow much more gas efficient. If `numberOfMarketsWithDebt`
   is `0`, `state.isCollateralized(...)` always returns `true`. Else, it does the normal collateralization check.
 - Added a `marketsWithNonZeroBalanceSet` which function as an enumerable hash set. Its implementation mimics
   [Open Zeppelin's](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/structs/EnumerableSet.sol)
   with adjustments made to support only the `uint256` type (for gas efficiency's sake).
     - The purpose for this set is to
-      track, in `O(1)` time, a user's active markets, for reading markets into memory in `OperationImpl`. These markets
-      are needed at the end of each transaction for checking the user's collateralization. It's understood that reading
-      this user's array into memory can be more costly gas-wise than the old algorithm, but as the number of markets
-      listed grows to the tens or hundreds, the new algorithm will be much more efficient.
+      track, in `O(1)` time, a user's active markets, for reading markets into memory
+      in [OperationImpl](contracts/protocol/impl/OperationImpl.sol). These markets are needed at the end of each
+      transaction for checking the user's collateralization. It's understood that reading this user's array into memory
+      can be more costly gas-wise than the old algorithm, but as the number of markets listed grows to the tens or
+      hundreds, the new algorithm will be much more efficient.
     - Most importantly, it's understood that a user can inadvertently DOS themselves by depositing too many unique
       markets into a single account number (recall, user's deposits are partitioned first by their `address` and second
       by a `uint256` account number). Through UI patterns and organizing the protocol such that a lot of these markets (
@@ -80,25 +81,29 @@ margin systems in DeFi. The detailed changes are outlined below:
         - This is done by reading the least significant bit, truncating it out of the bitmap, and repeating the process
           until the bitmap equals 0.
         - The process of reading the least significant bit is done in `O(1)` time using crafty bit math. Then, since the
-          final array that the bitmap is read into is sorted, it can be searched in later parts of `OperationImpl`
-          in `O(log(n))` time, and iterated in its entirety in `O(m)`, where `m` represents the number of items.
-- Separated each action's logic into separate libraries, to save bytecode (compilation size) in `OperationImpl`.
-  Otherwise, the `OperationImpl` bytecode was too large and could not be deployed. These files can be found in
-  `contracts/protocol/impl` and are named after the action(s) they represent.
-- Separated the `Getters` logic into a library, `GettersImpl.sol` (similar to `Admin.sol` and `AdminImpl.sol`), to
-  reduce the bytecode size of `DolomiteMargin`.
-- Added a require statement in `OperationImpl` that forces liquidations to come from a *global operator*.
+          final array that the bitmap is read into is sorted, it can be searched in later parts
+          of [OperationImpl](contracts/protocol/impl/OperationImpl.sol) in `O(log(n))` time, and iterated in it entirety
+          in `O(m)`, where `m` represents the number of items.
+- Separated each action's logic into separate libraries, to save bytecode (compilation size)
+  in [OperationImpl](contracts/protocol/impl/OperationImpl.sol). Otherwise,
+  the [OperationImpl](contracts/protocol/impl/OperationImpl.sol) bytecode was too large and could not be deployed. These
+  files can be found in `contracts/protocol/impl` and are named after the action(s) they represent.
+- Separated the [Getters](contracts/protocol/Getters.sol) logic into a
+  library, [GettersImpl](contracts/protocol/impl/GettersImpl.sol) (similar to [Admin](contracts/protocol/Admin.sol)
+  and [AdminImpl](contracts/protocol/impl/AdminImpl.sol)), to reduce the bytecode size of `DolomiteMargin`.
+- Added a require statement in [LiquidateOrVaporizeImpl](./contracts/protocol/impl/LiquidateOrVaporizeImpl.sol) that
+  forces liquidations to come from a *global operator*.
     - This will allow for Chainlink nodes to be the sole liquidator in the future, allowing the DAO to receive
       liquidation rewards (thus, socializing the reward), instead of having gas wars amongst liquidators to receive the
       reward while simultaneously clogging the network.
-- Similar to the prior point, added a require statement in `OperationImpl` that forces expirations to come from a
-  *global operator*. This requirement is done by first checking if the internal trader is considered *special* through a
-  new mapping `specialAutoTraders` `mapping (address => bool)`. If it is, interactions with *DolomiteMargin* must be
-  done through a *global operator*.
+- Similar to the prior point, added a require statement in [TradeImpl](./contracts/protocol/impl/TradeImpl.sol) that
+  forces expirations to come from a *global operator*. This requirement is done by first checking if the internal trader
+  is considered *special* through a new mapping `specialAutoTraders` `mapping (address => bool)`. If it is, interactions
+  with *DolomiteMargin* must be done through a *global operator*.
 - Added the option of limiting the quantity of deposits and borrows for a particular asset, via the addition of
-  the `maxSupplyWei` and `maxBorrowWei` fields in the `Market` struct in `Storage.sol`.
-    - This helps alleviate risk for assets that could be deposited in large
-      quantity into `DolomiteMargin` such that there isn't enough liquidity to perform timely liquidations.
+  the `maxSupplyWei` and `maxBorrowWei` fields in the `Market` struct in [Storage](contracts/protocol/lib/Storage.sol).
+    - This helps alleviate risk for assets that could be deposited in large quantity into `DolomiteMargin` such that
+      there isn't enough liquidity to perform timely liquidations.
         - For example, if the current market size were $50M in TVL, and a whale deposited $1B in UST, it would put too
           much stress on the system, since that much UST would outweigh every other asset deposited by orders of
           magnitude.

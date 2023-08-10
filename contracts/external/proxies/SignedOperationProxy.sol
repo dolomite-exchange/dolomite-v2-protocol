@@ -394,7 +394,7 @@ OnlyDolomiteMargin,
         uint256 numOperations = operationHashes.length;
         bool[] memory output = new bool[](numOperations);
 
-        for (uint256 i = 0; i < numOperations; i++) {
+        for (uint256 i; i < numOperations; ++i) {
             output[i] = g_invalidated[operationHashes[i]];
         }
         return output;
@@ -482,7 +482,7 @@ OnlyDolomiteMargin,
         bytes32[] memory actionsBytes = new bytes32[](auth.numActions);
 
         // for each action that corresponds to the auth
-        for (uint256 i = 0; i < auth.numActions; i++) {
+        for (uint256 i; i < auth.numActions; ++i) {
             Actions.ActionArgs memory action = actions[startIdx + i];
 
             // if action type has no second account, assume null account

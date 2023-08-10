@@ -120,8 +120,9 @@ library OperationImpl {
             "Cannot have zero actions"
         );
 
-        for (uint256 a = 0; a < accounts.length; a++) {
-            for (uint256 b = a + 1; b < accounts.length; b++) {
+        uint256 accountsLength = accounts.length;
+        for (uint256 a = 0; a < accountsLength; a++) {
+            for (uint256 b = a + 1; b < accountsLength; b++) {
                 Require.that(
                     !Account.equals(accounts[a], accounts[b]),
                     FILE,
@@ -145,13 +146,13 @@ library OperationImpl {
             Cache.MarketCache memory
         )
     {
-        uint256 numMarkets = state.numMarkets;
         bool[] memory primaryAccounts = new bool[](accounts.length);
         uint256[] memory numberOfMarketsWithBalancesPerAccount = new uint256[](accounts.length);
-        Cache.MarketCache memory cache = Cache.create(numMarkets);
+        Cache.MarketCache memory cache = Cache.create(state.numMarkets);
 
         // keep track of primary accounts and indexes that need updating
-        for (uint256 i = 0; i < actions.length; i++) {
+        uint256 accountsLength = accounts.length;
+        for (uint256 i; i < accountsLength; ++i) {
             Actions.ActionArgs memory arg = actions[i];
             Actions.ActionType actionType = arg.actionType;
             Actions.MarketLayout marketLayout = Actions.getMarketLayout(actionType);
@@ -195,17 +196,18 @@ library OperationImpl {
         }
 
         // get any other markets for which an account has a balance
-        for (uint256 a = 0; a < accounts.length; a++) {
+        for (uint256 a = 0; a < accountsLength; a++) {
             uint[] memory marketIdsWithBalance = state.getMarketsWithBalances(accounts[a]);
-            numberOfMarketsWithBalancesPerAccount[a] = marketIdsWithBalance.length;
-            for (uint256 i = 0; i < marketIdsWithBalance.length; i++) {
+            uint256 numMarketsWithBalance = marketIdsWithBalance.length;
+            numberOfMarketsWithBalancesPerAccount[a] = numMarketsWithBalance;
+            for (uint256 i; i < numMarketsWithBalance; ++i) {
                 _updateMarket(state, cache, marketIdsWithBalance[i]);
             }
         }
 
         state.initializeCache(cache, /* fetchFreshIndex = */ false);
 
-        for (uint i = 0; i < cache.getNumMarkets(); i++) {
+        for (uint256 i; i < cache.getNumMarkets(); ++i) {
             Events.logOraclePrice(cache.getAtIndex(i));
         }
 
@@ -233,7 +235,8 @@ library OperationImpl {
     )
         private
     {
-        for (uint256 i = 0; i < actions.length; i++) {
+        uint256 actionsLength = actions.length;
+        for (uint256 i; i < actionsLength; ++i) {
             Actions.ActionArgs memory action = actions[i];
             Actions.ActionType actionType = action.actionType;
 
@@ -317,7 +320,7 @@ library OperationImpl {
         bool isBorrowAllowed = state.riskParams.oracleSentinel.isBorrowAllowed();
 
         uint256 numMarkets = cache.getNumMarkets();
-        for (uint256 i = 0; i < numMarkets; i++) {
+        for (uint256 i; i < numMarkets; ++i) {
             uint256 marketId = cache.getAtIndex(i).marketId;
             Types.TotalPar memory totalPar = state.getTotalPar(marketId);
             (
@@ -382,7 +385,8 @@ library OperationImpl {
         }
 
         // verify account collateralization
-        for (uint256 a = 0; a < accounts.length; a++) {
+        uint256 accountsLength = accounts.length;
+        for (uint256 a = 0; a < accountsLength; a++) {
             Account.Info memory account = accounts[a];
 
             _verifyNumberOfMarketsWithBalances(state, account, numberOfMarketsWithBalancesPerAccount[a]);

@@ -150,7 +150,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
         LiquidatorProxyConstants memory _constants,
         LiquidatorProxyV3Cache memory _v3Cache
     ) internal pure {
-        if (_constants.expiry > 0) {
+        if (_constants.expiry != 0) {
             // accountId is solidAccount; otherAccountId is liquidAccount
             _v3Cache.actions[_v3Cache.actionsCursor++] = AccountActionLib.encodeExpiryLiquidateAction(
                 _v3Cache.solidAccountId,
@@ -194,7 +194,7 @@ contract LiquidatorProxyV3WithLiquidityToken is LiquidatorProxyV2WithExternalLiq
                 _proxyCache.owedWeiToLiquidate,
                 _proxyCache.solidHeldUpdateWithReward
             );
-            for (uint256 i = 0; i < unwrapActions.length; i++) {
+            for (uint256 i; i < unwrapActions.length; ++i) {
                 _v3Cache.actions[_v3Cache.actionsCursor++] = unwrapActions[i];
             }
 

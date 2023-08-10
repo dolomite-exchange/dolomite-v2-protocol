@@ -19,6 +19,8 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+
 import { IERC20Detailed } from "../interfaces/IERC20Detailed.sol";
 import { IAccountRiskOverrideSetter } from "../interfaces/IAccountRiskOverrideSetter.sol";
 import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
@@ -42,6 +44,7 @@ import { Types } from "../lib/Types.sol";
  * Administrative functions to keep the protocol updated
  */
 library AdminImpl {
+    using Address for address;
     using DolomiteMarginMath for uint256;
     using Storage for Storage.State;
     using Token for address;
@@ -130,6 +133,10 @@ library AdminImpl {
 
     event LogSetOracleSentinel(
         IOracleSentinel oracleSentinel
+    );
+
+    event LogSetCallbackGasLimit(
+        uint256 callbackGasLimit
     );
 
     event LogSetAccountRiskOverrideSetter(
@@ -407,7 +414,12 @@ library AdminImpl {
         Require.that(
             accountMaxNumberOfMarketsWithBalances >= 2,
             FILE,
-            "Acct MaxNumberOfMarkets too low"
+            "Max number of markets too low"
+        );
+        Require.that(
+            accountMaxNumberOfMarketsWithBalances <= 64,
+            FILE,
+            "Max number of markets too high"
         );
         state.riskParams.accountMaxNumberOfMarketsWithBalances = accountMaxNumberOfMarketsWithBalances;
         emit LogSetAccountMaxNumberOfMarketsWithBalances(accountMaxNumberOfMarketsWithBalances);
@@ -424,6 +436,18 @@ library AdminImpl {
         );
         state.riskParams.oracleSentinel = oracleSentinel;
         emit LogSetOracleSentinel(oracleSentinel);
+    }
+
+    function ownerSetCallbackGasLimit(
+        Storage.State storage state,
+        uint256 callbackGasLimit
+    ) public {
+        // Allow setting to any value.
+        // Setting to 0 will effectively disable callbacks; setting it super large is not desired since it could lead to
+        // DOS attacks on the protocol; however, hard coding a max value isn't preferred since some chains can calculate
+        // gas usage differently (like ArbGas before Arbitrum rolled out nitro)
+        state.riskParams.callbackGasLimit = callbackGasLimit;
+        emit LogSetCallbackGasLimit(callbackGasLimit);
     }
 
     function ownerSetAccountRiskOverride(
@@ -452,7 +476,7 @@ library AdminImpl {
     )
     public
     {
-        state.globalOperators[operator] = approved;
+        state.globalOperators[operator] = approved ? 1 : 2;
 
         emit LogSetGlobalOperator(operator, approved);
     }
@@ -464,7 +488,7 @@ library AdminImpl {
     )
     public
     {
-        state.specialAutoTraders[autoTrader] = isSpecial;
+        state.specialAutoTraders[autoTrader] = isSpecial ? 1 : 2;
 
         emit LogSetAutoTraderIsSpecial(autoTrader, isSpecial);
     }

@@ -59,10 +59,11 @@ contract Permission is
     )
         public
     {
-        for (uint256 i = 0; i < args.length; i++) {
+        uint256 length = args.length;
+        for (uint256 i; i < length; ++i) {
             address operator = args[i].operator;
             bool trusted = args[i].trusted;
-            g_state.operators[msg.sender][operator] = trusted;
+            g_state.operators[msg.sender][operator] = trusted ? 1 : 2;
             emit LogOperatorSet(msg.sender, operator, trusted);
         }
     }

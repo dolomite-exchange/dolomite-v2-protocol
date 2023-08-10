@@ -164,7 +164,7 @@ contract MultiSig {
         public
         validRequirement(_owners.length, _required)
     {
-        for (uint256 i = 0; i < _owners.length; i++) {
+        for (uint256 i; i < _owners.length; ++i) {
             require(!isOwner[_owners[i]] && _owners[i] != ADDRESS_ZERO, "ALREADY_OWNER");
             isOwner[_owners[i]] = true;
         }
@@ -206,7 +206,7 @@ contract MultiSig {
         ownerExists(owner)
     {
         isOwner[owner] = false;
-        for (uint256 i = 0; i < owners.length - 1; i++) {
+        for (uint256 i; i < owners.length - 1; ++i) {
             if (owners[i] == owner) {
                 owners[i] = owners[owners.length - 1];
                 break;
@@ -235,7 +235,7 @@ contract MultiSig {
         ownerDoesNotExist(newOwner)
         notNull(newOwner)
     {
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             if (owners[i] == owner) {
                 owners[i] = newOwner;
                 break;
@@ -363,7 +363,7 @@ contract MultiSig {
         returns (bool)
     {
         uint256 count = 0;
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             if (confirmations[transactionId][owners[i]]) {
                 count += 1;
             }
@@ -388,7 +388,7 @@ contract MultiSig {
         returns (uint256)
     {
         uint256 count = 0;
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             if (confirmations[transactionId][owners[i]]) {
                 count += 1;
             }
@@ -412,7 +412,7 @@ contract MultiSig {
         returns (uint256)
     {
         uint256 count = 0;
-        for (uint256 i = 0; i < transactionCount; i++) {
+        for (uint256 i; i < transactionCount; ++i) {
             if (
                 pending && !transactions[i].executed
                 || executed && transactions[i].executed
@@ -452,14 +452,14 @@ contract MultiSig {
         address[] memory confirmationsTemp = new address[](owners.length);
         uint256 count = 0;
         uint256 i;
-        for (i = 0; i < owners.length; i++) {
+        for (i = 0; i < owners.length; ++i) {
             if (confirmations[transactionId][owners[i]]) {
                 confirmationsTemp[count] = owners[i];
                 count += 1;
             }
         }
         address[] memory _confirmations = new address[](count);
-        for (i = 0; i < count; i++) {
+        for (i = 0; i < count; ++i) {
             _confirmations[i] = confirmationsTemp[i];
         }
         return _confirmations;
@@ -487,7 +487,7 @@ contract MultiSig {
         uint256[] memory transactionIdsTemp = new uint256[](transactionCount);
         uint256 count = 0;
         uint256 i;
-        for (i = 0; i < transactionCount; i++) {
+        for (i = 0; i < transactionCount; ++i) {
             if (
                 pending && !transactions[i].executed
                 || executed && transactions[i].executed
@@ -497,7 +497,7 @@ contract MultiSig {
             }
         }
         uint256[] memory _transactionIds = new uint256[](to - from);
-        for (i = from; i < to; i++) {
+        for (i = from; i < to; ++i) {
             _transactionIds[i - from] = transactionIdsTemp[i];
         }
         return _transactionIds;
@@ -578,7 +578,7 @@ contract MultiSig {
         bytes memory _string = new bytes(42);
         _string[0] = "0";
         _string[1] = "x";
-        for (uint i = 0; i < 20; i++) {
+        for (uint256 i; i < 20; ++i) {
             _string[2 + i * 2] = HEX[uint8(_bytes[i + 12] >> 4)];
             _string[3 + i * 2] = HEX[uint8(_bytes[i + 12] & 0x0f)];
         }

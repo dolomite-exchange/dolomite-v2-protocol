@@ -50,6 +50,7 @@ describe('Expiry', () => {
       otherAccountId: accountNumber2,
       inputMarketId: owedMarket,
       outputMarketId: heldMarket,
+      calculateAmountWithMakerAccount: true,
       autoTrader: dolomiteMargin.contracts.expiry.options.address,
       amount: {
         value: zero,
@@ -65,6 +66,7 @@ describe('Expiry', () => {
       otherAccountId: accountNumber2,
       inputMarketId: heldMarket,
       outputMarketId: owedMarket,
+      calculateAmountWithMakerAccount: true,
       autoTrader: dolomiteMargin.contracts.expiry.options.address,
       amount: {
         value: zero,

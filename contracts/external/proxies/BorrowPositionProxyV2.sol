@@ -98,8 +98,9 @@ contract BorrowPositionProxyV2 is IBorrowPositionProxyV2, BorrowPositionProxyV1,
         accounts[0] = Account.Info(_borrowAccountOwner, _borrowAccountNumber);
         accounts[1] = Account.Info(_toAccountOwner, _toAccountNumber);
 
-        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](_collateralMarketIds.length);
-        for (uint256 i = 0; i < _collateralMarketIds.length; i++) {
+        uint256 length = _collateralMarketIds.length;
+        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](length);
+        for (uint256 i; i < length; ++i) {
             actions[i] = AccountActionLib.encodeTransferAction(
                 /* _fromAccountId = */ 0, // solium-disable-line
                 /* _toAccountId = */ 1, // solium-disable-line

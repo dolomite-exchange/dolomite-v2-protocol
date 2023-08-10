@@ -38,6 +38,11 @@ const defaultData = {
   denomination: AmountDenomination.Actual,
   reference: AmountReference.Delta,
 };
+const targetData = {
+  value: INTEGERS.ZERO,
+  denomination: AmountDenomination.Actual,
+  reference: AmountReference.Target,
+};
 const zeroGlob = {
   amount: {
     value: zero,
@@ -65,6 +70,7 @@ describe('Trade', () => {
       otherAccountId: accountNumber2,
       inputMarketId: inputMarket,
       outputMarketId: outputMarket,
+      calculateAmountWithMakerAccount: true,
       autoTrader: dolomiteMargin.testing.autoTrader.address,
       data: toBytes(tradeId),
       amount: {
@@ -97,6 +103,16 @@ describe('Trade', () => {
   it('Basic trade test', async () => {
     await Promise.all([approveTrader(), setTradeData()]);
     const txResult = await expectTradeOkay({});
+    console.log(`\tTrade gas used: ${txResult.gasUsed}`);
+    await Promise.all([expectBalances1(par, negPar), expectBalances2(negPar, par)]);
+  });
+
+  it('Basic trade test with calculateAmountWithMakerAccount set to false', async () => {
+    const glob = {
+      calculateAmountWithMakerAccount: false,
+    };
+    await Promise.all([approveTrader(), setTradeData(targetData)]);
+    const txResult = await expectTradeOkay(glob);
     console.log(`\tTrade gas used: ${txResult.gasUsed}`);
     await Promise.all([expectBalances1(par, negPar), expectBalances2(negPar, par)]);
   });

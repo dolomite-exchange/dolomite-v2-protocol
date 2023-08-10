@@ -540,6 +540,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -570,6 +571,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -600,6 +602,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -622,6 +625,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -652,6 +656,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -682,6 +687,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -712,6 +718,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding('0x'),
             amount: {
               value: parA.negated(),
@@ -742,6 +749,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding(ethers.utils.defaultAbiCoder.encode(['uint256'], ['0'])),
             amount: {
               value: parA,
@@ -780,6 +788,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding(ethers.utils.defaultAbiCoder.encode(['uint256'], ['1'])),
             amount: {
               value: INTEGERS.ONE,
@@ -811,6 +820,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding(ethers.utils.defaultAbiCoder.encode(['uint256'], [INTEGERS.MAX_UINT_112.toFixed()])),
             amount: {
               value: parA,
@@ -841,6 +851,7 @@ describe('DolomiteAmmPair', () => {
             otherAccountOwner: makerAccount.owner,
             otherAccountId: makerAccount.number,
             autoTrader: lpToken.address,
+            calculateAmountWithMakerAccount: true,
             data: toBytesNoPadding(ethers.utils.defaultAbiCoder.encode(['uint256'], [parB.div(1000).toFixed()])),
             amount: {
               value: INTEGERS.ONE,

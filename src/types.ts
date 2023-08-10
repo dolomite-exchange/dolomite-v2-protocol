@@ -222,6 +222,7 @@ export interface Buy extends Exchange {}
 export interface Sell extends Exchange {}
 
 export interface Trade extends AccountAction {
+  calculateAmountWithMakerAccount: boolean;
   autoTrader: address;
   inputMarketId: Integer;
   outputMarketId: Integer;
@@ -334,6 +335,7 @@ export interface RiskParams {
   minBorrowedValue: Integer;
   accountMaxNumberOfMarketsWithBalances: Integer;
   oracleSentinel: OracleSentinel;
+  callbackGasLimit: Integer;
 }
 
 export interface Balance {

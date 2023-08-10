@@ -86,6 +86,24 @@ describe('OracleSentinel', () => {
     });
   });
 
+  describe('#gracePeriodDuration', () => {
+    it('Should return true when the sequencer is online', async () => {
+      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(false);
+
+      expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
+      expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
+      expect(await oracleSentinel.isLiquidationAllowed()).to.eql(true);
+    });
+
+    it('Should return false when the sequencer is online', async () => {
+      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
+
+      expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
+      expect(await alwaysOnlineOracleSentinel.isLiquidationAllowed()).to.eql(true);
+      expect(await oracleSentinel.isLiquidationAllowed()).to.eql(false);
+    });
+  });
+
   describe('#borrows', () => {
     it('should succeed when borrowing is disabled but borrow is not touched', async () => {
       await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);

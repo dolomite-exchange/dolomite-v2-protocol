@@ -61,7 +61,7 @@ library DolomiteAmmLibrary {
         );
 
         address[] memory pools = new address[](path.length - 1);
-        for (uint i = 0; i < path.length - 1; i++) {
+        for (uint256 i; i < path.length - 1; ++i) {
             pools[i] = pairFor(
                 factory,
                 path[i],
@@ -171,12 +171,12 @@ library DolomiteAmmLibrary {
     // given some amount of an asset and pair reserves, returns an equivalent amount of the other asset
     function quote(uint amountA, uint reserveA, uint reserveB) internal pure returns (uint amountB) {
         Require.that(
-            amountA > 0,
+            amountA != 0,
             FILE,
             "insufficient amount"
         );
         Require.that(
-            reserveA > 0 && reserveB > 0,
+            reserveA != 0 && reserveB != 0,
             FILE,
             "insufficient liquidity"
         );
@@ -186,12 +186,12 @@ library DolomiteAmmLibrary {
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) internal pure returns (uint amountOut) {
         Require.that(
-            amountIn > 0,
+            amountIn != 0,
             FILE,
             "insufficient input amount"
         );
         Require.that(
-            reserveIn > 0 && reserveOut > 0,
+            reserveIn != 0 && reserveOut != 0,
             FILE,
             "insufficient liquidity"
         );
@@ -204,12 +204,12 @@ library DolomiteAmmLibrary {
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
     function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) internal pure returns (uint amountIn) {
         Require.that(
-            amountOut > 0,
+            amountOut != 0,
             FILE,
             "insufficient output amount"
         );
         Require.that(
-            reserveIn > 0 && reserveOut > 0 && reserveOut > amountOut,
+            reserveIn != 0 && reserveOut != 0 && reserveOut > amountOut,
             FILE,
             "insufficient liquidity"
         );
@@ -246,7 +246,7 @@ library DolomiteAmmLibrary {
         );
         amounts = new uint[](path.length);
         amounts[0] = amountIn;
-        for (uint i; i < path.length - 1; i++) {
+        for (uint256 i; i < path.length - 1; ++i) {
             (uint reserveIn, uint reserveOut) = getReservesWei(
                 factory,
                 initCodeHash,
@@ -270,7 +270,7 @@ library DolomiteAmmLibrary {
         );
         amounts = new uint[](path.length);
         amounts[amounts.length - 1] = amountOut;
-        for (uint i = path.length - 1; i > 0; i--) {
+        for (uint256 i = path.length - 1; i != 0; i--) {
             (uint reserveIn, uint reserveOut) = getReservesWei(
                 factory,
                 initCodeHash,
@@ -294,7 +294,7 @@ library DolomiteAmmLibrary {
         );
         amounts = new uint[](path.length);
         amounts[amounts.length - 1] = amountOut;
-        for (uint i = path.length - 1; i > 0; i--) {
+        for (uint256 i = path.length - 1; i != 0; i--) {
             (uint reserveIn, uint reserveOut) = getReserves(
                 factory,
                 initCodeHash,

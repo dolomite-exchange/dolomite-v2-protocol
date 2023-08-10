@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 import { Actions } from "../lib/Actions.sol";
 import { Events } from "../lib/Events.sol";
 import { Interest } from "../lib/Interest.sol";
+import { SafeExternalCallback } from "../lib/SafeExternalCallback.sol";
 import { Storage } from "../lib/Storage.sol";
 import { Types } from "../lib/Types.sol";
 
@@ -67,6 +68,26 @@ library TransferImpl {
             args.market,
             index,
             deltaWei.negative()
+        );
+
+        uint256 callbackGasLimit = state.riskParams.callbackGasLimit;
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.accountOne,
+            args.accountTwo,
+            args.market,
+            deltaWei,
+            /* _secondaryMarketId = */ 0,
+            /* _secondaryDeltaWei = */ Types.zeroWei(),
+            callbackGasLimit
+        );
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.accountTwo,
+            args.accountOne,
+            args.market,
+            deltaWei.negative(),
+            /* _secondaryMarketId = */ 0,
+            /* _secondaryDeltaWei = */ Types.zeroWei(),
+            callbackGasLimit
         );
 
         Events.logTransfer(

@@ -152,6 +152,7 @@ library Actions {
      */
     struct TradeArgs {
         Types.AssetAmount amount;
+        bool calculateAmountWithMakerAccount;
         Account.Info takerAccount;
         Account.Info makerAccount;
         uint256 inputMarket;
@@ -345,14 +346,16 @@ library Actions {
         pure
         returns (TradeArgs memory)
     {
+        (bool calculateAmountWithMakerAccount, bytes memory tradeData) = abi.decode(args.data, (bool, bytes));
         return TradeArgs({
             amount: args.amount,
+            calculateAmountWithMakerAccount: calculateAmountWithMakerAccount,
             takerAccount: accounts[args.accountId],
             makerAccount: accounts[args.otherAccountId],
             inputMarket: args.primaryMarketId,
             outputMarket: args.secondaryMarketId,
             autoTrader: args.otherAddress,
-            tradeData: args.data
+            tradeData: tradeData
         });
     }
 

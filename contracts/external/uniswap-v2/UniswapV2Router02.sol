@@ -521,7 +521,7 @@ contract UniswapV2Router02 {
     // **** SWAP ****
     // requires the initial amount to have already been sent to the first pair
     function _swap(uint[] memory amounts, address[] memory path, address _to) internal {
-        for (uint i; i < path.length - 1; i++) {
+        for (uint256 i; i < path.length - 1; ++i) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = UniswapV2Library.sortTokens(input, output);
             uint amountOut = amounts[i + 1];
@@ -539,7 +539,7 @@ contract UniswapV2Router02 {
     // **** SWAP (supporting fee-on-transfer tokens) ****
     // requires the initial amount to have already been sent to the first pair
     function _swapSupportingFeeOnTransferTokens(address[] memory path, address _to) internal {
-        for (uint i; i < path.length - 1; i++) {
+        for (uint256 i; i < path.length - 1; ++i) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = UniswapV2Library.sortTokens(input, output);
             IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, input, output));

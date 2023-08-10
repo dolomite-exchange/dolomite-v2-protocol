@@ -26,7 +26,6 @@ const {
   isMaticProd,
   isMumbaiMatic,
   isArbitrumOne,
-  isArbitrumRinkeby,
   isArbitrumGoerli,
 } = require('./helpers');
 const {
@@ -134,7 +133,7 @@ function getTokens(network) {
       { address: getMaticAddress(network, TokenD) },
       { address: getUsdcAddress(network, TokenA) },
     ];
-  } else if (isArbitrumOne(network) || isArbitrumRinkeby(network) || isArbitrumGoerli(network)) {
+  } else if (isArbitrumOne(network) || isArbitrumGoerli(network)) {
     const tokens = [
       { address: getWethAddress(network, TestWETH) },
       { address: getDaiAddress(network, TokenB) },

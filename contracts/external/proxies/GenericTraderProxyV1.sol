@@ -307,7 +307,8 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             _userConfig.balanceCheckFlag == AccountBalanceLib.BalanceCheckFlag.Both
             || _userConfig.balanceCheckFlag == AccountBalanceLib.BalanceCheckFlag.To
         ) {
-            for (uint256 i = 0; i < _transferCollateralParams.transferAmounts.length; i++) {
+            uint256 length = _transferCollateralParams.transferAmounts.length;
+            for (uint256 i; i < length; ++i) {
                 AccountBalanceLib.verifyBalanceIsNonNegative(
                     cache.dolomiteMargin,
                     accounts[TRANSFER_ACCOUNT_ID].owner,
@@ -448,7 +449,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         pure
     {
         Require.that(
-            _param.transferAmounts.length > 0,
+            _param.transferAmounts.length != 0,
             FILE,
             "Invalid transfer amounts length"
         );
@@ -466,9 +467,10 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             ? _param.fromAccountNumber
             : _param.toAccountNumber;
 
-        for (uint256 i = 0; i < _param.transferAmounts.length; i++) {
+        uint256 length = _param.transferAmounts.length;
+        for (uint256 i; i < length; ++i) {
             Require.that(
-                _param.transferAmounts[i].amountWei > 0,
+                _param.transferAmounts[i].amountWei != 0,
                 FILE,
                 "Invalid transfer amount at index",
                 i
@@ -517,7 +519,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         uint256 toAccountId = _transferCollateralParam.fromAccountNumber == _traderAccountNumber
             ? TRANSFER_ACCOUNT_ID
             : TRADE_ACCOUNT_ID;
-        for (uint256 i = 0; i < _transferActionsLength; i++) {
+        for (uint256 i; i < _transferActionsLength; ++i) {
             _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferAction(
                 fromAccountId,
                 toAccountId,

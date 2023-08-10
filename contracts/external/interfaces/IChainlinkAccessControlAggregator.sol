@@ -19,29 +19,16 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import { IChainlinkAccessControlAggregator } from "./IChainlinkAccessControlAggregator.sol";
-
 
 /**
- * @title IChainlinkAggregator
+ * @title IChainlinkAccessControlAggregator
  * @author Dolomite
  *
- * Gets the latest price from the Chainlink Oracle Network. Amount of decimals depends on the base.
+ * Gets configuration for an aggregator proxy
  */
-contract IChainlinkAggregator {
+contract IChainlinkAccessControlAggregator {
 
-    function aggregator() external view returns (IChainlinkAccessControlAggregator);
+    function maxAnswer() external view returns (int192);
 
-    function decimals() external view returns (uint8);
-
-    function latestRoundData()
-        external
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        );
+    function minAnswer() external view returns (int192);
 }

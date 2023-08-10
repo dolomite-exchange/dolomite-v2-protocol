@@ -1343,7 +1343,14 @@ describe('Admin', () => {
     it('Fails for when too low', async () => {
       await expectThrow(
         dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(1, { from: admin }),
-        'AdminImpl: Acct MaxNumberOfMarkets too low',
+        'AdminImpl: Max number of markets too low',
+      );
+    });
+
+    it('Fails for when too high', async () => {
+      await expectThrow(
+        dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(65, { from: admin }),
+        'AdminImpl: Max number of markets too high',
       );
     });
   });
@@ -1373,11 +1380,27 @@ describe('Admin', () => {
 
     it('Fails for when borrowing not allowed or liquidations not allowed', async () => {
       const oracleSentinel = await deployChainlinkOracleSentinel();
-      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true)
+      await dolomiteMargin.testing.chainlinkFlags.setShouldReturnOffline(true);
       await expectThrow(
         dolomiteMargin.admin.setOracleSentinel(oracleSentinel.address, { from: admin }),
         'AdminImpl: Invalid oracle sentinel',
       );
+    });
+  });
+
+  describe('#ownerSetCallbackGasLimit', () => {
+    const callbackGasLimit = new BigNumber(12345678);
+    it('Successfully sets value', async () => {
+      const txResult = await dolomiteMargin.admin.setCallbackGasLimit(callbackGasLimit, { from: admin });
+      const logs = dolomiteMargin.logs.parseLogs(txResult);
+      expect(logs.length).to.eql(1);
+      expect(logs[0].name).to.eql('LogSetCallbackGasLimit');
+      expect(logs[0].args.callbackGasLimit).to.eql(callbackGasLimit);
+      expect((await dolomiteMargin.getters.getCallbackGasLimit())).to.eql(callbackGasLimit);
+    });
+
+    it('Fails for non-admin', async () => {
+      await expectThrow(dolomiteMargin.admin.setCallbackGasLimit(callbackGasLimit, { from: nonAdmin }));
     });
   });
 

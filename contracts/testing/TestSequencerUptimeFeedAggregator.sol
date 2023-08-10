@@ -1,6 +1,6 @@
 /*
 
-    Copyright 2020 Dolomite.
+    Copyright 2022 Dolomite.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,45 +17,52 @@
 */
 
 pragma solidity ^0.5.7;
+pragma experimental ABIEncoderV2;
 
 import { IChainlinkAggregator } from "../external/interfaces/IChainlinkAggregator.sol";
 import { IChainlinkAccessControlAggregator } from "../external/interfaces/IChainlinkAccessControlAggregator.sol";
 
 
-/**
- * @dev Gets the latest price from the Chainlink Oracle Network. Amount of decimals depends on the base.
- */
-contract TestUsdcUsdChainlinkAggregator is IChainlinkAggregator, IChainlinkAccessControlAggregator {
+contract TestSequencerUptimeFeedAggregator is IChainlinkAggregator {
+
+    int256 internal _latestAnswer;
+    uint256 internal _lastStartedAt;
+    uint256 internal _lastUpdatedAt;
 
     function aggregator() external view returns (IChainlinkAccessControlAggregator) {
         // For the sake of simplicity, we implement the IChainlinkAccessControlAggregator interface here
-        return IChainlinkAccessControlAggregator(address(this));
+        return IChainlinkAccessControlAggregator(address(0));
     }
 
     function decimals() external view returns (uint8) {
-        return 8;
-    }
-
-    function maxAnswer() external view returns (int192) {
-        return 95780971304118053647396689196894323976171195136475135;
-    }
-
-    function minAnswer() external view returns (int192) {
-        return 1;
+        return 0;
     }
 
     function latestRoundData()
-        external
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
-    {
-        // $1.00
-        return (0, 100000000, 0, block.timestamp, 0);
+    external
+    view
+    returns (
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) {
+        return (
+            0,
+            _latestAnswer,
+            _lastStartedAt,
+            _lastUpdatedAt,
+            0
+        );
+    }
+
+    function setLatestAnswer(
+        int256 __latestAnswer
+    )
+    public {
+        _latestAnswer = __latestAnswer;
+        _lastStartedAt = block.timestamp;
+        _lastUpdatedAt = block.timestamp;
     }
 }

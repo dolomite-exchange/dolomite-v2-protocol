@@ -312,6 +312,16 @@ contract Admin is
         AdminImpl.ownerSetOracleSentinel(g_state, oracleSentinel);
     }
 
+    function ownerSetCallbackGasLimit(
+        uint256 callbackGasLimit
+    )
+    public
+    onlyOwner
+    nonReentrant
+    {
+        AdminImpl.ownerSetCallbackGasLimit(g_state, callbackGasLimit);
+    }
+
     function ownerSetAccountRiskOverride(
         address accountOwner,
         IAccountRiskOverrideSetter accountRiskOverrideSetter

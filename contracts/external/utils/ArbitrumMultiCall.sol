@@ -25,7 +25,7 @@ contract ArbitrumMultiCall {
     function aggregate(Call[] memory calls) public returns (uint256 blockNumber, bytes[] memory returnData) {
         blockNumber = IArbitrumSys(address(100)).arbBlockNumber();
         returnData = new bytes[](calls.length);
-        for (uint256 i = 0; i < calls.length; i++) {
+        for (uint256 i; i < calls.length; ++i) {
             // solium-disable-next-line security/no-low-level-calls
             (bool success, bytes memory result) = calls[i].target.call(calls[i].callData);
             if (!success) {
@@ -97,7 +97,7 @@ contract ArbitrumMultiCall {
         bytes memory _string = new bytes(42);
         _string[0] = "0";
         _string[1] = "x";
-        for (uint i = 0; i < 20; i++) {
+        for (uint256 i; i < 20; ++i) {
             _string[2 + i * 2] = HEX[uint8(_bytes[i + 12] >> 4)];
             _string[3 + i * 2] = HEX[uint8(_bytes[i + 12] & 0x0f)];
         }

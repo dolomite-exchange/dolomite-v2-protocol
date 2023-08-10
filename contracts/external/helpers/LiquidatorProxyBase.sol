@@ -114,7 +114,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         MarketInfo memory owedMarketInfo = _binarySearch(_constants.markets, _constants.owedMarket);
 
         uint256 owedPriceAdj;
-        if (_constants.expiry > 0) {
+        if (_constants.expiry != 0) {
             (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
                 _constants.liquidAccount.owner,
                 _constants.heldMarket,
@@ -284,7 +284,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         returns (uint256 _newInputAmountWei, uint256 _newMinOutputAmountWei)
     {
         // at this point, _cache.owedWeiToLiquidate should be the max amount that can be liquidated on the user.
-        assert(_cache.owedWeiToLiquidate > 0); // assert it was initialized
+        assert(_cache.owedWeiToLiquidate != 0); // assert it was initialized
 
         uint256 desiredLiquidationOwedAmount = _minOutputAmountWei;
         if (
@@ -396,7 +396,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
 
         uint counter = 0;
         MarketInfo[] memory marketInfos = new MarketInfo[](marketsLength);
-        for (uint i = 0; i < marketBitmaps.length; i++) {
+        for (uint256 i; i < marketBitmaps.length; ++i) {
             uint bitmap = marketBitmaps[i];
             while (bitmap != 0) {
                 uint nextSetBit = Bits.getLeastSignificantBit(bitmap);
@@ -450,7 +450,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         Monetary.Value memory supplyValue;
         Monetary.Value memory borrowValue;
 
-        for (uint256 i = 0; i < marketIds.length; i++) {
+        for (uint256 i; i < marketIds.length; ++i) {
             Types.Par memory par = dolomiteMargin.getAccountPar(account, marketIds[i]);
             MarketInfo memory marketInfo = _binarySearch(marketInfos, marketIds[i]);
             Types.Wei memory userWei = Interest.parToWei(par, marketInfo.index);
@@ -475,7 +475,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256[] memory bitmaps,
         uint marketsLength
     ) private pure returns (uint) {
-        for (uint i = 0; i < markets.length; i++) {
+        for (uint256 i; i < markets.length; ++i) {
             if (!Bits.hasBit(bitmaps, markets[i])) {
                 Bits.setBit(bitmaps, markets[i]);
                 marketsLength += 1;
@@ -495,7 +495,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             revert("LiquidatorProxyBase: Market not found");
         }
 
-        uint mid = beginInclusive + len / 2;
+        uint mid = beginInclusive + (len >> 1);
         uint midMarketId = markets[mid].marketId;
         if (marketId < midMarketId) {
             return _binarySearch(

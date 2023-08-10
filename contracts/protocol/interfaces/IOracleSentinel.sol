@@ -29,6 +29,25 @@ pragma experimental ABIEncoderV2;
  */
 contract IOracleSentinel {
 
+    // ============ Events ============
+
+    event GracePeriodSet(
+        uint256 gracePeriod
+    );
+
+    // ============ Functions ============
+
+    /**
+     * @dev Allows the owner to set the grace period duration, which specifies how long the system will disallow
+     *      liquidations after sequencer is back online. Only callable by the owner.
+     *
+     * @param _gracePeriod  The new duration of the grace period
+     */
+    function ownerSetGracePeriod(
+        uint256 _gracePeriod
+    )
+        external;
+
     /**
      * @return True if new borrows should be allowed, false otherwise
      */
@@ -38,4 +57,10 @@ contract IOracleSentinel {
      * @return True if liquidations should be allowed, false otherwise
      */
     function isLiquidationAllowed() external view returns (bool);
+
+    /**
+     * @return  The duration between when the feed comes back online and when the system will allow liquidations to be
+     *          processed normally
+     */
+    function gracePeriod() external view returns (uint256);
 }

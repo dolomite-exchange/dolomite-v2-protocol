@@ -22,7 +22,6 @@ pragma experimental ABIEncoderV2;
 import { Monetary } from "../protocol/lib/Monetary.sol";
 
 import { ChainlinkPriceOracleV1 } from "../external/oracles/ChainlinkPriceOracleV1.sol";
-import { IChainlinkFlags } from "../external/interfaces/IChainlinkFlags.sol";
 
 
 /**
@@ -38,34 +37,21 @@ contract TestChainlinkPriceOracleV1 is ChainlinkPriceOracleV1 {
 
     mapping (address => uint8) public tokenToPercentChange;
 
-    /**
-     * Note, these arrays are set up, such that each index corresponds with one-another.
-     *
-     * @param tokens                The tokens that are supported by this adapter.
-     * @param chainlinkAggregators  The Chainlink aggregators that have on-chain prices.
-     * @param tokenDecimals         The number of decimals that each token has.
-     * @param tokenPairs            The token against which this token's value is compared using the aggregator. The
-     *                              zero address means USD.
-     * @param aggregatorDecimals    The number of decimals that the value has that comes back from the corresponding
-     *                              Chainlink Aggregator.
-     */
     constructor(
-        address[] memory tokens,
-        address[] memory chainlinkAggregators,
-        uint8[] memory tokenDecimals,
-        address[] memory tokenPairs,
-        uint8[] memory aggregatorDecimals
+        address[] memory _tokens,
+        address[] memory _chainlinkAggregators,
+        uint8[] memory _tokenDecimals,
+        address[] memory _tokenPairs,
+        address _dolomiteMargin
     )
     public
     ChainlinkPriceOracleV1(
-        tokens,
-        chainlinkAggregators,
-        tokenDecimals,
-        tokenPairs,
-        aggregatorDecimals
-    ) {
-        // solium-disable-line no-empty-blocks
-    }
+        _tokens,
+        _chainlinkAggregators,
+        _tokenDecimals,
+        _tokenPairs,
+        _dolomiteMargin
+    ) { /* solium-disable-line no-empty-blocks */ }
 
     // ============ Admin Functions ============
 
@@ -78,7 +64,10 @@ contract TestChainlinkPriceOracleV1 is ChainlinkPriceOracleV1 {
     function changeOraclePrice(
         address token,
         uint8 percent
-    ) public onlyOwner {
+    )
+        public
+        onlyDolomiteMarginOwner(msg.sender)
+    {
         tokenToPercentChange[token] = percent;
         if (percent == 0 || percent == 100) {
             emit UnsetOverrideOraclePrice(token);
@@ -103,5 +92,4 @@ contract TestChainlinkPriceOracleV1 is ChainlinkPriceOracleV1 {
             return Monetary.Price(price.value.mul(percent).div(100));
         }
     }
-
 }

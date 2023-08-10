@@ -71,7 +71,7 @@ contract SimpleFeeOwner is Ownable {
     )
     external
     onlyOwner {
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; ++i) {
             address token = tokens[i];
             uint amount = IERC20(token).balanceOf(address(this));
             IERC20(token).safeTransfer(recipient, amount);
@@ -84,7 +84,7 @@ contract SimpleFeeOwner is Ownable {
     )
     external
     onlyOwner {
-        for (uint i = 0; i < lpTokens.length; i++) {
+        for (uint256 i; i < lpTokens.length; ++i) {
             IDolomiteAmmPair lpToken = IDolomiteAmmPair(lpTokens[i]);
             lpToken.transfer(address(lpToken), lpToken.balanceOf(address(this)));
             lpToken.burn(address(this), 0);

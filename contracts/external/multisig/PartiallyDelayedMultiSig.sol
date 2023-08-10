@@ -89,7 +89,7 @@ contract PartiallyDelayedMultiSig is
             "ADDRESS_AND_SELECTOR_MISMATCH"
         );
 
-        for (uint256 i = 0; i < _noDelaySelectors.length; i++) {
+        for (uint256 i; i < _noDelaySelectors.length; ++i) {
             address destination = _noDelayDestinations[i];
             bytes4 selector = _noDelaySelectors[i];
             instantData[destination][selector] = true;

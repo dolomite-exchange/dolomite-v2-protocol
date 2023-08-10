@@ -46,7 +46,8 @@ contract TestDolomiteMargin is DolomiteMargin {
         Decimal.D256 memory earningsRate,
         Monetary.Value memory minBorrowedValue,
         uint256 accountMaxNumberOfMarketsWithBalances,
-        IOracleSentinel oracleSentinel
+        IOracleSentinel oracleSentinel,
+        uint256 callbackGasLimit
     )
         public
         DolomiteMargin(
@@ -56,7 +57,8 @@ contract TestDolomiteMargin is DolomiteMargin {
             earningsRate,
             minBorrowedValue,
             accountMaxNumberOfMarketsWithBalances,
-            oracleSentinel
+            oracleSentinel,
+            callbackGasLimit
         )
     {}
 

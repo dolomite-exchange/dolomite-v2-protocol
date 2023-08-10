@@ -142,7 +142,7 @@ contract LiquidatorProxyV4WithGenericTrader is
             constants.dolomiteMargin.getAccountMarketsWithBalances(_solidAccount),
             constants.liquidMarkets
         );
-        constants.expiryProxy = _expiry > 0 ? EXPIRY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
+        constants.expiryProxy = _expiry != 0 ? EXPIRY: IExpiry(address(0)); // don't read EXPIRY; it's not needed
         constants.expiry = uint32(_expiry);
 
         LiquidatorProxyCache memory liquidatorCache = _initializeCache(constants);
@@ -221,7 +221,7 @@ contract LiquidatorProxyV4WithGenericTrader is
         pure
     {
         // solidAccountId is always at index 0, liquidAccountId is always at index 1
-        if (_constants.expiry > 0) {
+        if (_constants.expiry != 0) {
             _actions[_genericCache.actionsCursor++] = AccountActionLib.encodeExpiryLiquidateAction(
                 TRADE_ACCOUNT_ID,
                 LIQUID_ACCOUNT_ID,

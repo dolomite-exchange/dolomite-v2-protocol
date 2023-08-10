@@ -27,6 +27,7 @@ import { Events } from "../lib/Events.sol";
 import { Exchange } from "../lib/Exchange.sol";
 import { Interest } from "../lib/Interest.sol";
 import { Require } from "../lib/Require.sol";
+import { SafeExternalCallback } from "../lib/SafeExternalCallback.sol";
 import { Storage } from "../lib/Storage.sol";
 import { Types } from "../lib/Types.sol";
 
@@ -54,10 +55,7 @@ library TradeImpl {
         address takerToken = state.getToken(args.takerMarket);
         address makerToken = state.getToken(args.makerMarket);
 
-        (
-            Types.Par memory makerPar,
-            Types.Wei memory makerWei
-        ) = state.getNewParAndDeltaWei(
+        (, Types.Wei memory makerWei) = state.getNewParAndDeltaWei(
             args.account,
             args.makerMarket,
             makerIndex,
@@ -88,10 +86,11 @@ library TradeImpl {
             tokensReceived.value
         );
 
-        state.setPar(
+        state.setParFromDeltaWei(
             args.account,
             args.makerMarket,
-            makerPar
+            makerIndex,
+            tokensReceived
         );
 
         state.setParFromDeltaWei(
@@ -185,15 +184,36 @@ library TradeImpl {
             args.inputMarket
         );
 
-        (
-            Types.Par memory newInputPar,
-            Types.Wei memory inputWei
-        ) = state.getNewParAndDeltaWei(
-            args.makerAccount,
-            args.inputMarket,
-            inputIndex,
-            args.amount
-        );
+        Types.Par memory newInputPar;
+        Types.Wei memory inputWei;
+        if (args.calculateAmountWithMakerAccount) {
+            (newInputPar, inputWei) = state.getNewParAndDeltaWei(
+                args.makerAccount,
+                args.inputMarket,
+                inputIndex,
+                args.amount
+            );
+        } else {
+            (,Types.Wei memory takerInputWei) = state.getNewParAndDeltaWei(
+                args.takerAccount,
+                args.inputMarket,
+                inputIndex,
+                args.amount
+            );
+            // invert the sign for the maker account
+            Types.AssetAmount memory makerAssetAmount = Types.AssetAmount({
+                sign: !takerInputWei.sign,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: takerInputWei.value
+            });
+            (newInputPar, inputWei) = state.getNewParAndDeltaWei(
+                args.makerAccount,
+                args.inputMarket,
+                inputIndex,
+                makerAssetAmount
+            );
+        }
 
         Types.AssetAmount memory outputAmount = IAutoTrader(args.autoTrader).getTradeCost(
             args.inputMarket,
@@ -247,6 +267,26 @@ library TradeImpl {
             args.outputMarket,
             outputIndex,
             outputWei.negative()
+        );
+
+        uint256 callbackGasLimit = state.riskParams.callbackGasLimit;
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.makerAccount,
+            args.takerAccount,
+            args.inputMarket,
+            inputWei,
+            args.outputMarket,
+            outputWei,
+            callbackGasLimit
+        );
+        SafeExternalCallback.callInternalBalanceChangeIfNecessary(
+            args.takerAccount,
+            args.makerAccount,
+            args.inputMarket,
+            inputWei.negative(),
+            args.outputMarket,
+            outputWei.negative(),
+            callbackGasLimit
         );
 
         Events.logTrade(

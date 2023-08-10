@@ -92,7 +92,7 @@ contract PayableProxy is OnlyDolomiteMargin, ReentrancyGuard {
         }
 
         // validate the input
-        for (uint256 i = 0; i < actions.length; i++) {
+        for (uint256 i; i < actions.length; ++i) {
             Actions.ActionArgs memory action = actions[i];
 
             // Can only operate on accounts owned by msg.sender

@@ -135,6 +135,14 @@ export class Getters {
     );
   }
 
+  public async getCallbackGasLimit(options?: ContractConstantCallOptions): Promise<Integer> {
+    const value = await this.contracts.callConstantContractFunction(
+      this.contracts.dolomiteMargin.methods.getCallbackGasLimit(),
+      options,
+    );
+    return new BigNumber(value);
+  }
+
   public async getAccountRiskOverrideSetterByAccountOwner(
     accountOwner: address,
     options?: ContractConstantCallOptions,
@@ -206,6 +214,7 @@ export class Getters {
       this.getMinBorrowedValue(options),
       this.getAccountMaxNumberOfMarketsWithBalances(options),
       this.getOracleSentinel(options),
+      this.getCallbackGasLimit(options),
     ]);
     return {
       marginRatio: result[0],
@@ -214,6 +223,7 @@ export class Getters {
       minBorrowedValue: result[3],
       accountMaxNumberOfMarketsWithBalances: result[4],
       oracleSentinel: result[5],
+      callbackGasLimit: result[6],
     };
   }
 

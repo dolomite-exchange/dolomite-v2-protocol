@@ -268,7 +268,7 @@ library Require {
         bytes memory result = abi.encodePacked(input);
 
         // determine the length of the input by finding the location of the last non-zero byte
-        for (uint256 i = 32; i > 0; ) {
+        for (uint256 i = 32; i != 0; ) {
             // reverse-for-loops with unsigned integer
             /* solium-disable-next-line security/no-modify-for-iter-var */
             i--;
@@ -314,7 +314,7 @@ library Require {
 
         // populate the string starting with the least-significant character
         j = input;
-        for (uint256 i = length; i > 0; ) {
+        for (uint256 i = length; i != 0; ) {
             // reverse-for-loops with unsigned integer
             /* solium-disable-next-line security/no-modify-for-iter-var */
             i--;
@@ -346,7 +346,7 @@ library Require {
         result[1] = byte(uint8(ASCII_LOWER_EX));
 
         // for each byte (starting from the lowest byte), populate the result with two characters
-        for (uint256 i = 0; i < 20; i++) {
+        for (uint256 i; i < 20; ++i) {
             // each byte takes two characters
             uint256 shift = i * 2;
 
@@ -379,7 +379,7 @@ library Require {
         result[1] = byte(uint8(ASCII_LOWER_EX));
 
         // for each byte (starting from the lowest byte), populate the result with two characters
-        for (uint256 i = 0; i < 32; i++) {
+        for (uint256 i; i < 32; ++i) {
             // each byte takes two characters
             uint256 shift = i * 2;
 

@@ -19,13 +19,17 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+import { Ownable } from "@openzeppelin/contracts/ownership/Ownable.sol";
+
+import { IChainlinkAccessControlAggregator } from "../external/interfaces/IChainlinkAccessControlAggregator.sol";
 import { IChainlinkAggregator } from "../external/interfaces/IChainlinkAggregator.sol";
 
-contract TestPriceAggregator is IChainlinkAggregator, Ownable {
+
+contract TestPriceAggregator is IChainlinkAggregator, IChainlinkAccessControlAggregator, Ownable {
 
     string public symbol;
     int256 internal _latestAnswer;
+    uint256 internal _lastUpdatedAt;
 
     constructor(
         string memory _symbol
@@ -35,8 +39,40 @@ contract TestPriceAggregator is IChainlinkAggregator, Ownable {
         symbol = _symbol;
     }
 
-    function latestAnswer() public view returns (int256) {
-        return _latestAnswer;
+    function aggregator() external view returns (IChainlinkAccessControlAggregator) {
+        // For the sake of simplicity, we implement the IChainlinkAccessControlAggregator interface here
+        return IChainlinkAccessControlAggregator(address(this));
+    }
+
+    function decimals() external view returns (uint8) {
+        return 8;
+    }
+
+    function maxAnswer() external view returns (int192) {
+        return 95780971304118053647396689196894323976171195136475135;
+    }
+
+    function minAnswer() external view returns (int192) {
+        return 1;
+    }
+
+    function latestRoundData()
+    external
+    view
+    returns (
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) {
+        return (
+            0,
+            _latestAnswer,
+            0,
+            _lastUpdatedAt,
+            0
+        );
     }
 
     function setLatestAnswer(
@@ -45,6 +81,6 @@ contract TestPriceAggregator is IChainlinkAggregator, Ownable {
     public
     onlyOwner {
         _latestAnswer = __latestAnswer;
+        _lastUpdatedAt = block.timestamp;
     }
-
 }

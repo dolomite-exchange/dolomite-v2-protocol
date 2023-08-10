@@ -24,7 +24,7 @@ function isEthereumNetwork(network) {
 }
 
 function isArbitrumNetwork(network) {
-  return isArbitrumOne(network) || isArbitrumRinkeby(network) || isArbitrumGoerli(network);
+  return isArbitrumOne(network) || isArbitrumGoerli(network);
 }
 
 function isMaticNetwork(network) {
@@ -69,11 +69,6 @@ function isMumbaiMatic(network) {
   return network.startsWith('mumbai_matic');
 }
 
-function isArbitrumRinkeby(network) {
-  verifyNetwork(network);
-  return network.startsWith('arbitrum_rinkeby');
-}
-
 function isArbitrumGoerli(network) {
   verifyNetwork(network);
   return network.startsWith('arbitrum_goerli');
@@ -93,9 +88,6 @@ function getChainId(network) {
   }
   if (isArbitrumOne(network)) {
     return 42161;
-  }
-  if (isArbitrumRinkeby(network)) {
-    return 421611;
   }
   if (isArbitrumGoerli(network)) {
     return 421613;
@@ -145,6 +137,7 @@ async function getRiskParams(network) {
     earningsRate: { value: decimalToString('0.90') },
     minBorrowedValue: { value: decimalToString(minBorrowedValue) },
     accountMaxNumberOfMarketsWithBalances: '32',
+    callbackGasLimit: '2000000',
   };
 }
 
@@ -190,7 +183,7 @@ function getSenderAddress(network, accounts) {
   if (isMaticProd(network)) {
     return accounts[0];
   }
-  if (isArbitrumOne(network) || isArbitrumRinkeby(network) || isArbitrumGoerli(network)) {
+  if (isArbitrumOne(network) || isArbitrumGoerli(network)) {
     return web3.eth.accounts.privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY).address;
   }
   throw new Error('Cannot find Sender address');
@@ -201,7 +194,6 @@ function getDelayedMultisigAddress(network) {
     isEthereumMainnet(network)
     || isGoerli(network)
     || isArbitrumOne(network)
-    || isArbitrumRinkeby(network)
     || isArbitrumGoerli(network)
   ) {
     return '0xE412991Fb026df586C2f2F9EE06ACaD1A34f585B';
@@ -219,7 +211,7 @@ function getGnosisSafeAddress(network) {
   if (isEthereumMainnet(network) || isGoerli(network) || isArbitrumOne(network)) {
     return '0xa75c21C5BE284122a87A37a76cc6C4DD3E55a1D4';
   }
-  if (isArbitrumRinkeby(network) || isArbitrumGoerli(network)) {
+  if (isArbitrumGoerli(network)) {
     return '0xE412991Fb026df586C2f2F9EE06ACaD1A34f585B'; // use the delayed multi sig
   }
   if (isMumbaiMatic(network)) {
@@ -232,9 +224,9 @@ function getChainlinkFlags(network, TestChainlinkFlags) {
   if (isDevNetwork(network)) {
     return TestChainlinkFlags.address;
   } else if (isArbitrumOne(network)) {
-    return '0x3C14e07Edd0dC67442FA96f1Ec6999c57E810a83';
-  } else if (isArbitrumRinkeby(network)) {
-    return '0x491B1dDA0A8fa069bbC1125133A975BF4e85a91b';
+    return '0xFdB631F5EE196F0ed6FAa767959853A9F217697D';
+  } else if (isArbitrumGoerli(network)) {
+    return '0x4da69F028a5790fCCAfe81a75C0D24f46ceCDd69';
   }
   return '0x0000000000000000000000000000000000000000';
 }
@@ -270,7 +262,6 @@ module.exports = {
   isProductionNetwork,
   isGoerli,
   isArbitrumOne,
-  isArbitrumRinkeby,
   isArbitrumGoerli,
   getChainId,
   isDevNetwork,
@@ -287,7 +278,7 @@ module.exports = {
   getSenderAddress,
   getDelayedMultisigAddress,
   getGnosisSafeAddress,
-  getChainlinkFlags,
+  getChainlinkSequencerUptimeFeed: getChainlinkFlags,
   getUniswapV3MultiRouter,
   shouldOverwrite,
   getNoOverwriteParams,
