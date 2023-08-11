@@ -88,16 +88,40 @@ describe('ChainlinkPriceOracleV1', () => {
     });
 
     it('reverts when the price is too low', async () => {
-      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(INTEGERS.MAX_UINT);
-      await chainlinkOracle()
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(INTEGERS.ONE);
+      await dolomiteMargin.testing.chainlinkAggregator.setMinAnswer(INTEGERS.MAX_INT_192);
+      await dolomiteMargin.chainlinkPriceOracle.ownerInsertOrUpdateOracleToken(
+        dolomiteMargin.testing.tokenD.address,
+        18,
+        dolomiteMargin.testing.chainlinkAggregator.address,
+        ADDRESSES.ZERO,
+        { from: admin },
+      );
       await expectThrow(
         dolomiteMargin.contracts.callConstantContractFunction(
-          chainlinkOracle().getPrice(ADDRESSES.TEST_SAI_PRICE_ORACLE),
+          chainlinkOracle().getPrice(dolomiteMargin.testing.tokenD.address),
         ),
+        'ChainlinkPriceOracleV1: Chainlink price too low'
       );
     });
 
-    it('reverts when the price is too high', async () => {});
+    it('reverts when the price is too high', async () => {
+      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(INTEGERS.MAX_INT_192);
+      await dolomiteMargin.testing.chainlinkAggregator.setMaxAnswer(INTEGERS.ONE);
+      await dolomiteMargin.chainlinkPriceOracle.ownerInsertOrUpdateOracleToken(
+        dolomiteMargin.testing.tokenD.address,
+        18,
+        dolomiteMargin.testing.chainlinkAggregator.address,
+        ADDRESSES.ZERO,
+        { from: admin },
+      );
+      await expectThrow(
+        dolomiteMargin.contracts.callConstantContractFunction(
+          chainlinkOracle().getPrice(dolomiteMargin.testing.tokenD.address),
+        ),
+        'ChainlinkPriceOracleV1: Chainlink price too high'
+      );
+    });
   });
 
   describe('#ownerSetStalenessThreshold', () => {
@@ -165,14 +189,14 @@ describe('ChainlinkPriceOracleV1', () => {
         tokenAddress,
        9,
         ADDRESSES.TEST_SAI_PRICE_ORACLE,
-        ADDRESSES.TEST_UNISWAP,
+        ADDRESSES.ZERO,
         { from: admin },
       );
       expect(await dolomiteMargin.chainlinkPriceOracle.getTokenDecimalsByToken(tokenAddress)).to.eql(9);
       expect(await dolomiteMargin.chainlinkPriceOracle.getAggregatorByToken(tokenAddress))
         .to.eql(ADDRESSES.TEST_SAI_PRICE_ORACLE);
       expect(await dolomiteMargin.chainlinkPriceOracle.getCurrencyPairingByToken(tokenAddress))
-        .to.eql(ADDRESSES.TEST_UNISWAP);
+        .to.eql(ADDRESSES.ZERO);
     });
 
     it('fails when invoked by non-admin', async () => {

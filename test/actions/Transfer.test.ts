@@ -4,15 +4,7 @@ import { TestDolomiteMargin } from '../modules/TestDolomiteMargin';
 import { resetEVM, snapshot } from '../helpers/EVM';
 import { setupMarkets } from '../helpers/DolomiteMarginHelpers';
 import { expectThrow } from '../helpers/Expect';
-import {
-  AccountStatus,
-  address,
-  AmountDenomination,
-  AmountReference,
-  Integer,
-  INTEGERS,
-  Transfer,
-} from '../../src';
+import { AccountStatus, address, AmountDenomination, AmountReference, Integer, INTEGERS, Transfer } from '../../src';
 
 let owner1: address;
 let owner2: address;
@@ -66,18 +58,8 @@ describe('Transfer', () => {
       }),
       dolomiteMargin.permissions.approveOperator(operator, { from: owner1 }),
       dolomiteMargin.permissions.approveOperator(operator, { from: owner2 }),
-      dolomiteMargin.testing.setAccountBalance(
-        owner1,
-        accountNumber1,
-        collateralMarket,
-        collateralAmount,
-      ),
-      dolomiteMargin.testing.setAccountBalance(
-        owner2,
-        accountNumber2,
-        collateralMarket,
-        collateralAmount,
-      ),
+      dolomiteMargin.testing.setAccountBalance(owner1, accountNumber1, collateralMarket, collateralAmount),
+      dolomiteMargin.testing.setAccountBalance(owner2, accountNumber2, collateralMarket, collateralAmount),
     ]);
     snapshotId = await snapshot();
   });
@@ -96,18 +78,8 @@ describe('Transfer', () => {
         borrow: INTEGERS.ONE,
         supply: INTEGERS.ONE,
       }),
-      dolomiteMargin.testing.setAccountBalance(
-        owner1,
-        accountNumber1,
-        market,
-        fullAmount,
-      ),
-      dolomiteMargin.testing.setAccountBalance(
-        owner2,
-        accountNumber2,
-        market,
-        fullAmount,
-      ),
+      dolomiteMargin.testing.setAccountBalance(owner1, accountNumber1, market, fullAmount),
+      dolomiteMargin.testing.setAccountBalance(owner2, accountNumber2, market, fullAmount),
     ]);
 
     const txResult = await expectTransferOkay({
@@ -191,9 +163,7 @@ describe('Transfer', () => {
     const interestRateLog = logs[6];
     expect(interestRateLog.name).to.eql('LogInterestRate');
     expect(interestRateLog.args.market).to.eql(market);
-    expect(interestRateLog.args.rate).to.eql(
-      await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market),
-    );
+    expect(interestRateLog.args.rate).to.eql(await dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market));
 
     const collateralInterestRateLog = logs[7];
     expect(collateralInterestRateLog.name).to.eql('LogInterestRate');
@@ -461,16 +431,8 @@ describe('Transfer', () => {
 
   it('Succeeds and sets status to Normal', async () => {
     await Promise.all([
-      dolomiteMargin.testing.setAccountStatus(
-        owner1,
-        accountNumber1,
-        AccountStatus.Liquidating,
-      ),
-      dolomiteMargin.testing.setAccountStatus(
-        owner2,
-        accountNumber2,
-        AccountStatus.Liquidating,
-      ),
+      dolomiteMargin.testing.setAccountStatus(owner1, accountNumber1, AccountStatus.Liquidating),
+      dolomiteMargin.testing.setAccountStatus(owner2, accountNumber2, AccountStatus.Liquidating),
     ]);
     await expectTransferOkay({});
     const [status1, status2] = await Promise.all([
@@ -494,6 +456,52 @@ describe('Transfer', () => {
     await expectTransferOkay({
       toAccountOwner: owner1,
     });
+  });
+
+  it('Succeeds with callback', async () => {
+    const shouldRevert = false;
+    const shouldRevertWithMessage = false;
+    const shouldConsumeTonsOfGas = false;
+    const shouldReturnBomb = false;
+    const contractWithCallback = await dolomiteMargin.contracts.deployTestCallbackContract(
+      accounts[0],
+      shouldRevert,
+      shouldRevertWithMessage,
+      shouldConsumeTonsOfGas,
+      shouldReturnBomb,
+    );
+
+    await dolomiteMargin.contracts.callContractFunction(contractWithCallback.methods.setLocalOperator(), {
+      from: dolomiteMargin.getDefaultAccount(),
+    });
+    const txResult = await expectTransferOkay(
+      {
+        toAccountOwner: contractWithCallback.options.address,
+        amount: {
+          value: negWei,
+          denomination: AmountDenomination.Wei,
+          reference: AmountReference.Delta,
+        }
+      },
+    );
+
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackSuccess');
+    expect(logs.length).to.eql(1);
+    let log = logs[0];
+    expect(log.args.primaryAccountOwner).to.eql(contractWithCallback.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(accountNumber2);
+
+    const eventLogs = await contractWithCallback.getPastEvents('LogOnInternalBalanceChangeInputs', {
+      fromBlock: txResult.blockNumber ?? 'latest',
+    });
+    expect(eventLogs.length === 1);
+    log = dolomiteMargin.logs.parseEventLogWithContract(contractWithCallback, eventLogs[0]);
+    expect(log.args.primaryAccountNumber).to.eql(accountNumber2);
+    expect(log.args.secondaryAccount).to.eql({ owner: owner1, number: accountNumber1 });
+    expect(log.args.primaryMarketId).to.eql(market);
+    expect(log.args.primaryDeltaWei).to.eql(wei);
+    expect(log.args.secondaryMarketId).to.eql(INTEGERS.ZERO);
+    expect(log.args.secondaryDeltaWei).to.eql(INTEGERS.ZERO);
   });
 
   it('Fails for non-operator on first account', async () => {
@@ -544,17 +552,12 @@ async function setAccountBalances(amount1: BigNumber, amount2: BigNumber) {
   ]);
 }
 
-async function expectBalances(
-  par1: Integer,
-  wei1: Integer,
-  par2: Integer,
-  wei2: Integer,
-) {
+async function expectBalances(par1: Integer, wei1: Integer, par2: Integer, wei2: Integer) {
   const [accountBalances1, accountBalances2] = await Promise.all([
     dolomiteMargin.getters.getAccountBalances(owner1, accountNumber1),
     dolomiteMargin.getters.getAccountBalances(owner2, accountNumber2),
   ]);
-  accountBalances1.forEach((balance) => {
+  accountBalances1.forEach(balance => {
     let expected = { par: zero, wei: zero };
     if (balance.marketId.eq(market)) {
       expected = { par: par1, wei: wei1 };
@@ -564,7 +567,7 @@ async function expectBalances(
     expect(balance.par).to.eql(expected.par);
     expect(balance.wei).to.eql(expected.wei);
   });
-  accountBalances2.forEach((balance) => {
+  accountBalances2.forEach(balance => {
     let expected = { par: zero, wei: zero };
     if (balance.marketId.eq(market)) {
       expected = { par: par2, wei: wei2 };
@@ -578,16 +581,9 @@ async function expectBalances(
 
 async function expectTransferOkay(glob: Object, options?: Object) {
   const combinedGlob = { ...defaultGlob, ...glob };
-  return dolomiteMargin.operation
-    .initiate()
-    .transfer(combinedGlob)
-    .commit(options);
+  return dolomiteMargin.operation.initiate().transfer(combinedGlob).commit(options);
 }
 
-async function expectTransferRevert(
-  glob: Object,
-  reason?: string,
-  options?: Object,
-) {
+async function expectTransferRevert(glob: Object, reason?: string, options?: Object) {
   await expectThrow(expectTransferOkay(glob, options), reason);
 }

@@ -1,7 +1,8 @@
 import BigNumber from 'bignumber.js';
-import TestLiquidationCallbackJSON from '../../build/contracts/TestLiquidationCallback.json';
-import { TestLiquidationCallback } from '../../build/testing_wrappers/TestLiquidationCallback';
+import TestExternalCallbackJSON from '../../build/contracts/TestExternalCallback.json';
+import { TestExternalCallback } from '../../build/testing_wrappers/TestExternalCallback';
 import {
+  AccountInfo,
   AccountStatus,
   address,
   AmountDenomination,
@@ -39,6 +40,7 @@ const collatPar = par.times(collateralization);
 const premium = new BigNumber('1.05');
 const remaining = collateralization.minus(premium);
 let defaultGlob: Liquidate;
+let solidAccount: AccountInfo;
 
 describe('Liquidate', () => {
   let snapshotId: string;
@@ -63,6 +65,10 @@ describe('Liquidate', () => {
         denomination: AmountDenomination.Principal,
         reference: AmountReference.Target,
       },
+    };
+    solidAccount = {
+      owner: solidOwner,
+      number: solidAccountNumber.toFixed(),
     };
 
     await resetEVM();
@@ -223,11 +229,11 @@ describe('Liquidate', () => {
       expectLiquidPars(par.times(remaining), zero, liquidContract.options.address),
     ]);
 
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogLiquidationCallbackSuccess');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackSuccess');
     expect(logs.length).to.eql(1);
     const log = logs[0];
-    expect(log.args.liquidAccountOwner).to.eql(liquidContract.options.address);
-    expect(log.args.liquidAccountNumber).to.eql(liquidAccountNumber);
+    expect(log.args.primaryAccountOwner).to.eql(liquidContract.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(liquidAccountNumber);
   });
 
   it('Succeeds when liquidating a contract with callback fails', async () => {
@@ -252,7 +258,17 @@ describe('Liquidate', () => {
     ]);
     await expectThrow(
       dolomiteMargin.contracts.callContractFunction(
-        liquidContract.methods.onLiquidate('0', '0', { sign: true, value: '0' }, '0', { sign: true, value: '0' }),
+        liquidContract.methods.onInternalBalanceChange(
+          '0',
+          solidAccount,
+          '0',
+          {
+            sign: true,
+            value: '0',
+          },
+          '0',
+          { sign: true, value: '0' },
+        ),
         { confirmationType: ConfirmationType.Simulate, gas: 6000000 },
       ),
     );
@@ -273,12 +289,12 @@ describe('Liquidate', () => {
       expectLiquidPars(par.times(remaining), zero, liquidContract.options.address),
     ]);
 
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogLiquidationCallbackFailure');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackFailure');
     expect(logs.length).to.eql(1);
     const log = logs[0];
-    expect(log.args.liquidAccountOwner).to.eql(liquidContract.options.address);
-    expect(log.args.liquidAccountNumber).to.eql(liquidAccountNumber);
-    expect(log.args.reason).to.eql('TestLiquidationCallback: purposeful reversion');
+    expect(log.args.primaryAccountOwner).to.eql(liquidContract.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(liquidAccountNumber);
+    expect(log.args.reason).to.eql('TestExternalCallback: purposeful reversion');
   });
 
   it('Succeeds when liquidating a contract with callback fails with a cut off message', async () => {
@@ -310,7 +326,10 @@ describe('Liquidate', () => {
     ]);
     await expectThrow(
       dolomiteMargin.contracts.callContractFunction(
-        liquidContract.methods.onLiquidate('0', '0', { sign: true, value: '0' }, '0', { sign: true, value: '0' }),
+        liquidContract.methods.onInternalBalanceChange('0', solidAccount, '0', { sign: true, value: '0' }, '0', {
+          sign: true,
+          value: '0',
+        }),
         { confirmationType: ConfirmationType.Simulate, gas: 6000000 },
       ),
     );
@@ -331,11 +350,11 @@ describe('Liquidate', () => {
       expectLiquidPars(par.times(remaining), zero, liquidContract.options.address),
     ]);
 
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogLiquidationCallbackFailure');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackFailure');
     expect(logs.length).to.eql(1);
     const log = logs[0];
-    expect(log.args.liquidAccountOwner).to.eql(liquidContract.options.address);
-    expect(log.args.liquidAccountNumber).to.eql(liquidAccountNumber);
+    expect(log.args.primaryAccountOwner).to.eql(liquidContract.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(liquidAccountNumber);
     expect(log.args.reason).to.eql(revertMessage.substring(0, 188));
   });
 
@@ -361,7 +380,10 @@ describe('Liquidate', () => {
     ]);
     await expectThrow(
       dolomiteMargin.contracts.callContractFunction(
-        liquidContract.methods.onLiquidate('0', '0', { sign: true, value: '0' }, '0', { sign: true, value: '0' }),
+        liquidContract.methods.onInternalBalanceChange('0', solidAccount, '0', { sign: true, value: '0' }, '0', {
+          sign: true,
+          value: '0',
+        }),
         { confirmationType: ConfirmationType.Simulate, gas: 6000000 },
       ),
     );
@@ -381,11 +403,11 @@ describe('Liquidate', () => {
       expectLiquidPars(par.times(remaining), zero, liquidContract.options.address),
     ]);
 
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogLiquidationCallbackFailure');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackFailure');
     expect(logs.length).to.eql(1);
     const log = logs[0];
-    expect(log.args.liquidAccountOwner).to.eql(liquidContract.options.address);
-    expect(log.args.liquidAccountNumber).to.eql(liquidAccountNumber);
+    expect(log.args.primaryAccountOwner).to.eql(liquidContract.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(liquidAccountNumber);
     expect(log.args.reason).to.eql('');
   });
 
@@ -411,7 +433,10 @@ describe('Liquidate', () => {
     ]);
     await expectOutOfGasFailure(
       dolomiteMargin.contracts.callContractFunction(
-        liquidContract.methods.onLiquidate('0', '0', { sign: true, value: '0' }, '0', { sign: true, value: '0' }),
+        liquidContract.methods.onInternalBalanceChange('0', solidAccount, '0', { sign: true, value: '0' }, '0', {
+          sign: true,
+          value: '0',
+        }),
         { confirmationType: ConfirmationType.Simulate, gas: 6000000 },
       ),
     );
@@ -431,11 +456,11 @@ describe('Liquidate', () => {
       expectLiquidPars(par.times(remaining), zero, liquidContract.options.address),
     ]);
 
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogLiquidationCallbackFailure');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackFailure');
     expect(logs.length).to.eql(1);
     const log = logs[0];
-    expect(log.args.liquidAccountOwner).to.eql(liquidContract.options.address);
-    expect(log.args.liquidAccountNumber).to.eql(liquidAccountNumber);
+    expect(log.args.primaryAccountOwner).to.eql(liquidContract.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(liquidAccountNumber);
     expect(log.args.reason).to.eql('');
   });
 
@@ -461,7 +486,10 @@ describe('Liquidate', () => {
     ]);
     await expectThrow(
       dolomiteMargin.contracts.callContractFunction(
-        liquidContract.methods.onLiquidate('0', '0', { sign: true, value: '0' }, '0', { sign: true, value: '0' }),
+        liquidContract.methods.onInternalBalanceChange('0', solidAccount, '0', { sign: true, value: '0' }, '0', {
+          sign: true,
+          value: '0',
+        }),
         { confirmationType: ConfirmationType.Simulate, gas: 6000000 },
       ),
     );
@@ -481,11 +509,11 @@ describe('Liquidate', () => {
       expectLiquidPars(par.times(remaining), zero, liquidContract.options.address),
     ]);
 
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogLiquidationCallbackFailure');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'LogExternalCallbackFailure');
     expect(logs.length).to.eql(1);
     const log = logs[0];
-    expect(log.args.liquidAccountOwner).to.eql(liquidContract.options.address);
-    expect(log.args.liquidAccountNumber).to.eql(liquidAccountNumber);
+    expect(log.args.primaryAccountOwner).to.eql(liquidContract.options.address);
+    expect(log.args.primaryAccountNumber).to.eql(liquidAccountNumber);
     expect(log.args.reason).to.eql('');
   });
 
@@ -687,14 +715,14 @@ async function deployCallbackContract(
   shouldRevertWithMessage: boolean,
   shouldConsumeTonsOfGas: boolean,
   shouldReturnBomb: boolean,
-): Promise<TestLiquidationCallback> {
-  const liquidContract = (await deployContract(dolomiteMargin, TestLiquidationCallbackJSON, [
+): Promise<TestExternalCallback> {
+  const liquidContract = (await deployContract(dolomiteMargin, TestExternalCallbackJSON, [
     dolomiteMargin.address,
     shouldRevert,
     shouldRevertWithMessage,
     shouldConsumeTonsOfGas,
     shouldReturnBomb,
-  ])) as TestLiquidationCallback;
+  ])) as TestExternalCallback;
   liquidContract.options.from = accounts[0];
   return liquidContract;
 }

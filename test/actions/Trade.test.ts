@@ -38,11 +38,6 @@ const defaultData = {
   denomination: AmountDenomination.Actual,
   reference: AmountReference.Delta,
 };
-const targetData = {
-  value: INTEGERS.ZERO,
-  denomination: AmountDenomination.Actual,
-  reference: AmountReference.Target,
-};
 const zeroGlob = {
   amount: {
     value: zero,
@@ -111,10 +106,62 @@ describe('Trade', () => {
     const glob = {
       calculateAmountWithMakerAccount: false,
     };
-    await Promise.all([approveTrader(), setTradeData(targetData)]);
+    // Need to negate the output amount to match that makerAmount is negated due to `calculateAmountWithMakerAccount`
+    // being set to `false`
+    const newDefaultData = {
+      value: defaultData.value.negated(),
+      denomination: defaultData.denomination,
+      reference: defaultData.reference,
+    };
+    await Promise.all([approveTrader(), setTradeData(newDefaultData)]);
     const txResult = await expectTradeOkay(glob);
     console.log(`\tTrade gas used: ${txResult.gasUsed}`);
-    await Promise.all([expectBalances1(par, negPar), expectBalances2(negPar, par)]);
+    await Promise.all([expectBalances1(negPar, par), expectBalances2(par, negPar)]);
+  });
+
+  it('Basic trade test with calculateAmountWithMakerAccount set to false and Target is used', async () => {
+    const parTwo = par.times(2);
+    await dolomiteMargin.testing.setAccountBalance(who1, accountNumber1, inputMarket, parTwo);
+    const glob = {
+      ...defaultGlob,
+      calculateAmountWithMakerAccount: false,
+      amount: {
+        value: INTEGERS.ZERO,
+        denomination: AmountDenomination.Actual,
+        reference: AmountReference.Target,
+      },
+    };
+    // Need to negate the output amount to match that makerAmount is negated due to `calculateAmountWithMakerAccount`
+    // being set to `false`
+    const newDefaultData = {
+      value: defaultData.value.negated(),
+      denomination: defaultData.denomination,
+      reference: defaultData.reference,
+    };
+    await Promise.all([approveTrader(), setTradeData(newDefaultData)]);
+    const txResult = await expectTradeOkay(glob);
+    console.log(`\tTrade gas used: ${txResult.gasUsed}`);
+    await expectBalances1(INTEGERS.ZERO, par);
+    await expectBalances2(parTwo, negPar);
+  });
+
+  it('Basic trade test with calculateAmountWithMakerAccount set to false and Target is used with 0 balance', async () => {
+    const parTwo = par.times(2);
+    await dolomiteMargin.testing.setAccountBalance(who2, accountNumber2, inputMarket, parTwo);
+    const glob = {
+      ...defaultGlob,
+      calculateAmountWithMakerAccount: false,
+      amount: {
+        value: INTEGERS.ZERO,
+        denomination: AmountDenomination.Actual,
+        reference: AmountReference.Target,
+      },
+    };
+    await Promise.all([approveTrader(), setTradeData()]);
+    const txResult = await expectTradeOkay(glob);
+    console.log(`\tTrade gas used: ${txResult.gasUsed}`);
+    await expectBalances1(INTEGERS.ZERO, negPar); // taker
+    await expectBalances2(parTwo, par); // maker
   });
 
   it('Succeeds for events', async () => {

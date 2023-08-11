@@ -16,7 +16,7 @@ import TestExchangeWrapper from '../build/contracts/TestExchangeWrapper.json';
 import TestInterestSetter from '../build/contracts/TestInterestSetter.json';
 import TestIsolationModeToken from '../build/contracts/TestIsolationModeToken.json';
 import TestLib from '../build/contracts/TestLib.json';
-import TestLiquidationCallback from '../build/contracts/TestLiquidationCallback.json';
+import TestExternalCallback from '../build/contracts/TestExternalCallback.json';
 import TestIsolationModeUnwrapperTrader from '../build/contracts/TestIsolationModeUnwrapperTrader.json';
 // eslint-disable-next-line max-len
 import TestIsolationModeUnwrapperTraderForV3Liquidator from '../build/contracts/TestIsolationModeUnwrapperTraderForV3Liquidator.json'; // tslint:disable-line:max-line-length
@@ -59,7 +59,7 @@ export default {
   TestInterestSetter,
   TestIsolationModeToken,
   TestLib,
-  TestLiquidationCallback,
+  TestExternalCallback,
   TestIsolationModeUnwrapperTrader,
   TestIsolationModeUnwrapperTraderForV3Liquidator,
   TestIsolationModeWrapperTrader,

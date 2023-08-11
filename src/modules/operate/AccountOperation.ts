@@ -1,11 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { TransactionObject } from 'web3/eth/types';
-import {
-  addressesAreEqual,
-  bytesToHexString,
-  hexStringToBytes,
-  toBytes,
-} from '../../lib/BytesHelper';
+import { addressesAreEqual, bytesToHexString, hexStringToBytes, toBytes } from '../../lib/BytesHelper';
 import { ADDRESSES, INTEGERS } from '../../lib/Constants';
 import { Contracts } from '../../lib/Contracts';
 import expiryConstants from '../../lib/expiry-constants.json';
@@ -44,7 +39,6 @@ import {
   Withdraw,
 } from '../../types';
 import { OrderMapper } from '../OrderMapper';
-import { ethers } from 'ethers';
 
 interface OptionalActionArgs {
   actionType: number | string;
@@ -193,6 +187,10 @@ export class AccountOperation {
   }
 
   public trade(trade: Trade): AccountOperation {
+    let callData = toBytes(trade.calculateAmountWithMakerAccount);
+    callData = callData.concat(toBytes(new BigNumber(64))); // offset to where the bytes array is
+    callData = callData.concat(toBytes(trade.data.length)); // length of the array
+    callData = callData.concat(hexStringToBytes(bytesToHexString(trade.data)));
     this.addActionArgs(trade, {
       actionType: ActionType.Trade,
       amount: trade.amount,
@@ -200,12 +198,7 @@ export class AccountOperation {
       secondaryMarketId: trade.outputMarketId.toFixed(0),
       otherAccountId: this.getAccountId(trade.otherAccountOwner, trade.otherAccountId),
       otherAddress: trade.autoTrader,
-      data: hexStringToBytes(
-        ethers.utils.defaultAbiCoder.encode(
-          ['bool', 'bytes'],
-          [trade.calculateAmountWithMakerAccount, bytesToHexString(trade.data)],
-        ),
-      ),
+      data: callData,
     });
 
     return this;
@@ -420,7 +413,12 @@ export class AccountOperation {
       secondaryMarketId: liquidate.payoutMarketId.toFixed(0),
       otherAccountId: this.getAccountId(liquidate.liquidAccountOwner, liquidate.liquidAccountId),
       otherAddress: contractAddress,
-      data: toBytes(liquidate.liquidMarketId, maxExpiryTimestamp),
+      data: toBytes(
+        /* calculateAmountWithMakerAccount */ true,
+        64, // position offset of dynamic byte array
+        64, // length of dynamic array in bytes
+        bytesToHexString(toBytes(liquidate.liquidMarketId, maxExpiryTimestamp)),
+      ),
     });
     return this;
   }
@@ -513,7 +511,12 @@ export class AccountOperation {
           secondaryMarketId: secondaryMarketId.toFixed(0),
           otherAccountId: this.getAccountId(expiredAccountOwner, expiredAccountNumber),
           otherAddress: contractAddress,
-          data: toBytes(expiredMarket, expiryTimestamp),
+          data: toBytes(
+            /* calculateAmountWithMakerAccount */ true,
+            64, // position offset of dynamic byte array
+            64, // length of dynamic array in bytes
+            bytesToHexString(toBytes(expiredMarket, expiryTimestamp)),
+          ),
         },
       );
     }

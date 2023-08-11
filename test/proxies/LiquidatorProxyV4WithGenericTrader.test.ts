@@ -1298,32 +1298,6 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         );
       });
 
-      it('should fail when inputAmount does not match customInputAmount for index 0 and trade type is internal liquidity', async () => {
-        await Promise.all([
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, negPar.times('2.25')),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market3, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market4, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market5, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
-        ]);
-
-        await expectThrow(
-          dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
-            solidOwner,
-            solidNumber,
-            liquidOwner,
-            liquidNumber,
-            [market2, market1],
-            INTEGERS.MAX_UINT,
-            INTEGERS.MAX_UINT,
-            [await getInternalTraderParamAsync(0, par.times(1.18125), par.times(118.125), tradeId1)],
-            [{ owner: makerOwner, number: makerNumber1.toNumber() }],
-            null,
-          ),
-          'GenericTraderProxyBase: Invalid custom input amount',
-        );
-      });
-
       it('should fail when the maker account is non-zero and trader type is external liquidity', async () => {
         const traderParam = getParaswapTraderParam(market1, market2, par1, par2);
         traderParam.makerAccountIndex = 1;
@@ -2020,10 +1994,7 @@ async function getInternalTraderParamAsync(
     makerAccountIndex,
     traderType: GenericTraderType.InternalLiquidity,
     trader: dolomiteMargin.contracts.testAutoTrader.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(
-      ['uint256', 'bytes'],
-      [amountIn.toFixed(), ethers.utils.defaultAbiCoder.encode(['uint256'], [tradeId.toFixed()])],
-    ),
+    tradeData: ethers.utils.defaultAbiCoder.encode(['uint256'], [tradeId.toFixed()]),
   };
 }
 

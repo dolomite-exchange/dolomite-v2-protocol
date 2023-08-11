@@ -36,6 +36,7 @@ const {
   isMaticProd,
   isMumbaiMatic,
   isArbitrumOne,
+  getChainlinkOracleSentinelGracePeriod,
   getChainlinkSequencerUptimeFeed,
   getUniswapV3MultiRouter,
   shouldOverwrite,
@@ -86,7 +87,7 @@ const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
 const TestAutoTrader = artifacts.require('TestAutoTrader');
 const TestBtcUsdChainlinkAggregator = artifacts.require('TestBtcUsdChainlinkAggregator');
 const TestCallee = artifacts.require('TestCallee');
-const TestSequencerUptimeFeedAggregator = artifacts.require('TestSequencerUptimeFeedAggregator');
+const TestChainlinkAggregator = artifacts.require('TestChainlinkAggregator');
 const TestDoubleExponentInterestSetter = artifacts.require('TestDoubleExponentInterestSetter');
 const TestDaiUsdChainlinkAggregator = artifacts.require('TestDaiUsdChainlinkAggregator');
 const TestEthUsdChainlinkAggregator = artifacts.require('TestEthUsdChainlinkAggregator');
@@ -98,6 +99,7 @@ const TestLrcEthChainlinkAggregator = artifacts.require('TestLrcEthChainlinkAggr
 const TestMaticUsdChainlinkAggregator = artifacts.require('TestMaticUsdChainlinkAggregator');
 const TestPolynomialInterestSetter = artifacts.require('TestPolynomialInterestSetter');
 const TestPriceOracle = artifacts.require('TestPriceOracle');
+const TestSequencerUptimeFeedAggregator = artifacts.require('TestSequencerUptimeFeedAggregator');
 const TestSimpleCallee = artifacts.require('TestSimpleCallee');
 const TestUsdcUsdChainlinkAggregator = artifacts.require('TestUsdcUsdChainlinkAggregator');
 const TestWETH = artifacts.require('TestWETH');
@@ -178,12 +180,13 @@ async function deployTestContracts(deployer, network) {
       // Test Contracts
       deployer.deploy(TestAccountRiskOverrideSetter),
       deployer.deploy(TestAutoTrader),
-      deployer.deploy(TestSequencerUptimeFeedAggregator),
+      deployer.deploy(TestChainlinkAggregator),
       deployer.deploy(TestDolomiteAmmLibrary),
       deployer.deploy(TestDoubleExponentInterestSetter, getDoubleExponentParams(network)),
       deployer.deploy(TestExchangeWrapper),
       deployer.deploy(TestLib),
       deployer.deploy(TestPolynomialInterestSetter, getPolynomialParams(network)),
+      deployer.deploy(TestSequencerUptimeFeedAggregator),
     ]);
   }
 }
@@ -303,6 +306,7 @@ async function deployBaseProtocol(deployer, network) {
     if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
       await deployer.deploy(
         ChainlinkOracleSentinel,
+        getChainlinkOracleSentinelGracePeriod(),
         getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggregator),
         dolomiteMargin.address,
       );

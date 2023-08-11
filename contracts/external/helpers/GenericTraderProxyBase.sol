@@ -104,7 +104,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
             "Invalid traders params length"
         );
 
-        for (uint256 i; i < _traderParamsPath.length; ++i) {
+        uint256 traderParamsPathLength = _traderParamsPath.length;
+        for (uint256 i; i < traderParamsPathLength; ++i) {
             _validateTraderParam(
                 _cache,
                 _marketIdsPath,
@@ -290,7 +291,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         Account.Info memory _account,
         uint256[] memory _marketIdsPath
     ) internal view {
-        for (uint256 i; i < _marketIdsPath.length; ++i) {
+        uint256 marketIdsLength = _marketIdsPath.length;
+        for (uint256 i; i < marketIdsLength; ++i) {
             // Panic if we're zapping to an account that has any value in it. Why? Because we don't want execute trades
             // where we sell ALL if there's already value in the account. That would mess up the user's holdings and
             // unintentionally sell assets the user does not want to sell.
@@ -329,7 +331,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         internal
         pure
     {
-        for (uint256 i; i < _makerAccounts.length; ++i) {
+        uint256 makerAccountsLength = _makerAccounts.length;
+        for (uint256 i; i < makerAccountsLength; ++i) {
             Account.Info memory account = _accounts[_cache.traderAccountStartIndex + i];
             assert(account.owner == address(0) && account.number == 0);
 
@@ -348,7 +351,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         returns (uint256)
     {
         uint256 actionsLength = 2; // start at 2 for the zap in/out of the zap account (2 transfer actions)
-        for (uint256 i; i < _tradersPath.length; ++i) {
+        uint256 tradersPathLength = _tradersPath.length;
+        for (uint256 i; i < tradersPathLength; ++i) {
             if (TraderType.IsolationModeUnwrapper == _tradersPath[i].traderType) {
                 actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
             } else if (TraderType.IsolationModeWrapper == _tradersPath[i].traderType) {
@@ -380,7 +384,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
             _inputAmountWei
         );
 
-        for (uint256 i; i < _tradersPath.length; ++i) {
+        uint256 tradersPathLength = _tradersPath.length;
+        for (uint256 i; i < tradersPathLength; ++i) {
             if (_tradersPath[i].traderType == TraderType.ExternalLiquidity) {
                 _actions[_cache.actionsCursor++] = AccountActionLib.encodeExternalSellAction(
                     ZAP_ACCOUNT_ID,
@@ -388,27 +393,18 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _marketIdsPath[i + 1],
                     _tradersPath[i].trader,
                     _getInputAmountWeiForIndex(_inputAmountWei, i),
-                    _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                    _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, tradersPathLength),
                     _tradersPath[i].tradeData
                 );
             } else if (_tradersPath[i].traderType == TraderType.InternalLiquidity) {
-                (
-                    uint256 customInputAmountWei,
-                    bytes memory tradeData
-                ) = abi.decode(_tradersPath[i].tradeData, (uint256, bytes));
-                Require.that(
-                    (i == 0 && customInputAmountWei == _inputAmountWei) || i != 0,
-                    FILE,
-                    "Invalid custom input amount"
-                );
                 _actions[_cache.actionsCursor++] = AccountActionLib.encodeInternalTradeActionWithCustomData(
                     ZAP_ACCOUNT_ID,
                     /* _makerAccountId = */ _tradersPath[i].makerAccountIndex + _cache.traderAccountStartIndex,
                     _marketIdsPath[i],
                     _marketIdsPath[i + 1],
                     _tradersPath[i].trader,
-                    customInputAmountWei,
-                    tradeData
+                    _getInputAmountWeiForIndex(_inputAmountWei, i),
+                    _tradersPath[i].tradeData
                 );
             } else if (_tradersPath[i].traderType == TraderType.IsolationModeUnwrapper) {
                 // We can't use a Require for the following assert, because there's already an invariant that enforces
@@ -416,43 +412,43 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 // an unwrapper can never appear at the non-zero index because there is an invariant that checks the
                 // `IsolationModeWrapper` is the last index
                 assert(i == 0);
-                IIsolationModeUnwrapperTrader unwrapperTrader = IIsolationModeUnwrapperTrader(_tradersPath[i].trader);
-                Actions.ActionArgs[] memory unwrapperActions = unwrapperTrader.createActionsForUnwrapping(
-                    ZAP_ACCOUNT_ID,
-                    _otherAccountId(),
-                    _accounts[ZAP_ACCOUNT_ID].owner,
-                    _accounts[_otherAccountId()].owner,
-                    /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
-                    /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
-                    _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
-                    _tradersPath[i].tradeData
-                );
-                for (uint256 j = 0; j < unwrapperActions.length; j++) {
+                Actions.ActionArgs[] memory unwrapperActions = IIsolationModeUnwrapperTrader(_tradersPath[i].trader)
+                    .createActionsForUnwrapping(
+                        ZAP_ACCOUNT_ID,
+                        _otherAccountId(),
+                        _accounts[ZAP_ACCOUNT_ID].owner,
+                        _accounts[_otherAccountId()].owner,
+                        /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
+                        /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
+                        _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, tradersPathLength),
+                        _getInputAmountWeiForIndex(_inputAmountWei, i),
+                        _tradersPath[i].tradeData
+                    );
+                for (uint256 j; j < unwrapperActions.length; ++j) {
                     _actions[_cache.actionsCursor++] = unwrapperActions[j];
                 }
             } else {
                 // Panic if the developer messed up the `else` statement here
                 assert(_tradersPath[i].traderType == TraderType.IsolationModeWrapper);
                 Require.that(
-                    i == _tradersPath.length - 1,
+                    i == tradersPathLength - 1,
                     FILE,
                     "Wrapper must be the last trader"
                 );
 
-                IIsolationModeWrapperTrader wrapperTrader = IIsolationModeWrapperTrader(_tradersPath[i].trader);
-                Actions.ActionArgs[] memory wrapperActions = wrapperTrader.createActionsForWrapping(
-                    ZAP_ACCOUNT_ID,
-                    _otherAccountId(),
-                    _accounts[ZAP_ACCOUNT_ID].owner,
-                    _accounts[_otherAccountId()].owner,
-                    /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
-                    /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
-                    _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
-                    _tradersPath[i].tradeData
-                );
-                for (uint256 j = 0; j < wrapperActions.length; j++) {
+                Actions.ActionArgs[] memory wrapperActions = IIsolationModeWrapperTrader(_tradersPath[i].trader)
+                    .createActionsForWrapping(
+                        ZAP_ACCOUNT_ID,
+                        _otherAccountId(),
+                        _accounts[ZAP_ACCOUNT_ID].owner,
+                        _accounts[_otherAccountId()].owner,
+                        /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
+                        /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
+                        _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, tradersPathLength),
+                        _getInputAmountWeiForIndex(_inputAmountWei, i),
+                        _tradersPath[i].tradeData
+                    );
+                for (uint256 j; j < wrapperActions.length; ++j) {
                     _actions[_cache.actionsCursor++] = wrapperActions[j];
                 }
             }

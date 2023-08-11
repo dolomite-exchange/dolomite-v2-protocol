@@ -394,9 +394,10 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         marketsLength = _addMarketsToBitmap(solidMarkets, marketBitmaps, marketsLength);
         marketsLength = _addMarketsToBitmap(liquidMarkets, marketBitmaps, marketsLength);
 
-        uint counter = 0;
+        uint256 counter;
+        uint256 marketBitmapsLength = marketBitmaps.length;
         MarketInfo[] memory marketInfos = new MarketInfo[](marketsLength);
-        for (uint256 i; i < marketBitmaps.length; ++i) {
+        for (uint256 i; i < marketBitmapsLength; ++i) {
             uint bitmap = marketBitmaps[i];
             while (bitmap != 0) {
                 uint nextSetBit = Bits.getLeastSignificantBit(bitmap);

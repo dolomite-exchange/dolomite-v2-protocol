@@ -67,7 +67,8 @@ contract HasLiquidatorRegistry {
 
     function _validateAssetsForLiquidation(uint256[] memory _marketIds) internal view {
         ILiquidatorAssetRegistry liquidatorAssetRegistry = LIQUIDATOR_ASSET_REGISTRY;
-        for (uint256 i; i < _marketIds.length; ++i) {
+        uint256 marketIdsLength = _marketIds.length;
+        for (uint256 i; i < marketIdsLength; ++i) {
             Require.that(
                 liquidatorAssetRegistry.isAssetWhitelistedForLiquidation(_marketIds[i], address(this)),
                 FILE,

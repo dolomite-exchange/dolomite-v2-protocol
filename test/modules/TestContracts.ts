@@ -19,6 +19,9 @@
 import Web3 from 'web3';
 import { Provider } from 'web3/providers';
 
+// JSON - Contracts with bytecode
+import testExternalCallbackJson from '../../build/contracts/TestExternalCallback.json';
+
 // JSON - Contracts
 import alwaysOnlineOracleSentinelJson from '../../build/published_contracts/AlwaysOnlineOracleSentinel.json';
 import chainlinkOracleSentinelJson from '../../build/published_contracts/ChainlinkOracleSentinel.json';
@@ -41,7 +44,8 @@ import testParaswapAugustusRouterJson from '../../build/testing_contracts/TestPa
 import testParaswapTraderJson from '../../build/testing_contracts/TestParaswapTrader.json';
 import testPolynomialInterestSetterJson from '../../build/testing_contracts/TestPolynomialInterestSetter.json';
 import testPriceOracleJson from '../../build/testing_contracts/TestPriceOracle.json';
-import testSequencerUptimeFeedAggregatorJson from '../../build/testing_contracts/TestSequencerUptimeFeedAggregator.json';
+import testSequencerUptimeFeedAggregatorJson
+  from '../../build/testing_contracts/TestSequencerUptimeFeedAggregator.json';
 import testSimpleCalleeJson from '../../build/testing_contracts/TestSimpleCallee.json';
 import testUniswapV3MultiRouterJson from '../../build/testing_contracts/TestUniswapV3MultiRouter.json';
 import testWeth from '../../build/testing_contracts/TestWETH.json';
@@ -66,6 +70,7 @@ import { TestDolomiteAmmLibrary } from '../../build/testing_wrappers/TestDolomit
 import { TestDolomiteMargin } from '../../build/testing_wrappers/TestDolomiteMargin';
 import { TestDoubleExponentInterestSetter } from '../../build/testing_wrappers/TestDoubleExponentInterestSetter';
 import { TestExchangeWrapper } from '../../build/testing_wrappers/TestExchangeWrapper';
+import { TestExternalCallback } from '../../build/testing_wrappers/TestExternalCallback';
 import { TestInterestSetter } from '../../build/testing_wrappers/TestInterestSetter';
 import { TestLib } from '../../build/testing_wrappers/TestLib';
 import { TestParaswapAugustusRouter } from '../../build/testing_wrappers/TestParaswapAugustusRouter';
@@ -86,6 +91,7 @@ import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
 
 import { address, DolomiteMarginOptions } from '../../src';
 import { Contracts } from '../../src/lib/Contracts';
+import { deployContractWithoutDolomiteMargin } from '../helpers/Deploy';
 
 export class TestContracts extends Contracts {
   // Contract instances
@@ -105,6 +111,7 @@ export class TestContracts extends Contracts {
   // Testing contract instances
   public alwaysOnlineOracleSentinel: IOracleSentinel;
   public chainlinkOracleSentinel: IOracleSentinel;
+  public chainlinkPriceOracleV1: TestChainlinkPriceOracleV1;
   public testAccountRiskOverrideSetter: TestAccountRiskOverrideSetter;
   public testAmmRebalancerProxy: TestAmmRebalancerProxy;
   public testAutoTrader: TestAutoTrader;
@@ -309,5 +316,24 @@ export class TestContracts extends Contracts {
 
   public getDefaultGasPrice(): string | number {
     return this.defaultGasPrice;
+  }
+
+  public async deployTestCallbackContract(
+    from: address,
+    shouldRevert: boolean,
+    shouldRevertWithMessage: boolean,
+    shouldConsumeTonsOfGas: boolean,
+    shouldReturnBomb: boolean,
+  ): Promise<TestExternalCallback> {
+    const liquidContract = (await deployContractWithoutDolomiteMargin(this.web3, this, testExternalCallbackJson, [
+      this.testDolomiteMargin.options.address,
+      shouldRevert,
+      shouldRevertWithMessage,
+      shouldConsumeTonsOfGas,
+      shouldReturnBomb,
+    ])) as TestExternalCallback;
+
+    liquidContract.options.from = from;
+    return liquidContract;
   }
 }

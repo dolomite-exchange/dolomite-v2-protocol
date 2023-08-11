@@ -52,12 +52,14 @@ contract ChainlinkOracleSentinel is IOracleSentinel, OnlyDolomiteMargin {
      *                              online.
      */
     constructor(
+        uint256 _gracePeriod,
         address _sequencerUptimeFeed,
         address _dolomiteMargin
     )
         public
         OnlyDolomiteMargin(_dolomiteMargin)
     {
+        gracePeriod = _gracePeriod;
         SEQUENCER_UPTIME_FEED = IChainlinkAggregator(_sequencerUptimeFeed);
     }
 
@@ -85,12 +87,12 @@ contract ChainlinkOracleSentinel is IOracleSentinel, OnlyDolomiteMargin {
         uint256 _gracePeriod
     ) internal {
         Require.that(
-            _gracePeriod > 10 minutes,
+            _gracePeriod >= 10 minutes,
             FILE,
             "Grace period too low"
         );
         Require.that(
-            _gracePeriod < 24 hours,
+            _gracePeriod <= 24 hours,
             FILE,
             "Grace period too high"
         );

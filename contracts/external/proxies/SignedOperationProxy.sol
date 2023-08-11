@@ -277,7 +277,8 @@ OnlyDolomiteMargin,
         uint256 actionStartIndex = 0;
 
         // loop over all auths
-        for (uint256 authIdx = 0; authIdx < auths.length; authIdx++) {
+        uint256 authsLength = auths.length;
+        for (uint256 authIdx = 0; authIdx < authsLength; authIdx++) {
             Authorization memory auth = auths[authIdx];
 
             // require that the message is not expired
@@ -322,7 +323,7 @@ OnlyDolomiteMargin,
 
                 // require that this signer matches the authorization
                 Require.that(
-                    auth.header.signer == signer,
+                    auth.header.signer == signer && signer != address(0),
                     FILE,
                     "Invalid signature"
                 );

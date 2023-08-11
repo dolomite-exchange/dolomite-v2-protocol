@@ -291,7 +291,8 @@ contract Expiry is
 
         assert(callType == CallFunctionType.SetExpiry);
 
-        for (uint256 i; i < expiries.length; ++i) {
+        uint256 expiriesLength = expiries.length;
+        for (uint256 i; i < expiriesLength; ++i) {
             SetExpiryArg memory exp = expiries[i];
             if (exp.account.owner != sender) {
                 // don't do anything if sender is not approved for this action

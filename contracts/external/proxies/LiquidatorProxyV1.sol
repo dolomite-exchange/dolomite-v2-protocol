@@ -140,11 +140,11 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
         uint256 totalValueLiquidated = 0;
 
         // for each owedMarket
-        for (uint256 owedIndex = 0; owedIndex < _owedPreferences.length; owedIndex++) {
+        for (uint256 owedIndex; owedIndex < _owedPreferences.length; ++owedIndex) {
             uint256 owedMarket = _owedPreferences[owedIndex];
 
             // for each heldMarket
-            for (uint256 heldIndex = 0; heldIndex < _heldPreferences.length; heldIndex++) {
+            for (uint256 heldIndex; heldIndex < _heldPreferences.length; ++heldIndex) {
                 uint256 heldMarket = _heldPreferences[heldIndex];
 
                 // cannot use the same market

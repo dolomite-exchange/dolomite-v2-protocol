@@ -137,7 +137,7 @@ async function getRiskParams(network) {
     earningsRate: { value: decimalToString('0.90') },
     minBorrowedValue: { value: decimalToString(minBorrowedValue) },
     accountMaxNumberOfMarketsWithBalances: '32',
-    callbackGasLimit: '2000000',
+    callbackGasLimit: '2000000', // 2M
   };
 }
 
@@ -220,7 +220,11 @@ function getGnosisSafeAddress(network) {
   throw new Error('Cannot find GnosisSafe for network: ' + network);
 }
 
-function getChainlinkFlags(network, TestChainlinkFlags) {
+function getChainlinkOracleSentinelGracePeriod() {
+  return 3600; // 1 hour
+}
+
+function getChainlinkSequencerUptimeFeed(network, TestChainlinkFlags) {
   if (isDevNetwork(network)) {
     return TestChainlinkFlags.address;
   } else if (isArbitrumOne(network)) {
@@ -278,7 +282,8 @@ module.exports = {
   getSenderAddress,
   getDelayedMultisigAddress,
   getGnosisSafeAddress,
-  getChainlinkSequencerUptimeFeed: getChainlinkFlags,
+  getChainlinkSequencerUptimeFeed,
+  getChainlinkOracleSentinelGracePeriod,
   getUniswapV3MultiRouter,
   shouldOverwrite,
   getNoOverwriteParams,

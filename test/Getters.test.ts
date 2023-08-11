@@ -65,6 +65,7 @@ describe('Getters', () => {
     minBorrowedValue: Integer;
     accountMaxNumberOfMarketsWithBalances: Integer;
     oracleSentinel: OracleSentinel;
+    callbackGasLimit: Integer;
   };
   let defaultLimits: {
     marginRatioMax: Decimal;
@@ -124,6 +125,7 @@ describe('Getters', () => {
       minBorrowedValue: new BigNumber('5e16'),
       accountMaxNumberOfMarketsWithBalances: new BigNumber(32),
       oracleSentinel: await dolomiteMargin.getters.getOracleSentinel(),
+      callbackGasLimit: new BigNumber(2_000_000),
     };
     defaultLimits = {
       marginRatioMax: new BigNumber('2.0'),
@@ -131,7 +133,7 @@ describe('Getters', () => {
       earningsRateMax: new BigNumber('1.0'),
       marginPremiumMax: new BigNumber('2.0'),
       liquidationSpreadPremiumMax: new BigNumber('5.0'),
-      minBorrowedValueMax: new BigNumber('100e18'),
+      minBorrowedValueMax: new BigNumber('100e36'),
     };
 
     snapshotId = await snapshot();
@@ -180,13 +182,13 @@ describe('Getters', () => {
         );
         const marginRatio = new BigNumber('0.09');
         const liquidationSpread = new BigNumber('0.0333');
-        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(owner1, marginRatio, liquidationSpread);
-
-        const value2 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
           owner1,
-          market1,
-          market2,
+          marginRatio,
+          liquidationSpread,
         );
+
+        const value2 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(owner1, market1, market2);
         expect(value2).to.eql(liquidationSpread);
       });
     });
@@ -231,11 +233,11 @@ describe('Getters', () => {
       });
     });
 
-    describe('#getIsBorrowAllowed()', () => {
+    describe('#getIsBorrowAllowed', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(true);
 
-        await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
+        await dolomiteMargin.testing.sequencerUptimeFeedAggregator.setIsEnabled(false);
         expect(await dolomiteMargin.getters.getIsBorrowAllowed()).to.eql(false);
       });
     });
@@ -244,8 +246,14 @@ describe('Getters', () => {
       it('Succeeds', async () => {
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(true);
 
-        await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
+        await dolomiteMargin.testing.sequencerUptimeFeedAggregator.setIsEnabled(false);
         expect(await dolomiteMargin.getters.getIsLiquidationAllowed()).to.eql(false);
+      });
+    });
+
+    describe('#getCallbackGasLimit', () => {
+      it('Succeeds', async () => {
+        expect(await dolomiteMargin.getters.getCallbackGasLimit()).to.eql(defaultParams.callbackGasLimit);
       });
     });
 
@@ -310,13 +318,9 @@ describe('Getters', () => {
 
         await dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par.times('1.12'));
         await dolomiteMargin.testing.tokenB.issueTo(wei, dolomiteMargin.address);
-        await dolomiteMargin.depositWithdrawalProxy.withdrawPar(
-          account1,
-          market2,
-          par,
-          BalanceCheckFlag.None,
-          { from: owner1 },
-        );
+        await dolomiteMargin.depositWithdrawalProxy.withdrawPar(account1, market2, par, BalanceCheckFlag.None, {
+          from: owner1,
+        });
         expect(await dolomiteMargin.getters.getMarginRatio()).to.eql(new BigNumber('0.15'));
         expect(await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1)).to.eql(false);
 
@@ -378,6 +382,11 @@ describe('Getters', () => {
         expect(params.marginRatio).to.eql(defaultParams.marginRatio);
         expect(params.liquidationSpread).to.eql(defaultParams.liquidationSpread);
         expect(params.minBorrowedValue).to.eql(defaultParams.minBorrowedValue);
+        expect(params.accountMaxNumberOfMarketsWithBalances).to.eql(
+          defaultParams.accountMaxNumberOfMarketsWithBalances,
+        );
+        expect(params.oracleSentinel.address).to.eql(defaultParams.oracleSentinel.address);
+        expect(params.callbackGasLimit).to.eql(defaultParams.callbackGasLimit);
       });
     });
 

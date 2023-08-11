@@ -121,8 +121,8 @@ library OperationImpl {
         );
 
         uint256 accountsLength = accounts.length;
-        for (uint256 a = 0; a < accountsLength; a++) {
-            for (uint256 b = a + 1; b < accountsLength; b++) {
+        for (uint256 a; a < accountsLength; ++a) {
+            for (uint256 b = a + 1; b < accountsLength; ++b) {
                 Require.that(
                     !Account.equals(accounts[a], accounts[b]),
                     FILE,
@@ -151,8 +151,8 @@ library OperationImpl {
         Cache.MarketCache memory cache = Cache.create(state.numMarkets);
 
         // keep track of primary accounts and indexes that need updating
-        uint256 accountsLength = accounts.length;
-        for (uint256 i; i < accountsLength; ++i) {
+        uint256 actionsLength = actions.length;
+        for (uint256 i; i < actionsLength; ++i) {
             Actions.ActionArgs memory arg = actions[i];
             Actions.ActionType actionType = arg.actionType;
             Actions.MarketLayout marketLayout = Actions.getMarketLayout(actionType);
@@ -196,6 +196,7 @@ library OperationImpl {
         }
 
         // get any other markets for which an account has a balance
+        uint256 accountsLength = accounts.length;
         for (uint256 a = 0; a < accountsLength; a++) {
             uint[] memory marketIdsWithBalance = state.getMarketsWithBalances(accounts[a]);
             uint256 numMarketsWithBalance = marketIdsWithBalance.length;
@@ -207,7 +208,8 @@ library OperationImpl {
 
         state.initializeCache(cache, /* fetchFreshIndex = */ false);
 
-        for (uint256 i; i < cache.getNumMarkets(); ++i) {
+        uint256 numMarkets = cache.getNumMarkets();
+        for (uint256 i; i < numMarkets; ++i) {
             Events.logOraclePrice(cache.getAtIndex(i));
         }
 

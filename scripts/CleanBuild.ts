@@ -15,7 +15,7 @@ import { abi as operationAbi } from '../build/contracts/OperationImpl.json';
 import { abi as tradeAbi } from '../build/contracts/TradeImpl.json';
 import { abi as transferAbi } from '../build/contracts/TransferImpl.json';
 import { abi as withdrawAbi } from '../build/contracts/WithdrawalImpl.json';
-import { abi as safeLiquidationCallbackAbi } from '../build/contracts/SafeLiquidationCallback.json';
+import { abi as safeExternalCallbackAbi } from '../build/contracts/SafeExternalCallback.json';
 import { abi as permissionAbi } from '../build/contracts/Permission.json';
 
 const writeFileAsync = promisify(fs.writeFile);
@@ -80,11 +80,8 @@ async function clean(): Promise<void> {
         .concat(getAllEvents(withdrawAbi))
         .concat(getAllEvents(eventsAbi))
         .concat(getAllEvents(adminAbi))
-        .concat(getAllEvents(safeLiquidationCallbackAbi))
+        .concat(getAllEvents(safeExternalCallbackAbi))
         .concat(getAllEvents(permissionAbi));
-    } else if (contractName.includes('Expiry')) {
-      cleaned.abi = cleaned.abi
-        .concat(getAllEvents(safeLiquidationCallbackAbi));
     }
 
     const json = JSON.stringify(cleaned, null, 4);

@@ -2110,10 +2110,7 @@ async function getInternalTraderParamAsync(
     makerAccountIndex,
     traderType: GenericTraderType.InternalLiquidity,
     trader: dolomiteMargin.contracts.testAutoTrader.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(
-      ['uint256', 'bytes'],
-      [amountIn.toFixed(), ethers.utils.defaultAbiCoder.encode(['uint256'], [tradeId.toFixed()])],
-    ),
+    tradeData: ethers.utils.defaultAbiCoder.encode(['uint256'], [tradeId.toFixed()]),
   };
 }
 

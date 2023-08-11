@@ -1328,12 +1328,12 @@ describe('Admin', () => {
 
   describe('#ownerSetAccountMaxNumberOfMarketsWithBalances', () => {
     it('Successfully sets value', async () => {
-      const txResult = await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(100, { from: admin });
+      const txResult = await dolomiteMargin.admin.setAccountMaxNumberOfMarketsWithBalances(50, { from: admin });
       const logs = dolomiteMargin.logs.parseLogs(txResult);
       expect(logs.length).to.eql(1);
       expect(logs[0].name).to.eql('LogSetAccountMaxNumberOfMarketsWithBalances');
-      expect(logs[0].args.accountMaxNumberOfMarketsWithBalances).to.eql(new BigNumber('100'));
-      expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber('100'));
+      expect(logs[0].args.accountMaxNumberOfMarketsWithBalances).to.eql(new BigNumber(50));
+      expect(await dolomiteMargin.getters.getAccountMaxNumberOfMarketsWithBalances()).to.eql(new BigNumber(50));
     });
 
     it('Fails for non-admin', async () => {
@@ -1358,7 +1358,8 @@ describe('Admin', () => {
   describe('#ownerSetOracleSentinel', () => {
     async function deployChainlinkOracleSentinel(): Promise<OracleSentinel> {
       const contract = await deployContract(dolomiteMargin, chainlinkOracleSentinelJson, [
-        dolomiteMargin.contracts.testChainlinkPriceAggregator.options.address,
+        dolomiteMargin.contracts.testSequencerUptimeFeedAggregator.options.address,
+        dolomiteMargin.address,
       ]);
       return new OracleSentinel(dolomiteMargin.contracts, contract.options.address);
     }
@@ -1380,7 +1381,7 @@ describe('Admin', () => {
 
     it('Fails for when borrowing not allowed or liquidations not allowed', async () => {
       const oracleSentinel = await deployChainlinkOracleSentinel();
-      await dolomiteMargin.testing.chainlinkAggregator.setLatestPrice(true);
+      await dolomiteMargin.testing.sequencerUptimeFeedAggregator.setIsEnabled(false);
       await expectThrow(
         dolomiteMargin.admin.setOracleSentinel(oracleSentinel.address, { from: admin }),
         'AdminImpl: Invalid oracle sentinel',

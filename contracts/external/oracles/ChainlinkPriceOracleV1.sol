@@ -93,7 +93,8 @@ contract ChainlinkPriceOracleV1 is IChainlinkPriceOracleV1, OnlyDolomiteMargin {
             "Invalid token pairs"
         );
 
-        for (uint256 i; i < _tokens.length; ++i) {
+        uint256 tokensLength = _tokens.length;
+        for (uint256 i; i < tokensLength; ++i) {
             _ownerInsertOrUpdateOracleToken(
                 _tokens[i],
                 _tokenDecimals[i],
@@ -158,7 +159,7 @@ contract ChainlinkPriceOracleV1 is IChainlinkPriceOracleV1, OnlyDolomiteMargin {
             /* uint80 answeredInRound */
         ) = aggregatorProxy.latestRoundData();
         Require.that(
-            block.timestamp.sub(updatedAt) > stalenessThreshold,
+            block.timestamp.sub(updatedAt) < stalenessThreshold,
             FILE,
             "Chainlink price expired",
             _token

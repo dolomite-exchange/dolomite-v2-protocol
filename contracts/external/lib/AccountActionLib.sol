@@ -286,7 +286,7 @@ library AccountActionLib {
             secondaryMarketId: !_flipMarkets ? _heldMarketId : _owedMarketId,
             otherAddress: _expiryProxy,
             otherAccountId: _liquidAccountId,
-            data: abi.encode(_owedMarketId, _expiry)
+            data: abi.encode(/* calculateAmountWithMakerAccount = */ true, abi.encode(_owedMarketId, _expiry))
         });
     }
 
@@ -299,17 +299,15 @@ library AccountActionLib {
         uint256 _amountInWei,
         uint256 _amountOutMinWei
     ) internal pure returns (Actions.ActionArgs memory) {
-        return Actions.ActionArgs({
-            actionType : Actions.ActionType.Trade,
-            accountId : _fromAccountId,
-            // solium-disable-next-line arg-overflow
-            amount : Types.AssetAmount(true, Types.AssetDenomination.Wei, Types.AssetReference.Delta, _amountInWei),
-            primaryMarketId : _primaryMarketId,
-            secondaryMarketId : _secondaryMarketId,
-            otherAddress : _traderAddress,
-            otherAccountId : _toAccountId,
-            data : abi.encode(_amountOutMinWei)
-        });
+        return encodeInternalTradeActionWithCustomData(
+            _fromAccountId,
+            _toAccountId,
+            _primaryMarketId,
+            _secondaryMarketId,
+            _traderAddress,
+            _amountInWei,
+            abi.encode(_amountOutMinWei)
+        );
     }
 
     function encodeInternalTradeActionWithCustomData(
@@ -327,16 +325,16 @@ library AccountActionLib {
             actionType: Actions.ActionType.Trade,
             accountId: _fromAccountId,
             amount: Types.AssetAmount({
-                sign: true,
+                sign: false,
                 denomination: Types.AssetDenomination.Wei,
-                ref: Types.AssetReference.Delta,
-                value: _amountInWei
+                ref: _amountInWei == ALL ? Types.AssetReference.Target : Types.AssetReference.Delta,
+                value: _amountInWei == ALL ? 0 : _amountInWei
             }),
             primaryMarketId: _primaryMarketId,
             secondaryMarketId: _secondaryMarketId,
             otherAddress: _traderAddress,
             otherAccountId: _toAccountId,
-            data: _orderData
+            data: abi.encode(/* calculateAmountWithMakerAccount = */ false, _orderData)
         });
     }
 

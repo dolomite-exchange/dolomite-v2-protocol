@@ -91,6 +91,7 @@ describe('PayableProxy', () => {
       from: owner1,
       to: owner1,
       order: testOrder,
+      calculateAmountWithMakerAccount: true,
       autoTrader: dolomiteMargin.testing.autoTrader.address,
       data: toBytes(tradeId),
       callee: dolomiteMargin.testing.callee.address,

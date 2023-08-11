@@ -32,8 +32,9 @@ import { Actions } from "../protocol/lib/Actions.sol";
 import { Require } from "../protocol/lib/Require.sol";
 import { Types } from "../protocol/lib/Types.sol";
 
-import { TypedSignature } from "../external/lib/TypedSignature.sol";
+import { AccountActionLib } from "../external/lib/AccountActionLib.sol";
 import { DolomiteAmmLibrary } from "../external/lib/DolomiteAmmLibrary.sol";
+import { TypedSignature } from "../external/lib/TypedSignature.sol";
 
 import { IDolomiteAmmFactory } from "../external/interfaces/IDolomiteAmmFactory.sol";
 import { IDolomiteAmmPair } from "../external/interfaces/IDolomiteAmmPair.sol";
@@ -127,7 +128,7 @@ contract TestAmmRebalancerProxy is OnlyDolomiteMargin, Ownable {
                 FILE,
                 "invalid pool owner address"
             );
-            actions[i + 1] = _encodeTrade(
+            actions[i + 1] = AccountActionLib.encodeInternalTradeAction(
                 0,
                 i + 1,
                 dolomiteMarketPath[i],
@@ -161,27 +162,6 @@ contract TestAmmRebalancerProxy is OnlyDolomiteMargin, Ownable {
         amountIn = leftSide.sub(rightSide);
     }
 
-    function _encodeTrade(
-        uint fromAccountIndex,
-        uint toAccountIndex,
-        uint primaryMarketId,
-        uint secondaryMarketId,
-        address traderAddress,
-        uint amountInWei,
-        uint amountOutWei
-    ) internal pure returns (Actions.ActionArgs memory) {
-        return Actions.ActionArgs({
-            actionType : Actions.ActionType.Trade,
-            accountId : fromAccountIndex,
-            amount : Types.AssetAmount(true, Types.AssetDenomination.Wei, Types.AssetReference.Delta, amountInWei),
-            primaryMarketId : primaryMarketId,
-            secondaryMarketId : secondaryMarketId,
-            otherAddress : traderAddress,
-            otherAccountId : toAccountIndex,
-            data : abi.encode(amountOutWei)
-        });
-    }
-
     function _getMarketPathFromTokenPath(
         address[] memory path
     ) internal view returns (uint[] memory) {
@@ -192,5 +172,4 @@ contract TestAmmRebalancerProxy is OnlyDolomiteMargin, Ownable {
         }
         return marketPath;
     }
-
 }

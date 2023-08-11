@@ -18,4 +18,18 @@ export class TestChainlinkAggregator {
       options,
     );
   }
+
+  public async setMinAnswer(minAnswer: Integer, options?: ContractCallOptions): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.testChainlinkPriceAggregator.methods.setMinAnswer(minAnswer.toFixed()),
+      options,
+    );
+  }
+
+  public async setMaxAnswer(maxAnswer: Integer, options?: ContractCallOptions): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.testChainlinkPriceAggregator.methods.setMaxAnswer(maxAnswer.toFixed()),
+      options,
+    );
+  }
 }
