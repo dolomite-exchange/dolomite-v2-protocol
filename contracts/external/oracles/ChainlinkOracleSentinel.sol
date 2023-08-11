@@ -59,7 +59,7 @@ contract ChainlinkOracleSentinel is IOracleSentinel, OnlyDolomiteMargin {
         public
         OnlyDolomiteMargin(_dolomiteMargin)
     {
-        gracePeriod = _gracePeriod;
+        _ownerSetGracePeriod(_gracePeriod);
         SEQUENCER_UPTIME_FEED = IChainlinkAggregator(_sequencerUptimeFeed);
     }
 

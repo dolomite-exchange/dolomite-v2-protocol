@@ -77,20 +77,20 @@ contract ChainlinkPriceOracleV1 is IChainlinkPriceOracleV1, OnlyDolomiteMargin {
         public
         OnlyDolomiteMargin(_dolomiteMargin)
     {
-        // coverage-disable-next-line
-        require(
+        Require.that(
             _tokens.length == _chainlinkAggregators.length,
-            "Invalid aggregators"
+            FILE,
+            "Invalid tokens length"
         );
-        // coverage-disable-next-line
-        require(
+        Require.that(
             _chainlinkAggregators.length == _tokenDecimals.length,
-            "Invalid token decimals"
+            FILE,
+            "Invalid aggregators length"
         );
-        // coverage-disable-next-line
-        require(
+        Require.that(
             _tokenDecimals.length == _tokenPairs.length,
-            "Invalid token pairs"
+            FILE,
+            "Invalid decimals length"
         );
 
         uint256 tokensLength = _tokens.length;

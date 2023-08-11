@@ -1358,6 +1358,7 @@ describe('Admin', () => {
   describe('#ownerSetOracleSentinel', () => {
     async function deployChainlinkOracleSentinel(): Promise<OracleSentinel> {
       const contract = await deployContract(dolomiteMargin, chainlinkOracleSentinelJson, [
+        INTEGERS.ONE_HOUR_IN_SECONDS.toFixed(),
         dolomiteMargin.contracts.testSequencerUptimeFeedAggregator.options.address,
         dolomiteMargin.address,
       ]);
