@@ -296,12 +296,12 @@ describe('Library', () => {
       await expectThrow(dolomiteMargin.contracts.testLib.methods.MathTo128(large).call());
     });
 
-    it('to96', async () => {
-      const large = '79228162514264337593543950336'; // 2^96
-      const small = '79228162514264337593543950335'; // 2^96 - 1
-      const result = await dolomiteMargin.contracts.testLib.methods.MathTo96(small).call();
+    it('to112', async () => {
+      const large = '5192296858534827628530496329220096'; // 2^112
+      const small = '5192296858534827628530496329220095'; // 2^112 - 1
+      const result = await dolomiteMargin.contracts.testLib.methods.MathTo112(small).call();
       expect(result).to.eql(small);
-      await expectThrow(dolomiteMargin.contracts.testLib.methods.MathTo96(large).call());
+      await expectThrow(dolomiteMargin.contracts.testLib.methods.MathTo112(large).call());
     });
 
     it('to32', async () => {

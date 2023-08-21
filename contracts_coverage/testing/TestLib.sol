@@ -195,14 +195,14 @@ contract TestLib {
         return DolomiteMarginMath.to128(x);
     }
 
-    function MathTo96(
+    function MathTo112(
         uint256 x
     )
         external
         pure
         returns (uint96)
     {
-        return DolomiteMarginMath.to96(x);
+        return DolomiteMarginMath.to112(x);
     }
 
     function MathTo32(

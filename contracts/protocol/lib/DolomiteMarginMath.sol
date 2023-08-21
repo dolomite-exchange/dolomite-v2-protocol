@@ -113,18 +113,18 @@ library DolomiteMarginMath {
         return result;
     }
 
-    function to96(
+    function to112(
         uint256 number
     )
         internal
         pure
-        returns (uint96)
+        returns (uint112)
     {
-        uint96 result = uint96(number);
+        uint112 result = uint112(number);
         Require.that(
             result == number,
             FILE,
-            "Unsafe cast to uint96",
+            "Unsafe cast to uint112",
             number
         );
         return result;

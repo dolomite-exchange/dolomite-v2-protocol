@@ -103,8 +103,8 @@ library Interest {
       /*assert(supplyInterest <= borrowInterest);*/
 
         return Index({
-            borrow: DolomiteMarginMath.getPartial(index.borrow, borrowInterest, BASE).add(index.borrow).to96(),
-            supply: DolomiteMarginMath.getPartial(index.supply, supplyInterest, BASE).add(index.supply).to96(),
+            borrow: DolomiteMarginMath.getPartial(index.borrow, borrowInterest, BASE).add(index.borrow).to112(),
+            supply: DolomiteMarginMath.getPartial(index.supply, supplyInterest, BASE).add(index.supply).to112(),
             lastUpdate: currentTime
         });
     }

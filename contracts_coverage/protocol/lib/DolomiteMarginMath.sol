@@ -113,7 +113,7 @@ library DolomiteMarginMath {
         return result;
     }
 
-    function to96(
+    function to112(
         uint256 number
     )
         internal
@@ -124,7 +124,7 @@ library DolomiteMarginMath {
         if (result == number) { /* FOR COVERAGE TESTING */ }
         Require.that(result == number,
             FILE,
-            "Unsafe cast to uint96",
+            "Unsafe cast to uint112",
             number
         );
         return result;
