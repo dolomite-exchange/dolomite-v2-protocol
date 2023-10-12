@@ -290,7 +290,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         Account.Info memory _account,
         uint256[] memory _marketIdsPath
     ) internal view {
-        for (uint i = 0; i < _marketIdsPath.length; i++) {
+        for (uint256 i = 0; i < _marketIdsPath.length; i++) {
             // Panic if we're zapping to an account that has any value in it. Why? Because we don't want execute trades
             // where we sell ALL if there's already value in the account. That would mess up the user's holdings and
             // unintentionally sell assets the user does not want to sell.
