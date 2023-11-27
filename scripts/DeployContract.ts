@@ -1,4 +1,4 @@
-import { abi, bytecode, contractName } from '../build/contracts/GenericTraderProxyV1.json';
+import { abi, bytecode, contractName } from '../build/contracts/LiquidatorProxyV4WithGenericTrader.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
 import { GenericTraderProxyV1 } from '../build/wrappers/GenericTraderProxyV1';
 import { execSync } from 'child_process';
@@ -33,8 +33,8 @@ async function deploy(): Promise<void> {
       data: bytecode,
       arguments: [
         dolomiteMargin.expiry.address,
-        dolomiteMargin.contracts.marginPositionRegistry.options.address,
         dolomiteMargin.address,
+        dolomiteMargin.contracts.liquidatorAssetRegistry.options.address,
       ],
     }),
     { confirmationType: ConfirmationType.Confirmed, gas: '60000000', gasPrice: '1000000000', from: deployer },
