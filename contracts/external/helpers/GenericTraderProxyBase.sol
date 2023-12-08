@@ -352,7 +352,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
             if (TraderType.IsolationModeUnwrapper == _tradersPath[i].traderType) {
                 actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
             } else if (TraderType.IsolationModeWrapper == _tradersPath[i].traderType) {
-                actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
+                actionsLength += IIsolationModeWrapperTrader(_tradersPath[i].trader).actionsLength();
             } else {
                 actionsLength += 1;
             }
