@@ -95,6 +95,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
 
     // TODO: Add transfer all functionality from account; transfer all that WAS swapped to the trader account
     // TODO: add swap ALL functionality
+    // TODO: add open borrow + swap
     function swapExactInputForOutput(
         uint256 _tradeAccountNumber,
         uint256[] memory _marketIdsPath,
