@@ -153,7 +153,7 @@ The original DolomiteMargin smart contracts were audited independently by both
 Some changes discussed above were audited by [SECBIT Labs](https://secbit.io/). We plan on performing at least one more 
 audit of the system before the new *Recyclable* feature is used in production.
 
-**[SECBIT Audit Report](./docs/Dolomite_Protocol_V2_Report_EN.pdf)**
+**[SECBIT Audit Report](./docs/Dolomite Margin - SECBIT - 2021-08-02.pdf)**
 
 ### Code Coverage
 

@@ -171,6 +171,16 @@ interface IDolomiteMargin {
     ) external view returns (Decimal.D256 memory);
 
     /**
+     * Get the maximum supply Wei for a given market. A value of `0` denotes there being no maximum.
+     *
+     * @param  marketId  The market to query
+     * @return           The market's max supply wei allowed
+     */
+    function getMarketMaxWei(
+        uint256 marketId
+    ) external view returns (Types.Wei memory);
+
+    /**
      * Return true if this market can be removed and its ID can be recycled and reused
      *
      * @param  marketId  The market to query
@@ -234,9 +244,9 @@ interface IDolomiteMargin {
     );
 
     /**
-     * Get the number of excess tokens for a market. The number of excess tokens is calculated by taking the current
-     * number of tokens held in DolomiteMargin, adding the number of tokens owed to DolomiteMargin by borrowers, and
-     * subtracting the number of tokens owed to suppliers by DolomiteMargin.
+     * Get the number of tokens that are owed to the `owner` of DolomiteMargin. The number of excess tokens is
+     * calculated by taking the current number of tokens held in DolomiteMargin, adding the number of tokens owed to
+     * DolomiteMargin by borrowers, and subtracting the number of tokens owed to suppliers by DolomiteMargin.
      *
      * @param  marketId  The market to query
      * @return           The number of excess tokens
@@ -421,8 +431,8 @@ interface IDolomiteMargin {
     function getMarginRatio() external view returns (Decimal.D256 memory);
 
     /**
-     * Get the global liquidation spread. This is the spread between oracle prices that incentivizes
-     * the liquidation of risky positions.
+     * Get the global liquidation spread. This is the spread between oracle prices that is used to incentivize the
+     * liquidation of risky positions.
      *
      * @return  The global liquidation spread
      */
