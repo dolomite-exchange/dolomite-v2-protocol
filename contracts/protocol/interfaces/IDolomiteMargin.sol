@@ -63,7 +63,7 @@ interface IDolomiteMargin {
     function getMarketMaxWei(
         uint256 marketId
     )
-    public
+    external
     view
     returns (Types.Wei memory);
 
@@ -169,16 +169,6 @@ interface IDolomiteMargin {
     function getMarketSpreadPremium(
         uint256 marketId
     ) external view returns (Decimal.D256 memory);
-
-    /**
-     * Get the maximum supply Wei for a given market. A value of `0` denotes there being no maximum.
-     *
-     * @param  marketId  The market to query
-     * @return           The market's max supply wei allowed
-     */
-    function getMarketMaxWei(
-        uint256 marketId
-    ) external view returns (Types.Wei memory);
 
     /**
      * Return true if this market can be removed and its ID can be recycled and reused

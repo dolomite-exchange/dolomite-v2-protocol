@@ -33,6 +33,7 @@ import { GenericTraderProxyBase } from "../helpers/GenericTraderProxyBase.sol";
 import { HasLiquidatorRegistry } from "../helpers/HasLiquidatorRegistry.sol";
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 
+import { IBorrowPositionRegistry } from "../interfaces/IBorrowPositionRegistry.sol";
 import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyV1 } from "../interfaces/IGenericTraderProxyV1.sol";
 import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
@@ -41,7 +42,6 @@ import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.s
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 import { AccountBalanceLib } from "../lib/AccountBalanceLib.sol";
-
 
 /**
  * @title   GenericTraderProxyV1
@@ -61,6 +61,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
 
     IExpiry public EXPIRY;
     IMarginPositionRegistry public MARGIN_POSITION_REGISTRY;
+    IBorrowPositionRegistry public BORROW_POSITION_REGISTRY;
 
     // ============ Modifiers ============
 
@@ -80,6 +81,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
     constructor (
         address _expiry,
         address _marginPositionRegistry,
+        address _borrowPositionRegistry,
         address _dolomiteMargin
     )
     public
@@ -89,12 +91,14 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
     {
         EXPIRY = IExpiry(_expiry);
         MARGIN_POSITION_REGISTRY = IMarginPositionRegistry(_marginPositionRegistry);
+        BORROW_POSITION_REGISTRY = IBorrowPositionRegistry(_borrowPositionRegistry);
     }
 
     // ============ Public Functions ============
 
-    // TODO: Add transfer all functionality from account; transfer all that WAS swapped to the trader account
-    // TODO: add swap ALL functionality
+    // TODO: Add transfer all functionality from account;
+    //  - transfer all that WAS swapped FROM the trader account
+    //  - use transfer IN amount as the trade amount
     // TODO: add open borrow + swap
     function swapExactInputForOutput(
         uint256 _tradeAccountNumber,
@@ -125,6 +129,14 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             // unused for this function
             transferBalanceWeiBeforeOperate: Types.zeroWei()
         });
+
+        _inputAmountWei = _getActualInputAmountWei(
+            cache,
+            _tradeAccountNumber,
+            _marketIdsPath[0],
+            _inputAmountWei
+        );
+
         _validateMarketIdPath(_marketIdsPath);
         _validateAmountWeis(_inputAmountWei, _minOutputAmountWei);
         _validateTraderParams(
@@ -203,6 +215,29 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             outputBalanceWeiBeforeOperate: Types.zeroWei(),
             transferBalanceWeiBeforeOperate: Types.zeroWei()
         });
+
+        // If we're transferring into the trade account, we check the input amount using the amount being transferred in
+        if (_transferCollateralParams.toAccountNumber == _tradeAccountNumber) {
+            Require.that(
+                _marketIdsPath[0] == _transferCollateralParams.transferAmounts[0].marketId,
+                FILE,
+                "Invalid transfer market ID"
+            );
+            _inputAmountWei = _getActualInputAmountWei(
+                cache,
+                _transferCollateralParams.fromAccountNumber,
+                _marketIdsPath[0],
+                _transferCollateralParams.transferAmounts[0].amountWei
+            );
+        } else {
+            _inputAmountWei = _getActualInputAmountWei(
+                cache,
+                _tradeAccountNumber,
+                _marketIdsPath[0],
+                _inputAmountWei
+            );
+        }
+
         _validateMarketIdPath(_marketIdsPath);
         _validateAmountWeis(_inputAmountWei, _minOutputAmountWei);
         _validateTraderParams(
@@ -233,6 +268,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
                 + transferActionsLength
                 + _getActionsLengthForExpiryParam(_expiryParams)
         );
+
         // solium-disable indentation
         {
             // To avoid the "stack too deep" error, we rearrange the stack
@@ -252,13 +288,15 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         }
         {
             // To avoid the "stack too deep" error, we rearrange the stack
+            uint256 lastMarketId = _marketIdsPath[_marketIdsPath.length - 1];
             uint256 tradeAccountNumberForStackTooDeep = _tradeAccountNumber;
             _appendTransferActions(
                 actions,
                 cache,
                 _transferCollateralParams,
                 tradeAccountNumberForStackTooDeep,
-                transferActionsLength
+                transferActionsLength,
+                lastMarketId
             );
         }
         // solium-enable indentation
@@ -287,9 +325,10 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
 
         _logEvents(
             cache,
-            /* _tradeAccount = */ accounts[TRADE_ACCOUNT_ID], // solium-disable-line indentation
+            accounts[TRADE_ACCOUNT_ID],
             _marketIdsPath,
-            _transferCollateralParams
+            _transferCollateralParams,
+            _userConfig.eventType
         );
 
         if (
@@ -324,6 +363,30 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
     // ============ Internal Functions ============
 
     function _logEvents(
+        GenericTraderProxyCache memory _cache,
+        Account.Info memory _tradeAccount,
+        uint256[] memory _marketIdsPath,
+        TransferCollateralParam memory _param,
+        EventEmissionType _eventType
+    ) internal {
+        if (_eventType == EventEmissionType.MarginPosition) {
+            _logMarginPositionEvent(
+                _cache,
+                _tradeAccount,
+                _marketIdsPath,
+                _param
+            );
+        } else if (_eventType == EventEmissionType.BorrowPosition) {
+            BORROW_POSITION_REGISTRY.emitBorrowPositionOpen(
+                _tradeAccount.owner,
+                _tradeAccount.number
+            );
+        } else {
+            assert(_eventType == EventEmissionType.None);
+        }
+    }
+
+    function _logMarginPositionEvent(
         GenericTraderProxyCache memory _cache,
         Account.Info memory _tradeAccount,
         uint256[] memory _marketIdsPath,
@@ -367,9 +430,9 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             marginBalanceUpdate = Events.BalanceUpdate({
                 deltaWei: marginBalanceWeiAfter.sub(_cache.transferBalanceWeiBeforeOperate),
                 newPar: _cache.dolomiteMargin.getAccountPar(
-                _tradeAccount,
-                _param.transferAmounts[0].marketId
-            )
+                    _tradeAccount,
+                    _param.transferAmounts[0].marketId
+                )
             });
         }
         // solium-enable indentation
@@ -442,6 +505,88 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         );
     }
 
+    function _getActualInputAmountWei(
+        GenericTraderProxyCache memory _cache,
+        uint256 _accountNumber,
+        uint256 _marketId,
+        uint256 _inputAmountWei
+    ) internal view returns (uint256) {
+        if (_inputAmountWei != uint256(-1)) {
+            return _inputAmountWei;
+        }
+
+        Types.Wei memory balanceWei = _cache.dolomiteMargin.getAccountWei(
+            Account.Info({
+                owner: msg.sender,
+                number: _accountNumber
+            }),
+            _marketId
+        );
+        Require.that(
+            !balanceWei.isNegative(),
+            FILE,
+            "Balance must be positive"
+        );
+        return balanceWei.value;
+    }
+
+    function _appendTransferActions(
+        Actions.ActionArgs[] memory _actions,
+        GenericTraderProxyCache memory _cache,
+        TransferCollateralParam memory _transferCollateralParam,
+        uint256 _traderAccountNumber,
+        uint256 _transferActionsLength,
+        uint256 _lastMarketId
+    )
+    internal
+    view
+    {
+        // the `_traderAccountNumber` is always `accountId=0`
+        uint256 fromAccountId = _transferCollateralParam.fromAccountNumber == _traderAccountNumber
+            ? TRADE_ACCOUNT_ID
+            : TRANSFER_ACCOUNT_ID;
+
+        uint256 toAccountId = _transferCollateralParam.fromAccountNumber == _traderAccountNumber
+            ? TRANSFER_ACCOUNT_ID
+            : TRADE_ACCOUNT_ID;
+
+        for (uint256 i = 0; i < _transferActionsLength; i++) {
+            if (_transferCollateralParam.transferAmounts[i].amountWei == uint256(-2)) {
+                Require.that(
+                    _transferCollateralParam.transferAmounts[i].marketId == _lastMarketId,
+                    FILE,
+                    "Invalid transfer market ID"
+                );
+                Require.that(
+                    fromAccountId == TRADE_ACCOUNT_ID,
+                    FILE,
+                    "Invalid from account ID"
+                );
+
+                // We transfer to the amount we had before the swap finished
+                _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferToTargetAmountAction(
+                    fromAccountId,
+                    toAccountId,
+                    _transferCollateralParam.transferAmounts[i].marketId,
+                    _cache.dolomiteMargin.getAccountWei(
+                        Account.Info({
+                            owner: msg.sender,
+                            number: _transferCollateralParam.fromAccountNumber
+                        }),
+                        _transferCollateralParam.transferAmounts[i].marketId
+                    )
+                );
+            } else {
+                _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferAction(
+                    fromAccountId,
+                    toAccountId,
+                    _transferCollateralParam.transferAmounts[i].marketId,
+                    _transferCollateralParam.transferAmounts[i].amountWei
+                );
+            }
+        }
+    }
+
     function _validateTransferParams(
         GenericTraderProxyCache memory _cache,
         TransferCollateralParam memory _param,
@@ -500,33 +645,6 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             return 0;
         } else {
             return 1;
-        }
-    }
-
-    function _appendTransferActions(
-        Actions.ActionArgs[] memory _actions,
-        GenericTraderProxyCache memory _cache,
-        TransferCollateralParam memory _transferCollateralParam,
-        uint256 _traderAccountNumber,
-        uint256 _transferActionsLength
-    )
-        internal
-        pure
-    {
-        // the `_traderAccountNumber` is always `accountId=0`
-        uint256 fromAccountId = _transferCollateralParam.fromAccountNumber == _traderAccountNumber
-            ? TRADE_ACCOUNT_ID
-            : TRANSFER_ACCOUNT_ID;
-        uint256 toAccountId = _transferCollateralParam.fromAccountNumber == _traderAccountNumber
-            ? TRANSFER_ACCOUNT_ID
-            : TRADE_ACCOUNT_ID;
-        for (uint256 i = 0; i < _transferActionsLength; i++) {
-            _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferAction(
-                fromAccountId,
-                toAccountId,
-                _transferCollateralParam.transferAmounts[i].marketId,
-                _transferCollateralParam.transferAmounts[i].amountWei
-            );
         }
     }
 

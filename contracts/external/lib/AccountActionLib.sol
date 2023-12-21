@@ -191,8 +191,12 @@ library AccountActionLib {
         return Actions.ActionArgs({
             actionType : Actions.ActionType.Call,
             accountId : _accountId,
-            // solium-disable-next-line arg-overflow
-            amount : Types.AssetAmount(true, Types.AssetDenomination.Wei, Types.AssetReference.Delta, 0),
+            amount : Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: 0
+            }),
             primaryMarketId : 0,
             secondaryMarketId : 0,
             otherAddress : _callee,
@@ -303,7 +307,12 @@ library AccountActionLib {
             actionType : Actions.ActionType.Trade,
             accountId : _fromAccountId,
             // solium-disable-next-line arg-overflow
-            amount : Types.AssetAmount(true, Types.AssetDenomination.Wei, Types.AssetReference.Delta, _amountInWei),
+            amount : Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: _amountInWei
+            }),
             primaryMarketId : _primaryMarketId,
             secondaryMarketId : _secondaryMarketId,
             otherAddress : _traderAddress,
@@ -398,24 +407,47 @@ library AccountActionLib {
     ) internal pure returns (Actions.ActionArgs memory) {
         Types.AssetAmount memory assetAmount;
         if (_amountWei == uint(- 1)) {
-            assetAmount = Types.AssetAmount(
-                true,
-                Types.AssetDenomination.Wei,
-                Types.AssetReference.Target,
-                0
-            );
+            assetAmount = Types.AssetAmount({
+                sign: true,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Target,
+                value: 0
+            });
         } else {
-            assetAmount = Types.AssetAmount(
-                false,
-                Types.AssetDenomination.Wei,
-                Types.AssetReference.Delta,
-                _amountWei
-            );
+            assetAmount = Types.AssetAmount({
+                sign: false,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: _amountWei
+            });
         }
         return Actions.ActionArgs({
             actionType : Actions.ActionType.Transfer,
             accountId : _fromAccountId,
             amount : assetAmount,
+            primaryMarketId : _marketId,
+            secondaryMarketId : 0,
+            otherAddress : address(0),
+            otherAccountId : _toAccountId,
+            data : bytes("")
+        });
+    }
+
+    function encodeTransferToTargetAmountAction(
+        uint256 _fromAccountId,
+        uint256 _toAccountId,
+        uint256 _marketId,
+        Types.Wei memory _targetAmountWei
+    ) internal pure returns (Actions.ActionArgs memory) {
+        return Actions.ActionArgs({
+            actionType : Actions.ActionType.Transfer,
+            accountId : _fromAccountId,
+            amount : Types.AssetAmount({
+                sign: _targetAmountWei.sign,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Target,
+                value: _targetAmountWei.value
+            }),
             primaryMarketId : _marketId,
             secondaryMarketId : 0,
             otherAddress : address(0),

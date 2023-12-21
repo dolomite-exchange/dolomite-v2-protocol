@@ -97,5 +97,4 @@ contract MarginPositionRegistry is IMarginPositionRegistry, OnlyDolomiteMargin {
             _marginWithdrawalUpdate
         );
     }
-
 }

@@ -46,12 +46,21 @@ contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
         TraderParam[] _tradersPath
     );
 
+    // ============ Enums ============
+
+    enum EventEmissionType {
+        None,
+        BorrowPosition,
+        MarginPosition
+    }
+
     // ============ Structs ============
 
     struct TransferAmount {
         /// @dev The market ID to transfer
         uint256 marketId;
-        /// @dev Note, setting to uint(-1) will transfer all of the user's balance.
+        /// @dev Note, setting to uint(-1) will transfer all of the user's balance. Setting to `uint(-2)` will transfer
+        ///      the output result of the swap (reverts if `marketId` is not `marketIdsPath[last]`).
         uint256 amountWei;
     }
 
@@ -74,6 +83,7 @@ contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
     struct UserConfig {
         uint256 deadline;
         AccountBalanceLib.BalanceCheckFlag balanceCheckFlag;
+        EventEmissionType eventType;
     }
 
     // ============ Functions ============
