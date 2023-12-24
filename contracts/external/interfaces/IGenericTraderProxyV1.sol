@@ -37,15 +37,6 @@ import { IGenericTraderProxyBase } from "./IGenericTraderProxyBase.sol";
  */
 contract IGenericTraderProxyV1 is IGenericTraderProxyBase {
 
-    // ============ Events ============
-
-    event ZapExecuted(
-        address indexed _accountOwner,
-        uint256 _accountNumber,
-        uint256[] _marketIdsPath,
-        TraderParam[] _tradersPath
-    );
-
     // ============ Enums ============
 
     enum EventEmissionType {

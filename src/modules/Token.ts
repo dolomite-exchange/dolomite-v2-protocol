@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'web3/types';
 import { Contracts } from '../lib/Contracts';
 import { INTEGERS } from '../lib/Constants';
-import { IERC20 } from '../../build/wrappers/IERC20';
+import { IERC20Detailed } from '../../build/wrappers/IERC20Detailed';
 import {
   address,
   ContractCallOptions,
@@ -272,13 +272,13 @@ export class Token {
     });
   }
 
-  private getToken(tokenAddress: string): IERC20 {
+  private getToken(tokenAddress: string): IERC20Detailed {
     if (this.tokens[tokenAddress]) {
       return this.tokens[tokenAddress];
     }
 
-    const token: IERC20 = this.contracts.erc20;
-    const contract: IERC20 = token.clone();
+    const token: IERC20Detailed = this.contracts.erc20;
+    const contract: IERC20Detailed = token.clone();
     contract.options.address = tokenAddress;
 
     this.tokens[tokenAddress] = contract;

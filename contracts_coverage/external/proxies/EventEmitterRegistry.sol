@@ -26,16 +26,16 @@ import { Require } from "../../protocol/lib/Require.sol";
 
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 
-import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
+import { IEventEmitterRegistry } from "../interfaces/IEventEmitterRegistry.sol";
 
 
 /**
- * @title   MarginPositionRegistry
+ * @title   EventEmitterRegistry
  * @author  Dolomite
  *
  * @dev Proxy contract for emitting events for a singular address when a margin position is opened or closed
  */
-contract MarginPositionRegistry is IMarginPositionRegistry, OnlyDolomiteMargin {
+contract EventEmitterRegistry is IEventEmitterRegistry, OnlyDolomiteMargin {
 
     // ============ Constructor ============
 
@@ -46,6 +46,19 @@ contract MarginPositionRegistry is IMarginPositionRegistry, OnlyDolomiteMargin {
     OnlyDolomiteMargin(dolomiteMargin)
     {
         // solhint-disable-line no-empty-blocks
+    }
+
+    function emitBorrowPositionOpen(
+        address _accountOwner,
+        uint256 _accountNumber
+    )
+        public
+        onlyGlobalOperator(msg.sender)
+    {
+        emit BorrowPositionOpen(
+            _accountOwner,
+            _accountNumber
+        );
     }
 
     function emitMarginPositionOpen(
@@ -97,4 +110,5 @@ contract MarginPositionRegistry is IMarginPositionRegistry, OnlyDolomiteMargin {
             _marginWithdrawalUpdate
         );
     }
+
 }

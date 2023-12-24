@@ -35,12 +35,10 @@ import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 import { IIsolationModeToken } from "../interfaces/IIsolationModeToken.sol";
-import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry.sol";
 import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
 import { IIsolationModeUnwrapperTraderV2 } from "../interfaces/IIsolationModeUnwrapperTraderV2.sol";
 import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
 import { IIsolationModeWrapperTraderV2 } from "../interfaces/IIsolationModeWrapperTraderV2.sol";
-import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
@@ -61,9 +59,36 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     uint256 internal constant TRADE_ACCOUNT_ID = 0;
     uint256 internal constant ZAP_ACCOUNT_ID = 1;
 
-    bytes32 internal constant GLP_ISOLATION_MODE_PREFIX = keccak256(bytes("Dolomite: Fee + Staked GLP"));
-    bytes32 internal constant ISOLATION_MODE_PREFIX = keccak256(bytes("Dolomite Isolation:"));
+    bytes32 internal constant GLP_ISOLATION_MODE_HASH = keccak256(bytes("Dolomite: Fee + Staked GLP"));
+    bytes32 internal constant ISOLATION_MODE_PREFIX_HASH = keccak256(bytes("Dolomite Isolation:"));
     uint256 internal constant DOLOMITE_ISOLATION_LENGTH = 19;
+
+    // ============ Public Functions ============
+
+    function isIsolationModeMarket(
+        IDolomiteMargin _dolomiteMargin,
+        uint256 _marketId
+    ) public view returns (bool) {
+        (bool isSuccess, bytes memory returnData) = ExcessivelySafeCall.safeStaticCall(
+            _dolomiteMargin.getMarketTokenAddress(_marketId),
+            IERC20Detailed(address(0)).name.selector,
+            bytes("")
+        );
+        if (!isSuccess) {
+            return false;
+        }
+        string memory name = abi.decode(returnData, (string));
+        return (
+            (bytes(name).length >= DOLOMITE_ISOLATION_LENGTH
+                && _hashSubstring(
+                    name,
+                    /* _startIndex = */ 0, // solium-disable-line indentation
+                    /* _endIndex = */ DOLOMITE_ISOLATION_LENGTH // solium-disable-line indentation
+                ) == ISOLATION_MODE_PREFIX_HASH
+            )
+            || keccak256(bytes(name)) == GLP_ISOLATION_MODE_HASH
+        );
+    }
 
     // ============ Internal Functions ============
 
@@ -167,7 +192,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         uint256 _nextMarketId,
         TraderParam memory _traderParam
     ) internal view {
-        if (_isIsolationModeMarket(_cache, _marketId)) {
+        if (isIsolationModeMarket(_cache.dolomiteMargin, _marketId)) {
             // If the current market is in isolation mode, the trader type must be for isolation mode assets
             Require.that(
                 _isUnwrapperTraderType(_traderParam.traderType),
@@ -177,7 +202,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 uint256(uint8(_traderParam.traderType))
             );
 
-            if (_isIsolationModeMarket(_cache, _nextMarketId)) {
+            if (isIsolationModeMarket(_cache.dolomiteMargin, _nextMarketId)) {
                 // If the user is unwrapping into an isolation mode asset, the next market must trust this trader
                 address isolationModeToken = _cache.dolomiteMargin.getMarketTokenAddress(_nextMarketId);
                 Require.that(
@@ -188,7 +213,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _nextMarketId
                 );
             }
-        } else if (_isIsolationModeMarket(_cache, _nextMarketId)) {
+        } else if (isIsolationModeMarket(_cache.dolomiteMargin, _nextMarketId)) {
             // If the next market is in isolation mode, the trader must wrap the current asset into the isolation asset.
             Require.that(
                 _isWrapperTraderType(_traderParam.traderType),
@@ -516,35 +541,6 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         );
     }
 
-    function _isIsolationModeMarket(
-        GenericTraderProxyCache memory _cache,
-        uint256 _marketId
-    ) internal view returns (bool) {
-        // TODO: adjust to use name so we don't deal with reversions?
-        (bool isSuccess, bytes memory returnData) = ExcessivelySafeCall.safeStaticCall(
-            _cache.dolomiteMargin.getMarketTokenAddress(_marketId),
-            IERC20Detailed(address(0)).name.selector,
-            bytes("")
-        );
-        if (!isSuccess) {
-            return false;
-        }
-        string memory name = abi.decode(returnData, (string));
-        return (
-            (bytes(name).length >= DOLOMITE_ISOLATION_LENGTH && keccak256(bytes(_substring(name, 0, 19))) == ISOLATION_MODE_PREFIX) // solhint-disable-line
-                || keccak256(bytes(name)) == GLP_ISOLATION_MODE_PREFIX
-        );
-    }
-
-    function _substring(string memory _value, uint256 _startIndex, uint256 _endIndex) private pure returns (string memory) {
-        bytes memory strBytes = bytes(_value);
-        bytes memory result = new bytes(_endIndex - _startIndex);
-        for (uint256 i = _startIndex; i < _endIndex; i++) {
-            result[i - _startIndex] = strBytes[i];
-        }
-        return string(result);
-    }
-
     /**
      * @return  The index of the account that is not the trade account. For the liquidation contract, this is
      *          the account being liquidated. For the GenericTrader contract this is the same as the trader account.
@@ -567,7 +563,11 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     function _getInputAmountWeiForIndex(
         uint256 _inputAmountWei,
         uint256 _index
-    ) private pure returns (uint256) {
+    )
+        private
+        pure
+        returns (uint256)
+    {
         return _index == 0 ? _inputAmountWei : AccountActionLib.all();
     }
 
@@ -575,16 +575,20 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         uint256 _minOutputAmountWei,
         uint256 _index,
         uint256 _tradersPathLength
-    ) private pure returns (uint256) {
+    )
+        private
+        pure
+        returns (uint256)
+    {
         return _index == _tradersPathLength - 1 ? _minOutputAmountWei : 1;
     }
 
     function _isWrapperTraderType(
         TraderType _traderType
     )
-    private
-    pure
-    returns (bool)
+        private
+        pure
+        returns (bool)
     {
         return TraderType.IsolationModeWrapper == _traderType || TraderType.IsolationModeWrapperV2 == _traderType;
     }
@@ -592,10 +596,27 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     function _isUnwrapperTraderType(
         TraderType _traderType
     )
-    private
-    pure
-    returns (bool)
+        private
+        pure
+        returns (bool)
     {
         return TraderType.IsolationModeUnwrapper == _traderType || TraderType.IsolationModeUnwrapperV2 == _traderType;
+    }
+
+    function _hashSubstring(
+        string memory _value,
+        uint256 _startIndex,
+        uint256 _endIndex
+    )
+        private
+        pure
+        returns (bytes32)
+    {
+        bytes memory strBytes = bytes(_value);
+        bytes memory result = new bytes(_endIndex - _startIndex);
+        for (uint256 i = _startIndex; i < _endIndex; i++) {
+            result[i - _startIndex] = strBytes[i];
+        }
+        return keccak256(result);
     }
 }

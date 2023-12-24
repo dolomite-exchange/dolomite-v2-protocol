@@ -39,14 +39,14 @@ import dolomiteAmmPairJson from '../../build/published_contracts/DolomiteAmmPair
 import dolomiteAmmRouterProxyJson from '../../build/published_contracts/DolomiteAmmRouterProxy.json';
 import dolomiteMarginJson from '../../build/published_contracts/DolomiteMargin.json';
 import doubleExponentInterestSetterJson from '../../build/published_contracts/DoubleExponentInterestSetter.json';
-import erc20Json from '../../build/published_contracts/IERC20.json';
+import erc20Json from '../../build/published_contracts/IERC20Detailed.json';
+import eventEmitterRegistryJson from '../../build/published_contracts/EventEmitterRegistry.json';
 import expiryJson from '../../build/published_contracts/Expiry.json';
 import expiryProxyJson from '../../build/published_contracts/ExpiryProxy.json';
 import genericTraderProxyV1Json from '../../build/published_contracts/GenericTraderProxyV1.json';
 import interestSetterJson from '../../build/published_contracts/IInterestSetter.json';
 import isolationModeUnwrapperJson from '../../build/published_contracts/IIsolationModeUnwrapperTrader.json';
 import isolationModeWrapperJson from '../../build/published_contracts/IIsolationModeWrapperTrader.json';
-import marginPositionRegistryJson from '../../build/published_contracts/MarginPositionRegistry.json';
 import priceOracleJson from '../../build/published_contracts/IPriceOracle.json';
 import liquidatorAssetRegistryJson from '../../build/published_contracts/LiquidatorAssetRegistry.json';
 import liquidatorProxyV1Json from '../../build/published_contracts/LiquidatorProxyV1.json';
@@ -79,11 +79,12 @@ import { DolomiteAmmPair } from '../../build/wrappers/DolomiteAmmPair';
 import { DolomiteAmmRouterProxy } from '../../build/wrappers/DolomiteAmmRouterProxy';
 import { DolomiteMargin } from '../../build/wrappers/DolomiteMargin';
 import { DoubleExponentInterestSetter } from '../../build/wrappers/DoubleExponentInterestSetter';
+import { EventEmitterRegistry } from '../../build/wrappers/EventEmitterRegistry';
 import { Expiry } from '../../build/wrappers/Expiry';
 import { ExpiryProxy } from '../../build/wrappers/ExpiryProxy';
 import { GenericTraderProxyV1 } from '../../build/wrappers/GenericTraderProxyV1';
 import { IArbitrumGasInfo } from '../../build/wrappers/IArbitrumGasInfo';
-import { IERC20 as ERC20 } from '../../build/wrappers/IERC20';
+import { IERC20Detailed as ERC20 } from '../../build/wrappers/IERC20Detailed';
 import { IInterestSetter as InterestSetter } from '../../build/wrappers/IInterestSetter';
 import { IIsolationModeUnwrapperTrader } from '../../build/wrappers/IIsolationModeUnwrapperTrader';
 import { IIsolationModeWrapperTrader } from '../../build/wrappers/IIsolationModeWrapperTrader';
@@ -94,7 +95,6 @@ import { LiquidatorProxyV1WithAmm } from '../../build/wrappers/LiquidatorProxyV1
 import { LiquidatorProxyV2WithExternalLiquidity } from '../../build/wrappers/LiquidatorProxyV2WithExternalLiquidity';
 import { LiquidatorProxyV3WithLiquidityToken } from '../../build/wrappers/LiquidatorProxyV3WithLiquidityToken';
 import { LiquidatorProxyV4WithGenericTrader } from '../../build/wrappers/LiquidatorProxyV4WithGenericTrader';
-import { MarginPositionRegistry } from '../../build/wrappers/MarginPositionRegistry';
 import { MultiCall } from '../../build/wrappers/MultiCall';
 import { PayableProxy as PayableProxy } from '../../build/wrappers/PayableProxy';
 import { PolynomialInterestSetter } from '../../build/wrappers/PolynomialInterestSetter';
@@ -137,6 +137,7 @@ export class Contracts {
   public doubleExponentInterestSetter: DoubleExponentInterestSetter;
   public erc20: ERC20;
   public expiry: Expiry;
+  public eventEmitterRegistry: EventEmitterRegistry;
   public expiryProxy: ExpiryProxy;
   public genericTraderProxyV1: GenericTraderProxyV1;
   public interestSetter: InterestSetter;
@@ -146,7 +147,6 @@ export class Contracts {
   public liquidatorProxyV2WithExternalLiquidity: LiquidatorProxyV2WithExternalLiquidity;
   public liquidatorProxyV3WithLiquidityToken: LiquidatorProxyV3WithLiquidityToken;
   public liquidatorProxyV4WithGenericTrader: LiquidatorProxyV4WithGenericTrader;
-  public marginPositionRegistry: MarginPositionRegistry;
   public multiCall: MultiCall;
   public payableProxy: PayableProxy;
   public polynomialInterestSetter: PolynomialInterestSetter;
@@ -219,7 +219,7 @@ export class Contracts {
     this.liquidatorProxyV4WithGenericTrader = new this.web3.eth.Contract(
       liquidatorProxyV4WithGenericTraderJson.abi,
     ) as LiquidatorProxyV4WithGenericTrader;
-    this.marginPositionRegistry = new this.web3.eth.Contract(marginPositionRegistryJson.abi) as MarginPositionRegistry;
+    this.eventEmitterRegistry = new this.web3.eth.Contract(eventEmitterRegistryJson.abi) as EventEmitterRegistry;
     this.multiCall = new this.web3.eth.Contract(multiCallJson.abi) as MultiCall;
     this.payableProxy = new this.web3.eth.Contract(payableProxyJson.abi) as PayableProxy;
     this.polynomialInterestSetter = new this.web3.eth.Contract(
@@ -302,6 +302,7 @@ export class Contracts {
       { contract: this.dolomiteMargin, json: dolomiteMarginJson },
       { contract: this.doubleExponentInterestSetter, json: doubleExponentInterestSetterJson },
       { contract: this.erc20, json: erc20Json },
+      { contract: this.eventEmitterRegistry, json: eventEmitterRegistryJson },
       { contract: this.expiry, json: expiryJson },
       { contract: this.expiryProxy, json: expiryProxyJson },
       { contract: this.genericTraderProxyV1, json: genericTraderProxyV1Json },
@@ -312,7 +313,6 @@ export class Contracts {
       { contract: this.liquidatorProxyV2WithExternalLiquidity, json: liquidatorProxyV2WithExternalLiquidityJson },
       { contract: this.liquidatorProxyV3WithLiquidityToken, json: liquidatorProxyV3WithLiquidityTokenJson },
       { contract: this.liquidatorProxyV4WithGenericTrader, json: liquidatorProxyV4WithGenericTraderJson },
-      { contract: this.marginPositionRegistry, json: marginPositionRegistryJson },
       { contract: this.multiCall, json: multiCallJson },
       { contract: this.payableProxy, json: payableProxyJson },
       { contract: this.polynomialInterestSetter, json: polynomialInterestSetterJson },
@@ -344,6 +344,7 @@ export class Contracts {
     this.dolomiteMargin.options.from = account;
     this.doubleExponentInterestSetter.options.from = account;
     this.erc20.options.from = account;
+    this.eventEmitterRegistry.options.from = account;
     this.expiry.options.from = account;
     this.expiryProxy.options.from = account;
     this.genericTraderProxyV1.options.from = account;
@@ -354,7 +355,6 @@ export class Contracts {
     this.liquidatorProxyV2WithExternalLiquidity.options.from = account;
     this.liquidatorProxyV3WithLiquidityToken.options.from = account;
     this.liquidatorProxyV4WithGenericTrader.options.from = account;
-    this.marginPositionRegistry.options.from = account;
     this.multiCall.options.from = account;
     this.payableProxy.options.from = account;
     this.polynomialInterestSetter.options.from = account;

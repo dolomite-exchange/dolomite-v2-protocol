@@ -220,4 +220,16 @@ export class TestToken {
       options,
     );
   }
+
+  public async setShouldRevertNameCall(
+    shouldRevertNameCall: boolean,
+    options: ContractCallOptions = {},
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.testTokenContract.methods.setShouldRevertNameCall(
+        shouldRevertNameCall,
+      ),
+      options,
+    );
+  }
 }

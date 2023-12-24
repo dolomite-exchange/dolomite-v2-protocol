@@ -209,7 +209,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
     it('should fail when not called by a global operator', async () => {
       await expectThrow(
         dolomiteMargin.contracts.callContractFunction(
-          dolomiteMargin.contracts.marginPositionRegistry.methods.emitMarginPositionOpen(
+          dolomiteMargin.contracts.eventEmitterRegistry.methods.emitMarginPositionOpen(
             solidOwner,
             solidNumber.toFixed(),
             token1,
@@ -228,7 +228,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
     it('should fail when not called by a global operator', async () => {
       await expectThrow(
         dolomiteMargin.contracts.callContractFunction(
-          dolomiteMargin.contracts.marginPositionRegistry.methods.emitMarginPositionClose(
+          dolomiteMargin.contracts.eventEmitterRegistry.methods.emitMarginPositionClose(
             solidOwner,
             solidNumber.toFixed(),
             token1,

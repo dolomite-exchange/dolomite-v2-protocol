@@ -29,6 +29,7 @@ contract TestToken is IERC20Detailed {
     uint256 supply;
     mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) allowed;
+    bool public shouldRevertNameCall;
 
     event Issue(address indexed token, address indexed owner, uint256 value);
 
@@ -37,18 +38,22 @@ contract TestToken is IERC20Detailed {
         issueTo(msg.sender, amount);
     }
 
-    function setBalance(address _target, uint _value) public {
+    function setBalance(address _target, uint256 _value) public {
         balances[_target] = _value;
         emit Transfer(address(0x0), _target, _value);
     }
 
+    function setShouldRevertNameCall(bool _shouldRevertNameCall) public {
+        shouldRevertNameCall = _shouldRevertNameCall;
+    }
+
     function addBalance(
         address _target,
-        uint _value
+        uint256 _value
     )
     public
     {
-        uint currBalance = balanceOf(_target);
+        uint256 currBalance = balanceOf(_target);
         require(_value + currBalance >= currBalance, "INVALID_VALUE");
         balances[_target] = currBalance.add(_value);
         supply = supply.add(_value);
@@ -78,6 +83,9 @@ contract TestToken is IERC20Detailed {
     }
 
     function name() public view returns (string memory) {
+        if (shouldRevertNameCall) {
+            revert("TestToken: name call reverted");
+        }
         return "Test Token";
     }
 

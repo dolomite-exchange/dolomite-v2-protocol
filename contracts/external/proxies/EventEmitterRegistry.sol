@@ -26,26 +26,56 @@ import { Require } from "../../protocol/lib/Require.sol";
 
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 
-import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
-
+import { IEventEmitterRegistry } from "../interfaces/IEventEmitterRegistry.sol";
+import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 
 /**
- * @title   MarginPositionRegistry
+ * @title   EventEmitterRegistry
  * @author  Dolomite
  *
  * @dev Proxy contract for emitting events for a singular address when a margin position is opened or closed
  */
-contract MarginPositionRegistry is IMarginPositionRegistry, OnlyDolomiteMargin {
+contract EventEmitterRegistry is IEventEmitterRegistry, OnlyDolomiteMargin {
 
     // ============ Constructor ============
 
     constructor (
         address dolomiteMargin
     )
-    public
-    OnlyDolomiteMargin(dolomiteMargin)
+        public
+        OnlyDolomiteMargin(dolomiteMargin)
     {
         // solhint-disable-line no-empty-blocks
+    }
+
+    function emitZapExecuted(
+        address _accountOwner,
+        uint256 _accountNumber,
+        uint256[] memory _marketIdsPath,
+        IGenericTraderProxyBase.TraderParam[] memory _tradersPath
+    )
+        public
+        onlyGlobalOperator(msg.sender)
+    {
+        emit ZapExecuted(
+            _accountOwner,
+            _accountNumber,
+            _marketIdsPath,
+            _tradersPath
+        );
+    }
+
+    function emitBorrowPositionOpen(
+        address _accountOwner,
+        uint256 _accountNumber
+    )
+        public
+        onlyGlobalOperator(msg.sender)
+    {
+        emit BorrowPositionOpen(
+            _accountOwner,
+            _accountNumber
+        );
     }
 
     function emitMarginPositionOpen(

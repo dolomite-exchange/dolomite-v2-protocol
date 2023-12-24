@@ -109,13 +109,14 @@ const DolomiteAmmRouterProxy = artifacts.require('DolomiteAmmRouterProxy');
 const Expiry = artifacts.require('Expiry');
 const ExpiryProxy = artifacts.require('ExpiryProxy');
 const GenericTraderProxyV1 = artifacts.require('GenericTraderProxyV1');
+const GenericTraderProxyV1Lib = artifacts.require('GenericTraderProxyV1Lib');
 const LiquidatorAssetRegistry = artifacts.require('LiquidatorAssetRegistry');
 const LiquidatorProxyV1 = artifacts.require('LiquidatorProxyV1');
 const LiquidatorProxyV1WithAmm = artifacts.require('LiquidatorProxyV1WithAmm');
 const LiquidatorProxyV2WithExternalLiquidity = artifacts.require('LiquidatorProxyV2WithExternalLiquidity');
 const LiquidatorProxyV3WithLiquidityToken = artifacts.require('LiquidatorProxyV3WithLiquidityToken');
 const LiquidatorProxyV4WithGenericTrader = artifacts.require('LiquidatorProxyV4WithGenericTrader');
-const MarginPositionRegistry = artifacts.require('MarginPositionRegistry');
+const EventEmitterRegistry = artifacts.require('EventEmitterRegistry');
 const PayableProxy = artifacts.require('PayableProxy');
 const SignedOperationProxy = artifacts.require('SignedOperationProxy');
 const TestAmmRebalancerProxy = artifacts.require('TestAmmRebalancerProxy');
@@ -495,19 +496,21 @@ async function deploySecondLayer(deployer, network, accounts) {
     await deployer.deploy(ammRebalancerProxyV2, getNoOverwriteParams());
   }
 
-  const marginPositionRegistry = MarginPositionRegistry;
-  if (shouldOverwrite(marginPositionRegistry, network)) {
-    await deployer.deploy(marginPositionRegistry, dolomiteMargin.address);
+  const eventEmitterRegistry = EventEmitterRegistry;
+  if (shouldOverwrite(eventEmitterRegistry, network)) {
+    await deployer.deploy(eventEmitterRegistry, dolomiteMargin.address);
   } else {
-    await deployer.deploy(marginPositionRegistry, getNoOverwriteParams());
+    await deployer.deploy(eventEmitterRegistry, getNoOverwriteParams());
   }
 
   const genericTraderProxyV1 = GenericTraderProxyV1;
   if (shouldOverwrite(genericTraderProxyV1, network)) {
+    await deployer.deploy(GenericTraderProxyV1Lib);
+    genericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);
     await deployer.deploy(
       genericTraderProxyV1,
       Expiry.address,
-      marginPositionRegistry.address,
+      eventEmitterRegistry.address,
       dolomiteMargin.address
     );
   } else {
