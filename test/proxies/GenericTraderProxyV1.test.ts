@@ -173,12 +173,6 @@ describe('GenericTraderProxyV1', () => {
       token4Contract.issueTo(par4.times(1000), dolomiteMargin.address),
       token5Contract.issueTo(par5.times(1000), dolomiteMargin.address),
       token6Contract.issueTo(par6.times(1000), dolomiteMargin.address),
-      // dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market1, par1),
-      // dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market2, par2),
-      // dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market3, par3),
-      // dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market4, par4),
-      // dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market5, par5),
-      // dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market6, par6),
       dolomiteMargin.testing.setAccountBalance(traderOwner, originalAccountNumber, market1, par1),
       dolomiteMargin.testing.setAccountBalance(traderOwner, originalAccountNumber, market2, par2),
       dolomiteMargin.testing.setAccountBalance(traderOwner, originalAccountNumber, market3, par3),
@@ -577,6 +571,34 @@ describe('GenericTraderProxyV1', () => {
         expect(maker2Market3Balance).to.eql(par3);
         expect(maker2Market5Balance).to.eql(INTEGERS.ZERO);
         expect(maker2Market6Balance).to.eql(par6);
+      });
+
+      it('should succeed when a swap wants to use all of the trader\'s balance', async () => {
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
+          originalAccountNumber,
+          simpleMarketIdPath,
+          INTEGERS.MAX_UINT,
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          [
+            getParaswapTraderParam(
+              simpleMarketIdPath[0],
+              simpleMarketIdPath[1],
+              simpleAmountWeisPath[0],
+              simpleAmountWeisPath[1],
+            ),
+          ],
+          [],
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [market1Balance, market2Balance] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market1),
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+        ]);
+
+        expect(market1Balance).to.eql(INTEGERS.ZERO);
+        expect(market2Balance).to.eql(par2.times(2));
       });
     });
 

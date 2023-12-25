@@ -60,7 +60,7 @@
     "deploy_coverage": "npm run replace_bytecode && RPC_NODE_URI=http://127.0.01:8545 npm run reset_test_evm && COVERAGE_REPLICA_DEPLOY=true node --max-old-space-size=16384 node_modules/.bin/truffle migrate --network coverage_replica && RPC_NODE_URI=http://127.0.0.1:8545 npm run snapshot_test_evm && npm run build:contract-artifacts",
     "deploy_test_ci": "RPC_NODE_URI=http://0.0.0.0:8545 npm run reset_test_evm && npm run migrate -- --network test_ci --reset && RPC_NODE_URI=http://0.0.0.0:8545 npm run snapshot_test_evm && npm run check_amm_bytecode && npm run build:contract-artifacts",
     "test_only": "NODE_ENV=test node --max-old-space-size=16384 node_modules/.bin/truffle test --network test",
-    "test_only_specific": "NODE_ENV=test node --max-old-space-size=16384 node_modules/.bin/truffle test --network test test/proxies/LiquidatorProxyV4WithGenericTrader.test.ts",
+    "test_only_specific": "NODE_ENV=test node --max-old-space-size=16384 node_modules/.bin/truffle test --network test test/proxies/GenericTraderProxyV1.test.ts",
     "ci_test": "NODE_ENV=test RPC_NODE_URI=http://0.0.0.0:8545 truffle test --network test",
     "reset_test_evm": "node scripts/reset-test-evm.js",
     "snapshot_test_evm": "node scripts/snapshot-test-evm.js",
