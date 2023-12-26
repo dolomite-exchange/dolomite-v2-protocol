@@ -17,9 +17,11 @@ import TestIsolationModeToken from '../build/contracts/TestIsolationModeToken.js
 import TestLib from '../build/contracts/TestLib.json';
 import TestLiquidationCallback from '../build/contracts/TestLiquidationCallback.json';
 import TestIsolationModeUnwrapperTrader from '../build/contracts/TestIsolationModeUnwrapperTrader.json';
+import TestIsolationModeUnwrapperTraderV2 from '../build/contracts/TestIsolationModeUnwrapperTraderV2.json';
 // eslint-disable-next-line max-len
 import TestIsolationModeUnwrapperTraderForV3Liquidator from '../build/contracts/TestIsolationModeUnwrapperTraderForV3Liquidator.json'; // tslint:disable-line:max-line-length
 import TestIsolationModeWrapperTrader from '../build/contracts/TestIsolationModeWrapperTrader.json';
+import TestIsolationModeWrapperTraderV2 from '../build/contracts/TestIsolationModeWrapperTraderV2.json';
 import TestParaswapAugustusRouter from '../build/contracts/TestParaswapAugustusRouter.json';
 import TestParaswapTrader from '../build/contracts/TestParaswapTrader.json';
 import TestPolynomialInterestSetter from '../build/contracts/TestPolynomialInterestSetter.json';
@@ -60,8 +62,10 @@ export default {
   TestLib,
   TestLiquidationCallback,
   TestIsolationModeUnwrapperTrader,
+  TestIsolationModeUnwrapperTraderV2,
   TestIsolationModeUnwrapperTraderForV3Liquidator,
   TestIsolationModeWrapperTrader,
+  TestIsolationModeWrapperTraderV2,
   TestParaswapAugustusRouter,
   TestParaswapTrader,
   TestPolynomialInterestSetter,

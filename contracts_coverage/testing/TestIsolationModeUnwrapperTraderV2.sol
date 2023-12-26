@@ -65,8 +65,8 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
     )
     external
     returns (uint256) {
-        Require.that(
-            _takerToken == UNDERLYING_TOKEN,
+        if (_takerToken == UNDERLYING_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_takerToken == UNDERLYING_TOKEN,
             FILE,
             "Taker token must be UNDERLYING",
             _takerToken
@@ -99,8 +99,8 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
     external
     view
     returns (uint256) {
-        Require.that(
-            _makerToken == UNDERLYING_TOKEN,
+        if (_makerToken == UNDERLYING_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_makerToken == UNDERLYING_TOKEN,
             FILE,
             "Maker token must be wrapper",
             _makerToken
@@ -127,14 +127,14 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
         bytes memory _data
     )
     public {
-        Require.that(
-            msg.sender == address(DOLOMITE_MARGIN),
+        if (msg.sender == address(DOLOMITE_MARGIN)) { /* FOR COVERAGE TESTING */ }
+        Require.that(msg.sender == address(DOLOMITE_MARGIN),
             FILE,
             "Invalid caller",
             msg.sender
         );
-        Require.that(
-            _data.length == 0,
+        if (_data.length == 0) { /* FOR COVERAGE TESTING */ }
+        Require.that(_data.length == 0,
             FILE,
             "callFunction should be noop"
         );
@@ -146,14 +146,14 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
     public
     view
     returns (Actions.ActionArgs[] memory) {
-        Require.that(
-            DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN) == _params.inputMarket,
+        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN) == _params.inputMarket) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN) == _params.inputMarket,
             FILE,
             "Invalid input market",
             _params.inputMarket
         );
-        Require.that(
-            DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket,
+        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket,
             FILE,
             "Invalid output market",
             _params.outputMarket
@@ -162,8 +162,8 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
         uint256 inputPrice = DOLOMITE_MARGIN.getMarketPrice(_params.inputMarket).value;
         uint256 outputPrice = DOLOMITE_MARGIN.getMarketPrice(_params.outputMarket).value;
         amountOut = DolomiteMarginMath.getPartial(inputPrice, _params.inputAmount, outputPrice);
-        Require.that(
-            amountOut >= _params.minOutputAmount,
+        if (amountOut >= _params.minOutputAmount) { /* FOR COVERAGE TESTING */ }
+        Require.that(amountOut >= _params.minOutputAmount,
             FILE,
             "Insufficient output amount"
         );

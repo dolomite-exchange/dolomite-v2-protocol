@@ -122,7 +122,7 @@ export interface LogParsingOptions {
   skipPermissionLogs?: boolean;
   skipSignedOperationProxyLogs?: boolean;
   skipExpiryLogs?: boolean;
-  skipMarginPositionRegistry?: boolean;
+  skipEventEmitterRegistry?: boolean;
 }
 
 export interface TxResult {

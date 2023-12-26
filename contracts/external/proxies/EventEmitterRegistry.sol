@@ -127,5 +127,4 @@ contract EventEmitterRegistry is IEventEmitterRegistry, OnlyDolomiteMargin {
             _marginWithdrawalUpdate
         );
     }
-
 }

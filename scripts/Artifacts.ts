@@ -24,6 +24,7 @@ import Expiry from '../build/contracts/Expiry.json';
 import EventEmitterRegistry from '../build/contracts/EventEmitterRegistry.json';
 import ExpiryProxy from '../build/contracts/ExpiryProxy.json';
 import GenericTraderProxyV1 from '../build/contracts/GenericTraderProxyV1.json';
+import GenericTraderProxyV1Lib from '../build/contracts/GenericTraderProxyV1Lib.json';
 import LiquidateOrVaporizeImpl from '../build/contracts/LiquidateOrVaporizeImpl.json';
 import IArbitrumGasInfo from '../build/contracts/IArbitrumGasInfo.json';
 import IERC20Detailed from '../build/contracts/IERC20Detailed.json';
@@ -76,6 +77,7 @@ export default {
   Expiry,
   ExpiryProxy,
   GenericTraderProxyV1,
+  GenericTraderProxyV1Lib,
   LiquidateOrVaporizeImpl,
   IArbitrumGasInfo,
   IERC20Detailed,

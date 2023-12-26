@@ -3,11 +3,15 @@ import { ethers } from 'ethers';
 import * as testTokenJson from '../../build/contracts/CustomTestToken.json';
 import * as testIsolationModeTokenJson from '../../build/contracts/TestIsolationModeToken.json';
 import * as testIsolationModeUnwrapperTraderJson from '../../build/contracts/TestIsolationModeUnwrapperTrader.json';
+import * as testIsolationModeUnwrapperTraderV2Json from '../../build/contracts/TestIsolationModeUnwrapperTraderV2.json';
 import * as testIsolationModeWrapperTraderJson from '../../build/contracts/TestIsolationModeWrapperTrader.json';
+import * as testIsolationModeWrapperTraderV2Json from '../../build/contracts/TestIsolationModeWrapperTraderV2.json';
 import { CustomTestToken as TestTokenContract } from '../../build/testing_wrappers/CustomTestToken';
 import { TestIsolationModeToken as TestIsolationModeTokenContract } from '../../build/testing_wrappers/TestIsolationModeToken';
 import { TestIsolationModeUnwrapperTrader } from '../../build/testing_wrappers/TestIsolationModeUnwrapperTrader';
+import { TestIsolationModeUnwrapperTraderV2 } from '../../build/testing_wrappers/TestIsolationModeUnwrapperTraderV2';
 import { TestIsolationModeWrapperTrader } from '../../build/testing_wrappers/TestIsolationModeWrapperTrader';
+import { TestIsolationModeWrapperTraderV2 } from '../../build/testing_wrappers/TestIsolationModeWrapperTraderV2';
 import {
   address,
   ADDRESSES,
@@ -55,7 +59,9 @@ let token4Contract: TestIsolationModeToken;
 let token5Contract: TestToken;
 let token6Contract: TestToken;
 let testLiquidityUnwrapper: TestIsolationModeUnwrapperTrader;
+let testLiquidityUnwrapperV2: TestIsolationModeUnwrapperTraderV2;
 let testLiquidityWrapper: TestIsolationModeWrapperTrader;
+let testLiquidityWrapperV2: TestIsolationModeWrapperTraderV2;
 
 const tradeAccountNumber = new BigNumber(111);
 const originalAccountNumber = new BigNumber(0);
@@ -129,9 +135,19 @@ describe('GenericTraderProxyV1', () => {
       testIsolationModeUnwrapperTraderJson,
       [token3, token2, dolomiteMargin.address],
     );
+    testLiquidityUnwrapperV2 = await deployContract<TestIsolationModeUnwrapperTraderV2>(
+      dolomiteMargin,
+      testIsolationModeUnwrapperTraderV2Json,
+      [token3, token2, dolomiteMargin.address],
+    );
     testLiquidityWrapper = await deployContract<TestIsolationModeWrapperTrader>(
       dolomiteMargin,
       testIsolationModeWrapperTraderJson,
+      [token2, token3, dolomiteMargin.address],
+    );
+    testLiquidityWrapperV2 = await deployContract<TestIsolationModeWrapperTraderV2>(
+      dolomiteMargin,
+      testIsolationModeWrapperTraderV2Json,
       [token2, token3, dolomiteMargin.address],
     );
 
@@ -165,6 +181,8 @@ describe('GenericTraderProxyV1', () => {
 
     await token3Contract.setTokenConverterTrusted(testLiquidityUnwrapper.options.address, true);
     await token3Contract.setTokenConverterTrusted(testLiquidityWrapper.options.address, true);
+    await token3Contract.setTokenConverterTrusted(testLiquidityUnwrapperV2.options.address, true);
+    await token3Contract.setTokenConverterTrusted(testLiquidityWrapperV2.options.address, true);
 
     await Promise.all([
       token1Contract.issueTo(par1.times(1000), dolomiteMargin.address),
@@ -352,6 +370,27 @@ describe('GenericTraderProxyV1', () => {
         expect(traderMarket3Balance).to.eql(INTEGERS.ZERO);
       });
 
+      it('should succeed for a simple swap using unwrapper V2', async () => {
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
+          originalAccountNumber,
+          [market3, market2],
+          par3,
+          par2,
+          [await getUnwrapperTraderV2Param()],
+          [],
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [traderMarket2Balance, traderMarket3Balance] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market3),
+        ]);
+
+        expect(traderMarket2Balance).to.eql(par2.plus(par3.div(2)));
+        expect(traderMarket3Balance).to.eql(INTEGERS.ZERO);
+      });
+
       it('should succeed for a simple swap using wrapper', async () => {
         await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
           originalAccountNumber,
@@ -359,6 +398,27 @@ describe('GenericTraderProxyV1', () => {
           par2,
           par3,
           [await getWrapperTraderParam()],
+          [],
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [traderMarket2Balance, traderMarket3Balance] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market3),
+        ]);
+
+        expect(traderMarket2Balance).to.eql(INTEGERS.ZERO);
+        expect(traderMarket3Balance).to.eql(par3.times(2));
+      });
+
+      it('should succeed for a simple swap using wrapper V2', async () => {
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
+          originalAccountNumber,
+          [market2, market3],
+          par2,
+          par3,
+          [await getWrapperTraderV2Param()],
           [],
           defaultUserConfig,
           { from: traderOwner },
@@ -573,7 +633,7 @@ describe('GenericTraderProxyV1', () => {
         expect(maker2Market6Balance).to.eql(par6);
       });
 
-      it('should succeed when a swap wants to use all of the trader\'s balance', async () => {
+      it("should succeed when a swap wants to use all of the trader's balance", async () => {
         await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
           originalAccountNumber,
           simpleMarketIdPath,
@@ -932,6 +992,49 @@ describe('GenericTraderProxyV1', () => {
           'GenericTraderProxyBase: Invalid maker account owner <0>',
         );
       });
+
+      it('should fail when the balance is negative and attempting to trade all', async () => {
+        const amountPath = [par1.times(2), par2.times(2)];
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
+          originalAccountNumber,
+          simpleMarketIdPath,
+          amountPath[0],
+          amountPath[1],
+          [getParaswapTraderParam(simpleMarketIdPath[0], simpleMarketIdPath[1], amountPath[0], amountPath[1])],
+          [],
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [market1Balance, market2Balance] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market1),
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+        ]);
+
+        expect(market1Balance).to.eql(par1.times(-1));
+        expect(market2Balance).to.eql(par2.times(3));
+
+        await expectThrow(
+          dolomiteMargin.genericTraderProxyV1.swapExactInputForOutput(
+            originalAccountNumber,
+            simpleMarketIdPath,
+            INTEGERS.MAX_UINT,
+            simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+            [
+              getParaswapTraderParam(
+                simpleMarketIdPath[0],
+                simpleMarketIdPath[1],
+                simpleAmountWeisPath[0],
+                simpleAmountWeisPath[1],
+              ),
+            ],
+            [],
+            defaultUserConfig,
+            { from: traderOwner },
+          ),
+          `GenericTraderProxyV1: Balance must be positive <${simpleMarketIdPath[0]}>`,
+        );
+      });
     });
   });
 
@@ -969,13 +1072,135 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           txResult,
           true,
           simpleMarketIdPath,
           simpleAmountWeisPath[0],
           simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
           defaultUserConfig.eventType,
+        );
+        await checkExpiry(txResult, expiryMarketId, expiryTimeDelta);
+
+        const [traderMarket1Balance, traderMarket2Balance, transferMarket1Balance, transferMarket2Balance] =
+          await Promise.all([
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market1),
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market1),
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+          ]);
+
+        expect(traderMarket1Balance).to.eql(par1.negated());
+        expect(traderMarket2Balance).to.eql(par2.times(2));
+
+        expect(transferMarket1Balance).to.eql(par1);
+        expect(transferMarket2Balance).to.eql(par2.negated());
+      });
+
+      it('should succeed for a simple swap that opens a borrow position', async () => {
+        const expiryMarketId = simpleMarketIdPath[0];
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, expiryMarketId, INTEGERS.ZERO);
+        const expiryTimeDelta = INTEGERS.ONE_HOUR_IN_SECONDS;
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, originalAccountNumber, market2, INTEGERS.ZERO);
+        const txResult = await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          simpleMarketIdPath,
+          simpleAmountWeisPath[0],
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          [
+            getParaswapTraderParam(
+              simpleMarketIdPath[0],
+              simpleMarketIdPath[1],
+              simpleAmountWeisPath[0],
+              simpleAmountWeisPath[1],
+            ),
+          ],
+          [],
+          {
+            fromAccountNumber: originalAccountNumber,
+            toAccountNumber: tradeAccountNumber,
+            transferAmounts: [{ amountWei: par2, marketId: market2 }],
+          },
+          {
+            expiryTimeDelta,
+            marketId: expiryMarketId,
+          },
+          {
+            ...defaultUserConfig,
+            eventType: GenericEventEmissionType.BorrowPosition,
+          },
+          { from: traderOwner },
+        );
+
+        await checkEventEmissionLogs(
+          txResult,
+          true,
+          simpleMarketIdPath,
+          simpleAmountWeisPath[0],
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          GenericEventEmissionType.BorrowPosition,
+        );
+        await checkExpiry(txResult, expiryMarketId, expiryTimeDelta);
+
+        const [traderMarket1Balance, traderMarket2Balance, transferMarket1Balance, transferMarket2Balance] =
+          await Promise.all([
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market1),
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market1),
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+          ]);
+
+        expect(traderMarket1Balance).to.eql(par1.negated());
+        expect(traderMarket2Balance).to.eql(par2.times(2));
+
+        expect(transferMarket1Balance).to.eql(par1);
+        expect(transferMarket2Balance).to.eql(par2.negated());
+      });
+
+      it('should succeed for a simple swap that does not emit any logs', async () => {
+        const expiryMarketId = simpleMarketIdPath[0];
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, expiryMarketId, INTEGERS.ZERO);
+        const expiryTimeDelta = INTEGERS.ONE_HOUR_IN_SECONDS;
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, originalAccountNumber, market2, INTEGERS.ZERO);
+        const txResult = await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          simpleMarketIdPath,
+          simpleAmountWeisPath[0],
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          [
+            getParaswapTraderParam(
+              simpleMarketIdPath[0],
+              simpleMarketIdPath[1],
+              simpleAmountWeisPath[0],
+              simpleAmountWeisPath[1],
+            ),
+          ],
+          [],
+          {
+            fromAccountNumber: originalAccountNumber,
+            toAccountNumber: tradeAccountNumber,
+            transferAmounts: [{ amountWei: par2, marketId: market2 }],
+          },
+          {
+            expiryTimeDelta,
+            marketId: expiryMarketId,
+          },
+          {
+            ...defaultUserConfig,
+            eventType: GenericEventEmissionType.None,
+          },
+          { from: traderOwner },
+        );
+
+        await checkEventEmissionLogs(
+          txResult,
+          true,
+          simpleMarketIdPath,
+          simpleAmountWeisPath[0],
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          GenericEventEmissionType.None,
         );
         await checkExpiry(txResult, expiryMarketId, expiryTimeDelta);
 
@@ -1029,7 +1254,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           txResult,
           true,
           simpleMarketIdPath,
@@ -1112,7 +1337,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           txResult,
           false,
           marketIdsReversed,
@@ -1162,7 +1387,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           result,
           true,
           simpleMarketIdPath,
@@ -1224,7 +1449,58 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
+          result,
+          true,
+          marketPath,
+          amountsPath[0],
+          amountsPath[amountsPath.length - 1],
+          defaultUserConfig.eventType,
+        );
+        await checkExpiry(result, expiryMarket, expiryTimeDelta);
+
+        const [traderMarket2Balance, traderMarket3Balance, transferMarket2Balance, transferMarket3Balance] =
+          await Promise.all([
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market3),
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market3),
+          ]);
+
+        expect(traderMarket2Balance).to.eql(par2.times(2)); // includes the transfer amount
+        expect(traderMarket3Balance).to.eql(par3.negated());
+
+        expect(transferMarket2Balance).to.eql(INTEGERS.ZERO);
+        expect(transferMarket3Balance).to.eql(par3);
+      });
+
+      it('should succeed for a simple swap using unwrapper V2', async () => {
+        const expiryMarket = market3;
+        const expiryTimeDelta = INTEGERS.ONE_HOUR_IN_SECONDS;
+        const marketPath = [market3, market2];
+        const amountsPath = [par3, par2];
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, expiryMarket, INTEGERS.ZERO);
+        const result = await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          marketPath,
+          amountsPath[0],
+          amountsPath[amountsPath.length - 1],
+          [await getUnwrapperTraderV2Param()],
+          [],
+          {
+            fromAccountNumber: originalAccountNumber,
+            toAccountNumber: tradeAccountNumber,
+            transferAmounts: [{ amountWei: par2, marketId: market2 }],
+          },
+          {
+            expiryTimeDelta,
+            marketId: expiryMarket,
+          },
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        await checkEventEmissionLogs(
           result,
           true,
           marketPath,
@@ -1275,7 +1551,59 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
+          result,
+          true,
+          marketPath,
+          amountsPath[0],
+          amountsPath[amountsPath.length - 1],
+          defaultUserConfig.eventType,
+        );
+        await checkExpiry(result, expiryMarket, expiryTimeDelta);
+
+        const [traderMarket2Balance, traderMarket3Balance, transferMarket2Balance, transferMarket3Balance] =
+          await Promise.all([
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+            dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market3),
+
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+            dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market3),
+          ]);
+
+        expect(traderMarket2Balance).to.eql(par2.negated());
+        expect(traderMarket3Balance).to.eql(par3.times(2));
+
+        expect(transferMarket2Balance).to.eql(par2);
+        expect(transferMarket3Balance).to.eql(INTEGERS.ZERO);
+      });
+
+      it('should succeed for a simple swap using wrapper V2', async () => {
+        const expiryMarket = market2;
+        const expiryTimeDelta = INTEGERS.ONE_HOUR_IN_SECONDS;
+        const marketPath = [market2, market3];
+        const amountsPath = [par2, par3];
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, expiryMarket, INTEGERS.ZERO);
+        const result = await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          marketPath,
+          amountsPath[0],
+          amountsPath[amountsPath.length - 1],
+          [await getWrapperTraderV2Param()],
+          [],
+          {
+            fromAccountNumber: originalAccountNumber,
+            toAccountNumber: tradeAccountNumber,
+            transferAmounts: [{ amountWei: par3, marketId: market3 }],
+          },
+          {
+            expiryTimeDelta,
+            marketId: expiryMarket,
+          },
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        await checkEventEmissionLogs(
           result,
           true,
           marketPath,
@@ -1338,7 +1666,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           result,
           true,
           marketPath,
@@ -1393,7 +1721,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           result,
           true,
           marketPath,
@@ -1447,7 +1775,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(
+        await checkEventEmissionLogs(
           result,
           true,
           marketPath,
@@ -1550,7 +1878,7 @@ describe('GenericTraderProxyV1', () => {
           { from: traderOwner },
         );
 
-        await checkMarginPositionLogs(result, true, marketPath, par3, par3.times(1.1), defaultUserConfig.eventType);
+        await checkEventEmissionLogs(result, true, marketPath, par3, par3.times(1.1), defaultUserConfig.eventType);
         const expiry = await dolomiteMargin.expiry.getExpiry(traderOwner, tradeAccountNumber, expiryMarket);
         // The expiry should not be set because expiryMarket didn't go negative
         expect(expiry).to.eql(INTEGERS.ZERO);
@@ -1625,6 +1953,80 @@ describe('GenericTraderProxyV1', () => {
         expect(maker2Market3Balance).to.eql(par3);
         expect(maker2Market5Balance).to.eql(INTEGERS.ZERO);
         expect(maker2Market6Balance).to.eql(par6);
+      });
+
+      it("should succeed when a swap wants to use all of the trader's balance", async () => {
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market1, par1);
+
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          simpleMarketIdPath,
+          INTEGERS.MAX_UINT,
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          [
+            getParaswapTraderParam(
+              simpleMarketIdPath[0],
+              simpleMarketIdPath[1],
+              simpleAmountWeisPath[0],
+              simpleAmountWeisPath[1],
+            ),
+          ],
+          [],
+          {
+            fromAccountNumber: originalAccountNumber,
+            toAccountNumber: tradeAccountNumber,
+            transferAmounts: [{ amountWei: par2, marketId: market2 }],
+          },
+          { expiryTimeDelta: INTEGERS.ZERO, marketId: market1 },
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [market1Balance, market2Balance] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market1),
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+        ]);
+
+        expect(market1Balance).to.eql(INTEGERS.ZERO);
+        expect(market2Balance).to.eql(par2.times(2));
+      });
+
+      it("should succeed when a swap wants transfer all of the trader's output", async () => {
+        await dolomiteMargin.testing.setAccountBalance(traderOwner, tradeAccountNumber, market1, par1);
+
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          simpleMarketIdPath,
+          INTEGERS.MAX_UINT,
+          simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+          [
+            getParaswapTraderParam(
+              simpleMarketIdPath[0],
+              simpleMarketIdPath[1],
+              simpleAmountWeisPath[0],
+              simpleAmountWeisPath[1],
+            ),
+          ],
+          [],
+          {
+            fromAccountNumber: tradeAccountNumber,
+            toAccountNumber: originalAccountNumber,
+            transferAmounts: [{ amountWei: INTEGERS.MAX_UINT_SUB_1, marketId: market2 }],
+          },
+          { expiryTimeDelta: INTEGERS.ZERO, marketId: market1 },
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [market1Balance, market2BalanceTradeAccount, market2BalanceOriginalAccount] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market1),
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+          dolomiteMargin.getters.getAccountWei(traderOwner, originalAccountNumber, market2),
+        ]);
+
+        expect(market1Balance).to.eql(INTEGERS.ZERO);
+        expect(market2BalanceTradeAccount).to.eql(INTEGERS.ZERO);
+        expect(market2BalanceOriginalAccount).to.eql(par2.times(2));
       });
     });
 
@@ -2135,6 +2537,127 @@ describe('GenericTraderProxyV1', () => {
           'GenericTraderProxyV1: Invalid transfer amount at index <0>',
         );
       });
+
+      it('should fail when the balance is negative and attempting to trade all', async () => {
+        const amountPath = [par1, par2];
+        await dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+          tradeAccountNumber,
+          simpleMarketIdPath,
+          amountPath[0],
+          amountPath[1],
+          [getParaswapTraderParam(simpleMarketIdPath[0], simpleMarketIdPath[1], amountPath[0], amountPath[1])],
+          [],
+          defaultTransferParam,
+          defaultExpiryParam,
+          defaultUserConfig,
+          { from: traderOwner },
+        );
+
+        const [market1Balance, market2Balance, market3Balance] = await Promise.all([
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market1),
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market2),
+          dolomiteMargin.getters.getAccountWei(traderOwner, tradeAccountNumber, market3),
+        ]);
+
+        expect(market1Balance).to.eql(par1.times(-1));
+        expect(market2Balance).to.eql(par2);
+        expect(market3Balance).to.eql(par3);
+
+        await expectThrow(
+          dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+            tradeAccountNumber,
+            simpleMarketIdPath,
+            INTEGERS.MAX_UINT,
+            simpleAmountWeisPath[simpleAmountWeisPath.length - 1],
+            [
+              getParaswapTraderParam(
+                simpleMarketIdPath[0],
+                simpleMarketIdPath[1],
+                simpleAmountWeisPath[0],
+                simpleAmountWeisPath[1],
+              ),
+            ],
+            [],
+            defaultTransferParam,
+            defaultExpiryParam,
+            defaultUserConfig,
+            { from: traderOwner },
+          ),
+          `GenericTraderProxyV1: Balance must be positive <${simpleMarketIdPath[0]}>`,
+        );
+      });
+
+      it('should fail when transferring the trade amount from the non-last marketId', async () => {
+        const transferParam: GenericTransferCollateralParam = {
+          fromAccountNumber: originalAccountNumber,
+          toAccountNumber: tradeAccountNumber,
+          transferAmounts: [
+            {
+              marketId: market3,
+              amountWei: INTEGERS.MAX_UINT_SUB_1,
+            },
+          ],
+        };
+
+        await expectThrow(
+          dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+            tradeAccountNumber,
+            simpleMarketIdPath,
+            simpleAmountWeisPath[0],
+            simpleAmountWeisPath[1],
+            [
+              getParaswapTraderParam(
+                simpleMarketIdPath[0],
+                simpleMarketIdPath[1],
+                simpleAmountWeisPath[0],
+                simpleAmountWeisPath[1],
+              ),
+            ],
+            [],
+            transferParam,
+            defaultExpiryParam,
+            defaultUserConfig,
+            { from: traderOwner },
+          ),
+          `GenericTraderProxyV1: Invalid transfer marketId <${transferParam.transferAmounts[0].marketId.toFixed()}>`,
+        );
+      });
+
+      it('should fail when transferring the trade amount from the non-trade account', async () => {
+        const transferParam: GenericTransferCollateralParam = {
+          fromAccountNumber: originalAccountNumber,
+          toAccountNumber: tradeAccountNumber,
+          transferAmounts: [
+            {
+              marketId: market2,
+              amountWei: INTEGERS.MAX_UINT_SUB_1,
+            },
+          ],
+        };
+
+        await expectThrow(
+          dolomiteMargin.genericTraderProxyV1.swapExactInputForOutputAndModifyPosition(
+            tradeAccountNumber,
+            simpleMarketIdPath,
+            simpleAmountWeisPath[0],
+            simpleAmountWeisPath[1],
+            [
+              getParaswapTraderParam(
+                simpleMarketIdPath[0],
+                simpleMarketIdPath[1],
+                simpleAmountWeisPath[0],
+                simpleAmountWeisPath[1],
+              ),
+            ],
+            [],
+            transferParam,
+            defaultExpiryParam,
+            defaultUserConfig,
+            { from: traderOwner },
+          ),
+          'GenericTraderProxyV1: Invalid from account ID',
+        );
+      });
     });
   });
 
@@ -2174,11 +2697,29 @@ function getUnwrapperTraderParam(): GenericTraderParam {
   };
 }
 
+function getUnwrapperTraderV2Param(): GenericTraderParam {
+  return {
+    traderType: GenericTraderType.IsolationModeUnwrapperV2,
+    makerAccountIndex: 0,
+    trader: testLiquidityUnwrapperV2.options.address,
+    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
+  };
+}
+
 function getWrapperTraderParam(): GenericTraderParam {
   return {
     traderType: GenericTraderType.IsolationModeWrapper,
     makerAccountIndex: 0,
     trader: testLiquidityWrapper.options.address,
+    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
+  };
+}
+
+function getWrapperTraderV2Param(): GenericTraderParam {
+  return {
+    traderType: GenericTraderType.IsolationModeWrapperV2,
+    makerAccountIndex: 0,
+    trader: testLiquidityWrapperV2.options.address,
     tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
   };
 }
@@ -2290,7 +2831,7 @@ async function setupMarkets() {
   }
 }
 
-async function checkMarginPositionLogs(
+async function checkEventEmissionLogs(
   txResult: TxResult,
   isOpen: boolean,
   marketPath: Integer[],
@@ -2344,10 +2885,21 @@ async function checkMarginPositionLogs(
       });
     }
   } else if (logType === GenericEventEmissionType.BorrowPosition) {
-    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'OpenBorrowPosition');
+    const logs = dolomiteMargin.logs.parseLogs(txResult).filter(log => log.name === 'BorrowPositionOpen');
     expect(logs.length).to.eql(1);
-    expect(logs[0].args.accountOwner).to.eql(traderOwner);
-    expect(logs[0].args.accountNumber).to.eql(tradeAccountNumber);
+    expect(logs[0].args.borrower).to.eql(traderOwner);
+    expect(logs[0].args.borrowAccountNumber).to.eql(tradeAccountNumber);
+  } else {
+    if (logType !== GenericEventEmissionType.None) {
+      return Promise.reject(new Error(`Invalid log type: ${logType}`));
+    }
+    const logs = dolomiteMargin.logs
+      .parseLogs(txResult)
+      .filter(
+        log =>
+          log.name === 'BorrowPositionOpen' || log.name === 'MarginPositionClose' || log.name === 'MarginPositionOpen',
+      );
+    expect(logs.length).to.eql(0);
   }
 }
 

@@ -74,8 +74,8 @@ contract TestIsolationModeWrapperTraderV2 is IIsolationModeWrapperTraderV2 {
     )
     external
     returns (uint256) {
-        Require.that(
-            _outputToken == OUTPUT_TOKEN,
+        if (_outputToken == OUTPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_outputToken == OUTPUT_TOKEN,
             FILE,
             "Maker token must be OUTPUT_TOKEN",
             _outputToken
@@ -91,8 +91,8 @@ contract TestIsolationModeWrapperTraderV2 is IIsolationModeWrapperTraderV2 {
         // solium-disable indentation
         {
             (uint256 minAmountOut,) = abi.decode(_orderData, (uint256, bytes));
-            Require.that(
-                amountOut >= minAmountOut,
+            if (amountOut >= minAmountOut) { /* FOR COVERAGE TESTING */ }
+            Require.that(amountOut >= minAmountOut,
                 FILE,
                 "Insufficient output amount"
             );
@@ -113,8 +113,8 @@ contract TestIsolationModeWrapperTraderV2 is IIsolationModeWrapperTraderV2 {
     external
     view
     returns (uint256) {
-        Require.that(
-            _takerToken == OUTPUT_TOKEN,
+        if (_takerToken == OUTPUT_TOKEN) { /* FOR COVERAGE TESTING */ }
+        Require.that(_takerToken == OUTPUT_TOKEN,
             FILE,
             "Taker token must be OUTPUT_TOKEN",
             _takerToken
@@ -135,8 +135,8 @@ contract TestIsolationModeWrapperTraderV2 is IIsolationModeWrapperTraderV2 {
     public
     view
     returns (Actions.ActionArgs[] memory) {
-        Require.that(
-            DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket,
+        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket,
             FILE,
             "Invalid output market",
             _params.outputMarket

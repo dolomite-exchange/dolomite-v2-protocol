@@ -27,7 +27,7 @@ import { Require } from "../../protocol/lib/Require.sol";
 import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 
 import { IEventEmitterRegistry } from "../interfaces/IEventEmitterRegistry.sol";
-
+import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 
 /**
  * @title   EventEmitterRegistry
@@ -42,10 +42,27 @@ contract EventEmitterRegistry is IEventEmitterRegistry, OnlyDolomiteMargin {
     constructor (
         address dolomiteMargin
     )
-    public
-    OnlyDolomiteMargin(dolomiteMargin)
+        public
+        OnlyDolomiteMargin(dolomiteMargin)
     {
         // solhint-disable-line no-empty-blocks
+    }
+
+    function emitZapExecuted(
+        address _accountOwner,
+        uint256 _accountNumber,
+        uint256[] memory _marketIdsPath,
+        IGenericTraderProxyBase.TraderParam[] memory _tradersPath
+    )
+        public
+        onlyGlobalOperator(msg.sender)
+    {
+        emit ZapExecuted(
+            _accountOwner,
+            _accountNumber,
+            _marketIdsPath,
+            _tradersPath
+        );
     }
 
     function emitBorrowPositionOpen(

@@ -17,7 +17,7 @@ import { abi as adminAbi } from '../../build/published_contracts/AdminImpl.json'
 import { abi as permissionAbi } from '../../build/published_contracts/Permission.json';
 import { abi as expiryAbi } from '../../build/published_contracts/Expiry.json';
 import { abi as signedOperationProxyAbi } from '../../build/published_contracts/SignedOperationProxy.json';
-import { abi as marginPositionRegistryAbi } from '../../build/published_contracts/MarginPositionRegistry.json';
+import { abi as eventEmitterRegistryAbi } from '../../build/published_contracts/EventEmitterRegistry.json';
 import { GenericTraderParam, GenericTraderType } from './GenericTraderProxyV1';
 
 export class Logs {
@@ -47,8 +47,8 @@ export class Logs {
     if (options.skipExpiryLogs) {
       logs = logs.filter((log: any) => !this.logIsFrom(log, expiryAbi));
     }
-    if (options.skipMarginPositionRegistry) {
-      logs = logs.filter((log: any) => !this.logIsFrom(log, marginPositionRegistryAbi));
+    if (options.skipEventEmitterRegistry) {
+      logs = logs.filter((log: any) => !this.logIsFrom(log, eventEmitterRegistryAbi));
     }
 
     const coveragePrefix = '__';

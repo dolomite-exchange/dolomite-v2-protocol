@@ -19,19 +19,46 @@
 pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
+import { IGenericTraderProxyBase } from "./IGenericTraderProxyBase.sol";
 import { Events } from "../../protocol/lib/Events.sol";
 
 
 /**
- * @title IMarginPositionRegistry
+ * @title IEventEmitterRegistry
  * @author Dolomite
  *
  * An implementation for an upgradeable proxy for emitting margin position-related events. Useful for indexing margin
  * positions from a singular address.
  */
-interface IMarginPositionRegistry {
+interface IEventEmitterRegistry {
 
     // ============ Events ============
+
+    /**
+     * @notice This is emitted when a zap is executed
+     *
+     * @param accountOwner  The address of the account that executed the zap
+     * @param accountNumber The sub account of the address that executed the zap
+     * @param marketIdsPath The path of market IDs that was executed
+     * @param tradersPath   The path of traders that was executed
+     */
+    event ZapExecuted(
+        address indexed accountOwner,
+        uint256 accountNumber,
+        uint256[] marketIdsPath,
+        IGenericTraderProxyBase.TraderParam[] tradersPath
+    );
+
+    /**
+     * @notice This is emitted when a borrow position is initially opened
+     *
+     * @param borrower              The address of the account that opened the position
+     * @param borrowAccountNumber   The account number of the account that opened the position
+     */
+    event BorrowPositionOpen(
+        address indexed borrower,
+        uint256 indexed borrowAccountNumber
+    );
 
     /**
      * @notice This is emitted when a margin position is initially opened
@@ -80,6 +107,34 @@ interface IMarginPositionRegistry {
     );
 
     // ============ Functions ============
+
+    /**
+     * @notice Emits a ZapExecuted event
+     *
+     * @param _accountOwner     The address of the account that executed the zap
+     * @param _accountNumber    The sub account of the address that executed the zap
+     * @param _marketIdsPath    The path of market IDs that was executed
+     * @param _tradersPath      The path of traders that was executed
+     */
+    function emitZapExecuted(
+        address _accountOwner,
+        uint256 _accountNumber,
+        uint256[] calldata _marketIdsPath,
+        IGenericTraderProxyBase.TraderParam[] calldata _tradersPath
+    )
+    external;
+
+    /**
+     * @notice Emits a MarginPositionOpen event
+     *
+     * @param _accountOwner          The address of the account that opened the position
+     * @param _accountNumber         The account number of the account that opened the position
+     */
+    function emitBorrowPositionOpen(
+        address _accountOwner,
+        uint256 _accountNumber
+    )
+    external;
 
     /**
      * @notice Emits a MarginPositionOpen event

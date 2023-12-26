@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import { contractName } from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
+import { contractName } from '../build/contracts/GenericTraderProxyV1.json';
 import { DolomiteMargin } from '../src';
 import deployed from '../migrations/deployed.json';
 
@@ -45,7 +45,7 @@ async function verifySingleContract(): Promise<void> {
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const txResult = await dolomiteMargin.web3.eth.getTransactionReceipt(process.env.TRANSACTION_HASH);
 
-  execSync(`truffle run verify --network ${process.env.NETWORK} ${contractName}@${txResult.contractAddress}`, {
+  execSync(`truffle run verify --network ${process.env.NETWORK} --debug ${contractName}@${txResult.contractAddress}`, {
     stdio: 'inherit',
   });
 

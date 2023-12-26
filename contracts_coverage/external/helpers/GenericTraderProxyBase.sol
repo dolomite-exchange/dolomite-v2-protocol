@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import { IDolomiteMargin } from "../../protocol/interfaces/IDolomiteMargin.sol";
+import { IERC20Detailed } from "../../protocol/interfaces/IERC20Detailed.sol";
 
 import { Account } from "../../protocol/lib/Account.sol";
 import { Actions } from "../../protocol/lib/Actions.sol";
@@ -34,10 +35,10 @@ import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 import { IIsolationModeToken } from "../interfaces/IIsolationModeToken.sol";
-import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry.sol";
 import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
+import { IIsolationModeUnwrapperTraderV2 } from "../interfaces/IIsolationModeUnwrapperTraderV2.sol";
 import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
-import { IMarginPositionRegistry } from "../interfaces/IMarginPositionRegistry.sol";
+import { IIsolationModeWrapperTraderV2 } from "../interfaces/IIsolationModeWrapperTraderV2.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
@@ -57,6 +58,37 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     /// @dev The index of the trade account in the accounts array (for executing an operation)
     uint256 internal constant TRADE_ACCOUNT_ID = 0;
     uint256 internal constant ZAP_ACCOUNT_ID = 1;
+
+    bytes32 internal constant GLP_ISOLATION_MODE_HASH = keccak256(bytes("Dolomite: Fee + Staked GLP"));
+    bytes32 internal constant ISOLATION_MODE_PREFIX_HASH = keccak256(bytes("Dolomite Isolation:"));
+    uint256 internal constant DOLOMITE_ISOLATION_LENGTH = 19;
+
+    // ============ Public Functions ============
+
+    function isIsolationModeMarket(
+        IDolomiteMargin _dolomiteMargin,
+        uint256 _marketId
+    ) public view returns (bool) {
+        (bool isSuccess, bytes memory returnData) = ExcessivelySafeCall.safeStaticCall(
+            _dolomiteMargin.getMarketTokenAddress(_marketId),
+            IERC20Detailed(address(0)).name.selector,
+            bytes("")
+        );
+        if (!isSuccess) {
+            return false;
+        }
+        string memory name = abi.decode(returnData, (string));
+        return (
+            (bytes(name).length >= DOLOMITE_ISOLATION_LENGTH
+                && _hashSubstring(
+                    name,
+                    /* _startIndex = */ 0, // solium-disable-line indentation
+                    /* _endIndex = */ DOLOMITE_ISOLATION_LENGTH // solium-disable-line indentation
+                ) == ISOLATION_MODE_PREFIX_HASH
+            )
+            || keccak256(bytes(name)) == GLP_ISOLATION_MODE_HASH
+        );
+    }
 
     // ============ Internal Functions ============
 
@@ -160,17 +192,17 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         uint256 _nextMarketId,
         TraderParam memory _traderParam
     ) internal view {
-        if (_isIsolationModeMarket(_cache, _marketId)) {
+        if (isIsolationModeMarket(_cache.dolomiteMargin, _marketId)) {
             // If the current market is in isolation mode, the trader type must be for isolation mode assets
-            if (_traderParam.traderType == TraderType.IsolationModeUnwrapper) { /* FOR COVERAGE TESTING */ }
-            Require.that(_traderParam.traderType == TraderType.IsolationModeUnwrapper,
+            if (_isUnwrapperTraderType(_traderParam.traderType)) { /* FOR COVERAGE TESTING */ }
+            Require.that(_isUnwrapperTraderType(_traderParam.traderType),
                 FILE,
                 "Invalid isolation mode unwrapper",
                 _marketId,
                 uint256(uint8(_traderParam.traderType))
             );
 
-            if (_isIsolationModeMarket(_cache, _nextMarketId)) {
+            if (isIsolationModeMarket(_cache.dolomiteMargin, _nextMarketId)) {
                 // If the user is unwrapping into an isolation mode asset, the next market must trust this trader
                 address isolationModeToken = _cache.dolomiteMargin.getMarketTokenAddress(_nextMarketId);
                 if (IIsolationModeToken(isolationModeToken).isTokenConverterTrusted(_traderParam.trader)) { /* FOR COVERAGE TESTING */ }
@@ -181,10 +213,10 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _nextMarketId
                 );
             }
-        } else if (_isIsolationModeMarket(_cache, _nextMarketId)) {
+        } else if (isIsolationModeMarket(_cache.dolomiteMargin, _nextMarketId)) {
             // If the next market is in isolation mode, the trader must wrap the current asset into the isolation asset.
-            if (_traderParam.traderType == TraderType.IsolationModeWrapper) { /* FOR COVERAGE TESTING */ }
-            Require.that(_traderParam.traderType == TraderType.IsolationModeWrapper,
+            if (_isWrapperTraderType(_traderParam.traderType)) { /* FOR COVERAGE TESTING */ }
+            Require.that(_isWrapperTraderType(_traderParam.traderType),
                 FILE,
                 "Invalid isolation mode wrapper",
                 _nextMarketId,
@@ -209,7 +241,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         TraderParam memory _traderParam,
         uint256 _index
     ) internal view {
-        if (TraderType.IsolationModeUnwrapper == _traderParam.traderType) {
+        if (_isUnwrapperTraderType(_traderParam.traderType)) {
             IIsolationModeUnwrapperTrader unwrapperTrader = IIsolationModeUnwrapperTrader(_traderParam.trader);
             address isolationModeToken = _cache.dolomiteMargin.getMarketTokenAddress(_marketId);
             if (unwrapperTrader.token() == isolationModeToken) { /* FOR COVERAGE TESTING */ }
@@ -233,7 +265,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 _traderParam.trader,
                 _marketId
             );
-        } else if (TraderType.IsolationModeWrapper == _traderParam.traderType) {
+        } else if (_isWrapperTraderType(_traderParam.traderType)) {
             IIsolationModeWrapperTrader wrapperTrader = IIsolationModeWrapperTrader(_traderParam.trader);
             address isolationModeToken = _cache.dolomiteMargin.getMarketTokenAddress(_nextMarketId);
             if (wrapperTrader.isValidInputToken(_cache.dolomiteMargin.getMarketTokenAddress(_marketId))) { /* FOR COVERAGE TESTING */ }
@@ -290,7 +322,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         Account.Info memory _account,
         uint256[] memory _marketIdsPath
     ) internal view {
-        for (uint i = 0; i < _marketIdsPath.length; i++) {
+        for (uint256 i = 0; i < _marketIdsPath.length; i++) {
             // Panic if we're zapping to an account that has any value in it. Why? Because we don't want execute trades
             // where we sell ALL if there's already value in the account. That would mess up the user's holdings and
             // unintentionally sell assets the user does not want to sell.
@@ -349,10 +381,10 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     {
         uint256 actionsLength = 2; // start at 2 for the zap in/out of the zap account (2 transfer actions)
         for (uint256 i = 0; i < _tradersPath.length; i++) {
-            if (TraderType.IsolationModeUnwrapper == _tradersPath[i].traderType) {
+            if (_isUnwrapperTraderType(_tradersPath[i].traderType)) {
                 actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
-            } else if (TraderType.IsolationModeWrapper == _tradersPath[i].traderType) {
-                actionsLength += IIsolationModeUnwrapperTrader(_tradersPath[i].trader).actionsLength();
+            } else if (_isWrapperTraderType(_tradersPath[i].traderType)) {
+                actionsLength += IIsolationModeWrapperTrader(_tradersPath[i].trader).actionsLength();
             } else {
                 actionsLength += 1;
             }
@@ -410,48 +442,90 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     customInputAmountWei,
                     tradeData
                 );
-            } else if (_tradersPath[i].traderType == TraderType.IsolationModeUnwrapper) {
+            } else if (_isUnwrapperTraderType(_tradersPath[i].traderType)) {
                 // We can't use a Require for the following assert, because there's already an invariant that enforces
                 // the trader is an `IsolationModeWrapper` if the market ID at `i + 1` is in isolation mode. Meaning,
                 // an unwrapper can never appear at the non-zero index because there is an invariant that checks the
                 // `IsolationModeWrapper` is the last index
               /*assert(i == 0);*/
-                IIsolationModeUnwrapperTrader unwrapperTrader = IIsolationModeUnwrapperTrader(_tradersPath[i].trader);
-                Actions.ActionArgs[] memory unwrapperActions = unwrapperTrader.createActionsForUnwrapping(
-                    ZAP_ACCOUNT_ID,
-                    _otherAccountId(),
-                    _accounts[ZAP_ACCOUNT_ID].owner,
-                    _accounts[_otherAccountId()].owner,
-                    /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
-                    /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
-                    _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
-                    _tradersPath[i].tradeData
-                );
+                address unwrapperTrader = _tradersPath[i].trader;
+                Actions.ActionArgs[] memory unwrapperActions;
+                if (_tradersPath[i].traderType == TraderType.IsolationModeUnwrapper) {
+                    unwrapperActions = IIsolationModeUnwrapperTrader(unwrapperTrader).createActionsForUnwrapping(
+                        ZAP_ACCOUNT_ID,
+                        _otherAccountId(),
+                        _accounts[ZAP_ACCOUNT_ID].owner,
+                        _accounts[_otherAccountId()].owner,
+                        /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
+                        /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
+                        _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                        _getInputAmountWeiForIndex(_inputAmountWei, i),
+                        _tradersPath[i].tradeData
+                    );
+                } else {
+                  /*assert(_tradersPath[i].traderType == TraderType.IsolationModeUnwrapperV2);*/
+                    unwrapperActions = IIsolationModeUnwrapperTraderV2(unwrapperTrader).createActionsForUnwrapping(
+                        IIsolationModeUnwrapperTraderV2.CreateActionsForUnwrappingParams({
+                            primaryAccountId: ZAP_ACCOUNT_ID,
+                            otherAccountId: _otherAccountId(),
+                            primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
+                            primaryAccountNumber: _accounts[ZAP_ACCOUNT_ID].number,
+                            otherAccountOwner: _accounts[_otherAccountId()].owner,
+                            otherAccountNumber: _accounts[_otherAccountId()].number,
+                            outputMarket: _marketIdsPath[i + 1],
+                            inputMarket: _marketIdsPath[i],
+                            minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                            inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
+                            orderData: _tradersPath[i].tradeData
+                        })
+                    );
+                }
+
                 for (uint256 j = 0; j < unwrapperActions.length; j++) {
                     _actions[_cache.actionsCursor++] = unwrapperActions[j];
                 }
             } else {
                 // Panic if the developer messed up the `else` statement here
-              /*assert(_tradersPath[i].traderType == TraderType.IsolationModeWrapper);*/
+              /*assert(_isWrapperTraderType(_tradersPath[i].traderType));*/
                 if (i == _tradersPath.length - 1) { /* FOR COVERAGE TESTING */ }
                 Require.that(i == _tradersPath.length - 1,
                     FILE,
                     "Wrapper must be the last trader"
                 );
 
-                IIsolationModeWrapperTrader wrapperTrader = IIsolationModeWrapperTrader(_tradersPath[i].trader);
-                Actions.ActionArgs[] memory wrapperActions = wrapperTrader.createActionsForWrapping(
-                    ZAP_ACCOUNT_ID,
-                    _otherAccountId(),
-                    _accounts[ZAP_ACCOUNT_ID].owner,
-                    _accounts[_otherAccountId()].owner,
-                    /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
-                    /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
-                    _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
-                    _tradersPath[i].tradeData
-                );
+                address wrapperTrader = _tradersPath[i].trader;
+                Actions.ActionArgs[] memory wrapperActions;
+                if (_tradersPath[i].traderType == TraderType.IsolationModeWrapper) {
+                    wrapperActions = IIsolationModeWrapperTrader(wrapperTrader).createActionsForWrapping(
+                        ZAP_ACCOUNT_ID,
+                        _otherAccountId(),
+                        _accounts[ZAP_ACCOUNT_ID].owner,
+                        _accounts[_otherAccountId()].owner,
+                        /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
+                        /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
+                        _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                        _getInputAmountWeiForIndex(_inputAmountWei, i),
+                        _tradersPath[i].tradeData
+                    );
+                } else {
+                  /*assert(_tradersPath[i].traderType == TraderType.IsolationModeWrapperV2);*/
+                    wrapperActions = IIsolationModeWrapperTraderV2(wrapperTrader).createActionsForWrapping(
+                        IIsolationModeWrapperTraderV2.CreateActionsForWrappingParams({
+                            primaryAccountId: ZAP_ACCOUNT_ID,
+                            otherAccountId: _otherAccountId(),
+                            primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
+                            primaryAccountNumber: _accounts[ZAP_ACCOUNT_ID].number,
+                            otherAccountOwner: _accounts[_otherAccountId()].owner,
+                            otherAccountNumber: _accounts[_otherAccountId()].number,
+                            outputMarket: _marketIdsPath[i + 1],
+                            inputMarket: _marketIdsPath[i],
+                            minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                            inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
+                            orderData: _tradersPath[i].tradeData
+                        })
+                    );
+                }
+
                 for (uint256 j = 0; j < wrapperActions.length; j++) {
                     _actions[_cache.actionsCursor++] = wrapperActions[j];
                 }
@@ -465,18 +539,6 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
             _marketIdsPath[_marketIdsPath.length - 1],
             AccountActionLib.all()
         );
-    }
-
-    function _isIsolationModeMarket(
-        GenericTraderProxyCache memory _cache,
-        uint256 _marketId
-    ) internal view returns (bool) {
-        (bool isSuccess, bytes memory returnData) = ExcessivelySafeCall.safeStaticCall(
-            _cache.dolomiteMargin.getMarketTokenAddress(_marketId),
-            IIsolationModeToken(address(0)).isIsolationAsset.selector,
-            bytes("")
-        );
-        return isSuccess && abi.decode(returnData, (bool));
     }
 
     /**
@@ -501,7 +563,11 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     function _getInputAmountWeiForIndex(
         uint256 _inputAmountWei,
         uint256 _index
-    ) private pure returns (uint256) {
+    )
+        private
+        pure
+        returns (uint256)
+    {
         return _index == 0 ? _inputAmountWei : AccountActionLib.all();
     }
 
@@ -509,7 +575,48 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         uint256 _minOutputAmountWei,
         uint256 _index,
         uint256 _tradersPathLength
-    ) private pure returns (uint256) {
+    )
+        private
+        pure
+        returns (uint256)
+    {
         return _index == _tradersPathLength - 1 ? _minOutputAmountWei : 1;
+    }
+
+    function _isWrapperTraderType(
+        TraderType _traderType
+    )
+        private
+        pure
+        returns (bool)
+    {
+        return TraderType.IsolationModeWrapper == _traderType || TraderType.IsolationModeWrapperV2 == _traderType;
+    }
+
+    function _isUnwrapperTraderType(
+        TraderType _traderType
+    )
+        private
+        pure
+        returns (bool)
+    {
+        return TraderType.IsolationModeUnwrapper == _traderType || TraderType.IsolationModeUnwrapperV2 == _traderType;
+    }
+
+    function _hashSubstring(
+        string memory _value,
+        uint256 _startIndex,
+        uint256 _endIndex
+    )
+        private
+        pure
+        returns (bytes32)
+    {
+        bytes memory strBytes = bytes(_value);
+        bytes memory result = new bytes(_endIndex - _startIndex);
+        for (uint256 i = _startIndex; i < _endIndex; i++) {
+            result[i - _startIndex] = strBytes[i];
+        }
+        return keccak256(result);
     }
 }

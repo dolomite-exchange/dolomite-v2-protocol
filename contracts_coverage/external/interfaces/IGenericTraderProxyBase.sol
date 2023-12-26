@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 import { IDolomiteMargin } from "../../protocol/interfaces/IDolomiteMargin.sol";
 
 import { Types } from "../../protocol/lib/Types.sol";
+import {IEventEmitterRegistry} from "./IEventEmitterRegistry.sol";
 
 
 /**
@@ -47,7 +48,11 @@ interface IGenericTraderProxyBase {
         /// @dev    The trade will be conducted using external liquidity using an `ActionType.Sell` or `ActionType.Buy`
         ///         action. If this TradeType is used, the trader must be validated using
         ///         the `IIsolationModeToken#isTokenConverterTrusted` function on the IsolationMode token.
-        IsolationModeWrapper
+        IsolationModeWrapper,
+        /// @dev    Same as `IsolationModeUnwrapper` but uses the new V2 `creatActionsForUnwrapping` signature
+        IsolationModeUnwrapperV2,
+        /// @dev    Same as `IsolationModeWrapper` but uses the new V2 `creatActionsForWrapping` signature
+        IsolationModeWrapperV2
     }
 
     // ============ Structs ============
@@ -66,6 +71,7 @@ interface IGenericTraderProxyBase {
 
     struct GenericTraderProxyCache {
         IDolomiteMargin dolomiteMargin;
+        IEventEmitterRegistry eventEmitterRegistry;
         /// @dev    True if the user is making a margin deposit, false if they are withdrawing. False if the variable is
         ///         unused too.
         bool isMarginDeposit;

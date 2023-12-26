@@ -228,7 +228,8 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         _validateMarketIdPath(_marketIdsPath);
         _validateTransferParams(cache, _transferCollateralParams, _tradeAccountNumber);
 
-        // If we're transferring into the trade account and the input market is the transfer amount, we check the input amount using the amount being transferred in
+        // If we're transferring into the trade account and the input market is the transfer amount, we check the input
+        // amount using the amount being transferred in
         if (
             _transferCollateralParams.toAccountNumber == _tradeAccountNumber
                 && _marketIdsPath[0] == _transferCollateralParams.transferAmounts[0].marketId
@@ -440,7 +441,8 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         Require.that(
             !balanceWei.isNegative(),
             FILE,
-            "Balance must be positive"
+            "Balance must be positive",
+            _marketId
         );
         return balanceWei.value;
     }
@@ -470,7 +472,8 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
                 Require.that(
                     _transferCollateralParam.transferAmounts[i].marketId == _lastMarketId,
                     FILE,
-                    "Invalid transfer market ID"
+                    "Invalid transfer marketId",
+                    _transferCollateralParam.transferAmounts[i].marketId
                 );
                 Require.that(
                     fromAccountId == TRADE_ACCOUNT_ID,
