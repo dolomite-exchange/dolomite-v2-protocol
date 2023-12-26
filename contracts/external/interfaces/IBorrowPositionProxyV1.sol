@@ -31,7 +31,10 @@ interface IBorrowPositionProxyV1 {
 
     // ========================= Events =========================
 
-    event BorrowPositionOpen(address indexed _borrower, uint256 indexed _borrowAccountNumber);
+    event BorrowPositionOpen(
+        address indexed _borrower,
+        uint256 indexed _borrowAccountNumber
+    );
 
     // ========================= Functions =========================
 

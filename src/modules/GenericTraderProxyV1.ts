@@ -1,12 +1,14 @@
 import { toBytesNoPadding } from '../lib/BytesHelper';
 import { Contracts } from '../lib/Contracts';
-import { AccountInfo, address, ContractCallOptions, Integer, TxResult } from '../types';
+import { AccountInfo, address, ContractCallOptions, ContractConstantCallOptions, Integer, TxResult } from '../types';
 
 export enum GenericTraderType {
   ExternalLiquidity = 0,
   InternalLiquidity = 1,
   IsolationModeUnwrapper = 2,
   IsolationModeWrapper = 3,
+  IsolationModeUnwrapperV2 = 4,
+  IsolationModeWrapperV2 = 5,
 }
 
 export interface GenericTraderParam {
@@ -32,9 +34,16 @@ export interface GenericExpiryParam {
   expiryTimeDelta: Integer;
 }
 
+export enum GenericEventEmissionType {
+  None = 0,
+  BorrowPosition = 1,
+  MarginPosition = 2,
+}
+
 export interface GenericUserConfig {
   deadline: number | string;
   balanceCheckFlag: number | string;
+  eventType: GenericEventEmissionType;
 }
 
 interface GenericTraderCalldata {
@@ -101,6 +110,16 @@ export class GenericTraderProxyV1 {
   }
 
   // ============ State-Changing Functions ============
+
+  public async ownerSetEventEmitterRegistry(
+    eventEmitter: address,
+    options: ContractCallOptions = {},
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.genericTraderProxyV1.methods.ownerSetEventEmitterRegistry(eventEmitter),
+      options,
+    );
+  }
 
   /**
    * Executes a trade using the path of markets provided and the provided traders.
@@ -185,6 +204,23 @@ export class GenericTraderProxyV1 {
         GenericTraderProxyV1.genericTransferParamToCalldata(transferCollateralParam),
         GenericTraderProxyV1.genericExpiryToCalldata(expiryParam),
         userConfig,
+      ),
+      options,
+    );
+  }
+
+  public async eventEmitterRegistry(options: ContractConstantCallOptions = {}): Promise<string> {
+    return this.contracts.callConstantContractFunction(
+      this.contracts.genericTraderProxyV1.methods.EVENT_EMITTER_REGISTRY(),
+      options,
+    );
+  }
+
+  public async isIsolationModeMarket(marketId: Integer, options: ContractConstantCallOptions = {}): Promise<boolean> {
+    return this.contracts.callConstantContractFunction(
+      this.contracts.genericTraderProxyV1.methods.isIsolationModeMarket(
+        this.contracts.dolomiteMargin.options.address,
+        marketId.toFixed(0),
       ),
       options,
     );

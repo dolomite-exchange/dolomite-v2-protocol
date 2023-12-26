@@ -36,7 +36,6 @@ import { AccountBalanceLib } from "../lib/AccountBalanceLib.sol";
 import { BorrowPositionProxyV1 } from "./BorrowPositionProxyV1.sol";
 
 
-
 /**
  * @title   BorrowPositionProxyV2
  * @author  Dolomite

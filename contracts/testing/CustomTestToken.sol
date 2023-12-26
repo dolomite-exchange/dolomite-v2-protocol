@@ -43,6 +43,9 @@ contract CustomTestToken is TestToken {
     }
 
     function name() public view returns (string memory) {
+        if (shouldRevertNameCall) {
+            revert("TestToken: name call reverted");
+        }
         return _name;
     }
 

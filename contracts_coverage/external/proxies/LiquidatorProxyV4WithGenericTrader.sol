@@ -32,6 +32,7 @@ import { GenericTraderProxyBase } from "../helpers/GenericTraderProxyBase.sol";
 import { HasLiquidatorRegistry } from "../helpers/HasLiquidatorRegistry.sol";
 import { LiquidatorProxyBase } from "../helpers/LiquidatorProxyBase.sol";
 
+import { IEventEmitterRegistry } from "../interfaces/IEventEmitterRegistry.sol";
 import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
 import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
@@ -100,6 +101,7 @@ contract LiquidatorProxyV4WithGenericTrader is
     {
         GenericTraderProxyCache memory genericCache = GenericTraderProxyCache({
             dolomiteMargin: DOLOMITE_MARGIN,
+            eventEmitterRegistry: IEventEmitterRegistry(address(0)),
             // unused for this function
             isMarginDeposit: false,
             // unused for this function
@@ -199,7 +201,7 @@ contract LiquidatorProxyV4WithGenericTrader is
         uint256 _inputMarketId,
         uint256 _inputAmountWei
     ) internal view {
-        if (_isIsolationModeMarket(_cache, _inputMarketId)) {
+        if (isIsolationModeMarket(_cache.dolomiteMargin, _inputMarketId)) {
             // For liquidations, the asset amount must match the amount of collateral transferred from liquid account
             // to solid account. This is done via always selling the max amount of held collateral in the amountWeisPath
             // variable.

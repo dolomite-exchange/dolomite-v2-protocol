@@ -17,7 +17,8 @@ import { abi as adminAbi } from '../../build/published_contracts/AdminImpl.json'
 import { abi as permissionAbi } from '../../build/published_contracts/Permission.json';
 import { abi as expiryAbi } from '../../build/published_contracts/Expiry.json';
 import { abi as signedOperationProxyAbi } from '../../build/published_contracts/SignedOperationProxy.json';
-import { abi as marginPositionRegistryAbi } from '../../build/published_contracts/MarginPositionRegistry.json';
+import { abi as eventEmitterRegistryAbi } from '../../build/published_contracts/EventEmitterRegistry.json';
+import { GenericTraderParam, GenericTraderType } from './GenericTraderProxyV1';
 
 export class Logs {
   private contracts: Contracts;
@@ -46,8 +47,8 @@ export class Logs {
     if (options.skipExpiryLogs) {
       logs = logs.filter((log: any) => !this.logIsFrom(log, expiryAbi));
     }
-    if (options.skipMarginPositionRegistry) {
-      logs = logs.filter((log: any) => !this.logIsFrom(log, marginPositionRegistryAbi));
+    if (options.skipEventEmitterRegistry) {
+      logs = logs.filter((log: any) => !this.logIsFrom(log, eventEmitterRegistryAbi));
     }
 
     const coveragePrefix = '__';
@@ -116,9 +117,9 @@ export class Logs {
           log,
         );
       }
-      case this.contracts.marginPositionRegistry.options.address.toLowerCase(): {
+      case this.contracts.eventEmitterRegistry.options.address.toLowerCase(): {
         return this.parseLogWithContract(
-          this.contracts.marginPositionRegistry,
+          this.contracts.eventEmitterRegistry,
           log,
         );
       }
@@ -173,8 +174,12 @@ export class Logs {
         val = eventArgs[input.name];
       } else if (input.type.match(/^uint[0-9]*$/)) {
         val = new BigNumber(eventArgs[input.name]);
+      } else if (input.type.match(/^uint[0-9]*\[]$/)) {
+        val = eventArgs[input.name].map(arg => new BigNumber(arg));
       } else if (input.type === 'tuple') {
-        val = Logs.parseTuple(input, eventArgs);
+        val = Logs.parseTuple(input, eventArgs[input.name]);
+      } else if (input.type === 'tuple[]') {
+        val = eventArgs[input.name].map(arg => Logs.parseTuple(input, arg));
       } else if (input.type === 'string') {
         val = eventArgs[input.name];
       } else {
@@ -193,7 +198,7 @@ export class Logs {
       input.components[0].name === 'owner' &&
       input.components[1].name === 'number'
     ) {
-      return Logs.parseAccountInfo(eventArgs[input.name]);
+      return Logs.parseAccountInfo(eventArgs);
     }
 
     if (
@@ -202,7 +207,7 @@ export class Logs {
       input.components[0].name === 'deltaWei' &&
       input.components[1].name === 'newPar'
     ) {
-      return Logs.parseBalanceUpdate(eventArgs[input.name]);
+      return Logs.parseBalanceUpdate(eventArgs);
     }
 
     if (
@@ -212,7 +217,7 @@ export class Logs {
       input.components[1].name === 'supply' &&
       input.components[2].name === 'lastUpdate'
     ) {
-      return Logs.parseIndex(eventArgs[input.name]);
+      return Logs.parseIndex(eventArgs);
     }
 
     if (
@@ -226,9 +231,29 @@ export class Logs {
         input.name.toLowerCase().includes('rate') ||
         input.name.toLowerCase().includes('premium')
       ) {
-        return Logs.parseDecimalValue(eventArgs[input.name]);
+        return Logs.parseDecimalValue(eventArgs);
       }
-      return Logs.parseIntegerValue(eventArgs[input.name]);
+      return Logs.parseIntegerValue(eventArgs);
+    }
+
+    if (
+      Array.isArray(input.components) &&
+      input.components.length === 2 &&
+      input.components[0].name === 'sign' &&
+      input.components[1].name === 'value'
+    ) {
+      return Logs.parseWei(eventArgs);
+    }
+
+    if (
+      Array.isArray(input.components) &&
+      input.components.length === 4 &&
+      input.components[0].name === 'traderType' &&
+      input.components[1].name === 'makerAccountIndex' &&
+      input.components[2].name === 'trader' &&
+      input.components[3].name === 'tradeData'
+    ) {
+      return Logs.parseTraderParam(eventArgs);
     }
 
     if (
@@ -238,16 +263,7 @@ export class Logs {
       input.components[1].name === 'fee' &&
       input.components[2].name === 'isNegativeFee'
     ) {
-      return Logs.parseFillData(eventArgs[input.name]);
-    }
-
-    if (
-      Array.isArray(input.components) &&
-      input.components.length === 2 &&
-      input.components[0].name === 'sign' &&
-      input.components[1].name === 'value'
-    ) {
-      return Logs.parseWei(eventArgs[input.name]);
+      return Logs.parseFillData(eventArgs);
     }
 
     throw new Error('Unknown tuple type in event');
@@ -295,6 +311,17 @@ export class Logs {
       value: weiData.value,
       sign: weiData.sign,
     });
+  }
+
+  private static parseTraderParam(
+    traderParam: any,
+  ): GenericTraderParam {
+    return {
+      traderType: traderParam.traderType as GenericTraderType,
+      makerAccountIndex: stringToDecimal(traderParam.makerAccountIndex).toNumber(),
+      trader: traderParam.trader,
+      tradeData: traderParam.tradeData,
+    };
   }
 
   private static parseFillData(

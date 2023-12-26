@@ -41,7 +41,7 @@ library AccountBalanceLib {
 
     // ============ Types ============
 
-    /// Checks that either BOTH, FROM, or TO accounts all have non-negative balances
+    /// Checks that either BOTH, FROM, or TO accounts do not have negative balances
     enum BalanceCheckFlag {
         Both,
         From,
