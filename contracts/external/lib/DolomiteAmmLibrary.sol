@@ -60,7 +60,7 @@ library DolomiteAmmLibrary {
             "invalid path length"
         );
 
-        uint256 pathLength = path.length ;
+        uint256 pathLength = path.length;
         address[] memory pools = new address[](pathLength - 1);
         for (uint256 i; i < pathLength - 1; ++i) {
             pools[i] = pairFor(

@@ -444,10 +444,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 // an unwrapper can never appear at the non-zero index because there is an invariant that checks the
                 // `IsolationModeWrapper` is the last index
                 assert(i == 0);
-                address unwrapperTrader = _tradersPath[i].trader;
-                Actions.ActionArgs[] memory unwrapperActions;
+                Actions.ActionArgs[] memory unwrapActions;
                 if (_tradersPath[i].traderType == TraderType.IsolationModeUnwrapper) {
-                    unwrapperActions = IIsolationModeUnwrapperTrader(unwrapperTrader).createActionsForUnwrapping(
+                    unwrapActions = IIsolationModeUnwrapperTrader(_tradersPath[i].trader).createActionsForUnwrapping(
                         ZAP_ACCOUNT_ID,
                         _otherAccountId(),
                         _accounts[ZAP_ACCOUNT_ID].owner,
@@ -460,7 +459,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     );
                 } else {
                     assert(_tradersPath[i].traderType == TraderType.IsolationModeUnwrapperV2);
-                    unwrapperActions = IIsolationModeUnwrapperTraderV2(unwrapperTrader).createActionsForUnwrapping(
+                    unwrapActions = IIsolationModeUnwrapperTraderV2(_tradersPath[i].trader).createActionsForUnwrapping(
                         IIsolationModeUnwrapperTraderV2.CreateActionsForUnwrappingParams({
                             primaryAccountId: ZAP_ACCOUNT_ID,
                             otherAccountId: _otherAccountId(),
@@ -477,8 +476,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     );
                 }
 
-                for (uint256 j; j < unwrapperActions.length; j++) {
-                    _actions[_cache.actionsCursor++] = unwrapperActions[j];
+                for (uint256 j; j < unwrapActions.length; j++) {
+                    _actions[_cache.actionsCursor++] = unwrapActions[j];
                 }
             } else {
                 // Panic if the developer messed up the `else` statement here
@@ -489,10 +488,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     "Wrapper must be the last trader"
                 );
 
-                address wrapperTrader = _tradersPath[i].trader;
-                Actions.ActionArgs[] memory wrapperActions;
+                Actions.ActionArgs[] memory wrapActions;
                 if (_tradersPath[i].traderType == TraderType.IsolationModeWrapper) {
-                    wrapperActions = IIsolationModeWrapperTrader(wrapperTrader).createActionsForWrapping(
+                    wrapActions = IIsolationModeWrapperTrader(_tradersPath[i].trader).createActionsForWrapping(
                         ZAP_ACCOUNT_ID,
                         _otherAccountId(),
                         _accounts[ZAP_ACCOUNT_ID].owner,
@@ -505,7 +503,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     );
                 } else {
                     assert(_tradersPath[i].traderType == TraderType.IsolationModeWrapperV2);
-                    wrapperActions = IIsolationModeWrapperTraderV2(wrapperTrader).createActionsForWrapping(
+                    wrapActions = IIsolationModeWrapperTraderV2(_tradersPath[i].trader).createActionsForWrapping(
                         IIsolationModeWrapperTraderV2.CreateActionsForWrappingParams({
                             primaryAccountId: ZAP_ACCOUNT_ID,
                             otherAccountId: _otherAccountId(),
@@ -522,8 +520,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     );
                 }
 
-                for (uint256 j; j < wrapperActions.length; j++) {
-                    _actions[_cache.actionsCursor++] = wrapperActions[j];
+                for (uint256 j; j < wrapActions.length; j++) {
+                    _actions[_cache.actionsCursor++] = wrapActions[j];
                 }
             }
         }

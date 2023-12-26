@@ -560,7 +560,8 @@ async function deploySecondLayer(deployer, network, accounts) {
   const genericTraderProxyV1 = GenericTraderProxyV1;
   if (shouldOverwrite(genericTraderProxyV1, network)) {
     await deployer.deploy(GenericTraderProxyV1Lib);
-    genericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);await deployer.deploy(genericTraderProxyV1, Expiry.address, eventEmitterRegistry.address, dolomiteMargin.address);
+    genericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);
+    await deployer.deploy(genericTraderProxyV1, Expiry.address, eventEmitterRegistry.address, dolomiteMargin.address);
   } else {
     await deployer.deploy(genericTraderProxyV1, getNoOverwriteParams());
   }

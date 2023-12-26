@@ -29,6 +29,7 @@ import { OnlyDolomiteMargin } from "../helpers/OnlyDolomiteMargin.sol";
 import { IEventEmitterRegistry } from "../interfaces/IEventEmitterRegistry.sol";
 import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 
+
 /**
  * @title   EventEmitterRegistry
  * @author  Dolomite

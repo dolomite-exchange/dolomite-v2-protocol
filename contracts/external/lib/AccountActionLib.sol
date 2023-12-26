@@ -290,7 +290,10 @@ library AccountActionLib {
             secondaryMarketId: !_flipMarkets ? _heldMarketId : _owedMarketId,
             otherAddress: _expiryProxy,
             otherAccountId: _liquidAccountId,
-            data: abi.encode(/* calculateAmountWithMakerAccount = */ true, abi.encode(_owedMarketId, _expiry))
+            data: abi.encode(
+                /* calculateAmountWithMakerAccount = */ true,
+                abi.encode(_owedMarketId, _expiry)
+            )
         });
     }
 
@@ -338,7 +341,10 @@ library AccountActionLib {
             secondaryMarketId: _secondaryMarketId,
             otherAddress: _traderAddress,
             otherAccountId: _toAccountId,
-            data: abi.encode(/* calculateAmountWithMakerAccount = */ false, _orderData)
+            data: abi.encode(
+                /* calculateAmountWithMakerAccount = */ false,
+                _orderData
+            )
         });
     }
 
