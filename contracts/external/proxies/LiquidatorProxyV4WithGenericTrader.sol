@@ -124,7 +124,7 @@ contract LiquidatorProxyV4WithGenericTrader is
             _makerAccounts,
             _tradersPath
         );
-        _validateInputAmountAndInputMarketForIsolationMode(genericCache, _marketIdsPath[0], _inputAmountWei);
+        _validateInputAmountAndInputMarketForIsolationMode(_tradersPath[0], _inputAmountWei);
 
         // put all values that will not change into a single struct
         LiquidatorProxyConstants memory constants;
@@ -155,11 +155,7 @@ contract LiquidatorProxyV4WithGenericTrader is
         // get the max liquidation amount
         _calculateAndSetMaxLiquidationAmount(liquidatorCache);
 
-        (_inputAmountWei, _minOutputAmountWei) = _calculateAndSetActualLiquidationAmount(
-            _inputAmountWei,
-            _minOutputAmountWei,
-            liquidatorCache
-        );
+        _minOutputAmountWei = _calculateAndSetActualLiquidationAmount(_minOutputAmountWei, liquidatorCache);
 
         Account.Info[] memory accounts = _getAccounts(
             genericCache,
@@ -197,14 +193,12 @@ contract LiquidatorProxyV4WithGenericTrader is
     // ============ Internal Functions ============
 
     function _validateInputAmountAndInputMarketForIsolationMode(
-        GenericTraderProxyCache memory _cache,
-        uint256 _inputMarketId,
+        TraderParam memory _param,
         uint256 _inputAmountWei
-    ) internal view {
-        if (isIsolationModeMarket(_cache.dolomiteMargin, _inputMarketId)) {
+    ) internal pure {
+        if (_isUnwrapperTraderType(_param.traderType) || _isWrapperTraderType(_param.traderType)) {
             // For liquidations, the asset amount must match the amount of collateral transferred from liquid account
-            // to solid account. This is done via always selling the max amount of held collateral in the amountWeisPath
-            // variable.
+            // to solid account. This is done via always selling the max amount of held collateral.
             Require.that(
                 _inputAmountWei == uint256(-1),
                 FILE,
