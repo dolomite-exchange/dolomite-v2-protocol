@@ -20,6 +20,7 @@ module.exports = {
     'external/utils/MultiCall.sol',
     'external/utils/ArbitrumMultiCall.sol',
     'protocol/interfaces/',
+    'protocol/', // TODO: delete
     'testing/',
   ],
   measureFunctionCoverage: false, // done because of this error here: https://github.com/sc-forks/solidity-coverage/blob/master/docs/faq.md#running-out-of-memory

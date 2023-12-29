@@ -405,12 +405,25 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         view
     {
         // Before the trades are started, transfer inputAmountWei of the inputMarket from the TRADE account to the ZAP account
-        _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferAction(
-            TRADE_ACCOUNT_ID,
-            ZAP_ACCOUNT_ID,
-            _marketIdsPath[0],
-            _inputAmountWei
-        );
+        if (_inputAmountWei == uint256(-1)) {
+            // Transfer such that we TARGET w/e the trader has right now, before the trades occur
+            _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferToTargetAmountAction(
+                TRADE_ACCOUNT_ID,
+                ZAP_ACCOUNT_ID,
+                _marketIdsPath[0],
+                /* _targetAmountWei = */ _cache.dolomiteMargin.getAccountWei(
+                    _accounts[TRADE_ACCOUNT_ID],
+                    _marketIdsPath[0]
+                )
+            );
+        } else {
+            _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferAction(
+                TRADE_ACCOUNT_ID,
+                ZAP_ACCOUNT_ID,
+                _marketIdsPath[0],
+                _inputAmountWei
+            );
+        }
 
         for (uint256 i = 0; i < _tradersPath.length; i++) {
             if (_tradersPath[i].traderType == TraderType.ExternalLiquidity) {
@@ -448,23 +461,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 // an unwrapper can never appear at the non-zero index because there is an invariant that checks the
                 // `IsolationModeWrapper` is the last index
                 assert(i == 0);
-                address unwrapperTrader = _tradersPath[i].trader;
-                Actions.ActionArgs[] memory unwrapperActions;
-                if (_tradersPath[i].traderType == TraderType.IsolationModeUnwrapper) {
-                    unwrapperActions = IIsolationModeUnwrapperTrader(unwrapperTrader).createActionsForUnwrapping(
-                        ZAP_ACCOUNT_ID,
-                        _otherAccountId(),
-                        _accounts[ZAP_ACCOUNT_ID].owner,
-                        _accounts[_otherAccountId()].owner,
-                        /* _outputMarketId = */_marketIdsPath[i + 1], // solium-disable-line indentation
-                        /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
-                        _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                        _getInputAmountWeiForIndex(_inputAmountWei, i),
-                        _tradersPath[i].tradeData
-                    );
-                } else {
-                    assert(_tradersPath[i].traderType == TraderType.IsolationModeUnwrapperV2);
-                    unwrapperActions = IIsolationModeUnwrapperTraderV2(unwrapperTrader).createActionsForUnwrapping(
+                Actions.ActionArgs[] memory unwrapperActions = IIsolationModeUnwrapperTraderV2(_tradersPath[i].trader)
+                    .createActionsForUnwrapping(
                         IIsolationModeUnwrapperTraderV2.CreateActionsForUnwrappingParams({
                             primaryAccountId: ZAP_ACCOUNT_ID,
                             otherAccountId: _otherAccountId(),
@@ -479,7 +477,6 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                             orderData: _tradersPath[i].tradeData
                         })
                     );
-                }
 
                 for (uint256 j = 0; j < unwrapperActions.length; j++) {
                     _actions[_cache.actionsCursor++] = unwrapperActions[j];
@@ -493,38 +490,22 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     "Wrapper must be the last trader"
                 );
 
-                address wrapperTrader = _tradersPath[i].trader;
-                Actions.ActionArgs[] memory wrapperActions;
-                if (_tradersPath[i].traderType == TraderType.IsolationModeWrapper) {
-                    wrapperActions = IIsolationModeWrapperTrader(wrapperTrader).createActionsForWrapping(
-                        ZAP_ACCOUNT_ID,
-                        _otherAccountId(),
-                        _accounts[ZAP_ACCOUNT_ID].owner,
-                        _accounts[_otherAccountId()].owner,
-                        /* _outputMarketId = */ _marketIdsPath[i + 1], // solium-disable-line indentation
-                        /* _inputMarketId = */ _marketIdsPath[i], // solium-disable-line indentation
-                        _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                        _getInputAmountWeiForIndex(_inputAmountWei, i),
-                        _tradersPath[i].tradeData
-                    );
-                } else {
-                    assert(_tradersPath[i].traderType == TraderType.IsolationModeWrapperV2);
-                    wrapperActions = IIsolationModeWrapperTraderV2(wrapperTrader).createActionsForWrapping(
+                Actions.ActionArgs[] memory wrapperActions = IIsolationModeWrapperTraderV2(_tradersPath[i].trader)
+                    .createActionsForWrapping(
                         IIsolationModeWrapperTraderV2.CreateActionsForWrappingParams({
-                            primaryAccountId: ZAP_ACCOUNT_ID,
-                            otherAccountId: _otherAccountId(),
-                            primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
-                            primaryAccountNumber: _accounts[ZAP_ACCOUNT_ID].number,
-                            otherAccountOwner: _accounts[_otherAccountId()].owner,
-                            otherAccountNumber: _accounts[_otherAccountId()].number,
-                            outputMarket: _marketIdsPath[i + 1],
-                            inputMarket: _marketIdsPath[i],
-                            minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                            inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
-                            orderData: _tradersPath[i].tradeData
+                        primaryAccountId: ZAP_ACCOUNT_ID,
+                        otherAccountId: _otherAccountId(),
+                        primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
+                        primaryAccountNumber: _accounts[ZAP_ACCOUNT_ID].number,
+                        otherAccountOwner: _accounts[_otherAccountId()].owner,
+                        otherAccountNumber: _accounts[_otherAccountId()].number,
+                        outputMarket: _marketIdsPath[i + 1],
+                        inputMarket: _marketIdsPath[i],
+                        minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                        inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
+                        orderData: _tradersPath[i].tradeData
                         })
                     );
-                }
 
                 for (uint256 j = 0; j < wrapperActions.length; j++) {
                     _actions[_cache.actionsCursor++] = wrapperActions[j];
@@ -542,10 +523,30 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     }
 
     /**
-     * @return  The index of the account that is not the trade account. For the liquidation contract, this is
+     * @return  The index of the account that is not the Zap account. For the liquidation contract, this is
      *          the account being liquidated. For the GenericTrader contract this is the same as the trader account.
      */
     function _otherAccountId() internal pure returns (uint256);
+
+    function _isWrapperTraderType(
+        TraderType _traderType
+    )
+        internal
+        pure
+        returns (bool)
+    {
+        return TraderType.IsolationModeWrapper == _traderType;
+    }
+
+    function _isUnwrapperTraderType(
+        TraderType _traderType
+    )
+        internal
+        pure
+        returns (bool)
+    {
+        return TraderType.IsolationModeUnwrapper == _traderType;
+    }
 
     // ==================== Private Functions ====================
 
@@ -581,26 +582,6 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         returns (uint256)
     {
         return _index == _tradersPathLength - 1 ? _minOutputAmountWei : 1;
-    }
-
-    function _isWrapperTraderType(
-        TraderType _traderType
-    )
-        private
-        pure
-        returns (bool)
-    {
-        return TraderType.IsolationModeWrapper == _traderType || TraderType.IsolationModeWrapperV2 == _traderType;
-    }
-
-    function _isUnwrapperTraderType(
-        TraderType _traderType
-    )
-        private
-        pure
-        returns (bool)
-    {
-        return TraderType.IsolationModeUnwrapper == _traderType || TraderType.IsolationModeUnwrapperV2 == _traderType;
     }
 
     function _hashSubstring(

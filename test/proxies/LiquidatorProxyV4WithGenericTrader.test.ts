@@ -2,15 +2,11 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import * as testTokenJson from '../../build/contracts/CustomTestToken.json';
 import * as testIsolationModeTokenJson from '../../build/contracts/TestIsolationModeToken.json';
-import * as testIsolationModeUnwrapperTraderJson from '../../build/contracts/TestIsolationModeUnwrapperTrader.json';
 import * as testIsolationModeUnwrapperTraderV2Json from '../../build/contracts/TestIsolationModeUnwrapperTraderV2.json';
-import * as testIsolationModeWrapperTraderJson from '../../build/contracts/TestIsolationModeWrapperTrader.json';
 import * as testIsolationModeWrapperTraderV2Json from '../../build/contracts/TestIsolationModeWrapperTraderV2.json';
 import { CustomTestToken as TestTokenContract } from '../../build/testing_wrappers/CustomTestToken';
 import { TestIsolationModeToken as TestIsolationModeTokenContract } from '../../build/testing_wrappers/TestIsolationModeToken';
-import { TestIsolationModeUnwrapperTrader } from '../../build/testing_wrappers/TestIsolationModeUnwrapperTrader';
 import { TestIsolationModeUnwrapperTraderV2 } from '../../build/testing_wrappers/TestIsolationModeUnwrapperTraderV2';
-import { TestIsolationModeWrapperTrader } from '../../build/testing_wrappers/TestIsolationModeWrapperTrader';
 import { TestIsolationModeWrapperTraderV2 } from '../../build/testing_wrappers/TestIsolationModeWrapperTraderV2';
 import {
   address,
@@ -51,10 +47,8 @@ let token3Contract: TestIsolationModeToken;
 let token4Contract: TestIsolationModeToken;
 let token5Contract: TestToken;
 let token6Contract: TestToken;
-let testIsolationModeUnwrapper: TestIsolationModeUnwrapperTrader;
-let testIsolationModeUnwrapperV2: TestIsolationModeUnwrapperTraderV2;
-let testIsolationModeWrapper: TestIsolationModeWrapperTrader;
-let testIsolationModeWrapperV2: TestIsolationModeWrapperTraderV2;
+let testIsolationModeUnwrapper: TestIsolationModeUnwrapperTraderV2;
+let testIsolationModeWrapper: TestIsolationModeWrapperTraderV2;
 
 const solidNumber = new BigNumber(111);
 const liquidNumber = new BigNumber(222);
@@ -127,22 +121,12 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
     marketIdToTokenMap[market5.toFixed()] = token5;
     marketIdToTokenMap[market6.toFixed()] = token6;
 
-    testIsolationModeUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
-      dolomiteMargin,
-      testIsolationModeUnwrapperTraderJson,
-      [token3, token2, dolomiteMargin.address],
-    );
-    testIsolationModeUnwrapperV2 = await deployContract<TestIsolationModeUnwrapperTraderV2>(
+    testIsolationModeUnwrapper = await deployContract<TestIsolationModeUnwrapperTraderV2>(
       dolomiteMargin,
       testIsolationModeUnwrapperTraderV2Json,
       [token3, token2, dolomiteMargin.address],
     );
-    testIsolationModeWrapper = await deployContract<TestIsolationModeWrapperTrader>(
-      dolomiteMargin,
-      testIsolationModeWrapperTraderJson,
-      [token2, token3, dolomiteMargin.address],
-    );
-    testIsolationModeWrapperV2 = await deployContract<TestIsolationModeWrapperTraderV2>(
+    testIsolationModeWrapper = await deployContract<TestIsolationModeWrapperTraderV2>(
       dolomiteMargin,
       testIsolationModeWrapperTraderV2Json,
       [token2, token3, dolomiteMargin.address],
@@ -179,10 +163,13 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
     console.log('setting trusted converters');
     await token3Contract.setTokenConverterTrusted(testIsolationModeUnwrapper.options.address, true);
     await token3Contract.setTokenConverterTrusted(testIsolationModeWrapper.options.address, true);
-    await token3Contract.setTokenConverterTrusted(testIsolationModeUnwrapperV2.options.address, true);
-    await token3Contract.setTokenConverterTrusted(testIsolationModeWrapperV2.options.address, true);
+    await token3Contract.setTokenConverterTrusted(testIsolationModeUnwrapper.options.address, true);
+    await token3Contract.setTokenConverterTrusted(testIsolationModeWrapper.options.address, true);
 
     await Promise.all([
+      dolomiteMargin.contracts.callContractFunction(
+        testIsolationModeUnwrapper.methods.setVault(liquidOwner, true),
+      ),
       token1Contract.issueTo(par1.times(1000), dolomiteMargin.address),
       token2Contract.issueTo(par2.times(1000), dolomiteMargin.address),
       token3Contract.issueTo(par3.times(1000), dolomiteMargin.address),
@@ -555,126 +542,6 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
         expect(liquidMarket3Balance).to.eql(par3.minus(par.times('236.25')));
       });
 
-      it('should succeed when unwrapping with V2 and inputAmountWei is set to sell all', async () => {
-        await Promise.all([
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market2, negPar.times('112.5')),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market4, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market5, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
-        ]);
-
-        const marketIdsPath = [market3, market2];
-        const amountWeisPath = [INTEGERS.MAX_UINT, par.times('118.125')];
-        await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
-          solidOwner,
-          solidNumber,
-          liquidOwner,
-          liquidNumber,
-          marketIdsPath,
-          amountWeisPath[0],
-          amountWeisPath[1],
-          [await getUnwrapperTraderV2Param()],
-          [],
-          noExpiry,
-          { from: operator },
-        );
-
-        const [solidMarket2Balance, solidMarket3Balance, liquidMarket2Balance, liquidMarket3Balance] =
-          await Promise.all([
-            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market2),
-            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market3),
-            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market2),
-            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market3),
-          ]);
-
-        expect(solidMarket2Balance).to.eql(par2.plus(amountWeisPath[1].minus(par.times('112.5'))));
-        expect(solidMarket3Balance).to.eql(par3);
-
-        expect(liquidMarket2Balance).to.eql(INTEGERS.ZERO);
-        expect(liquidMarket3Balance).to.eql(par3.minus(par.times('236.25')));
-      });
-
-      it('should succeed for a simple swap using wrapper', async () => {
-        await Promise.all([
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market3, negPar.times('225')),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market4, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market5, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
-        ]);
-
-        const marketIdsPath = [market2, market3];
-        const amountWeisPath = [par.times('118.125'), par.times('236.25')];
-        await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
-          solidOwner,
-          solidNumber,
-          liquidOwner,
-          liquidNumber,
-          marketIdsPath,
-          amountWeisPath[0],
-          amountWeisPath[1],
-          [await getWrapperTraderV2Param()],
-          [],
-          noExpiry,
-          { from: operator },
-        );
-
-        const [solidMarket2Balance, solidMarket3Balance, liquidMarket2Balance, liquidMarket3Balance] =
-          await Promise.all([
-            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market2),
-            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market3),
-            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market2),
-            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market3),
-          ]);
-
-        expect(solidMarket2Balance).to.eql(par2);
-        expect(solidMarket3Balance).to.eql(par3.plus(amountWeisPath[1].minus(par.times('225'))));
-
-        expect(liquidMarket2Balance).to.eql(par2.minus(amountWeisPath[0]));
-        expect(liquidMarket3Balance).to.eql(INTEGERS.ZERO);
-      });
-
-      it('should succeed for a simple swap using wrapper V2', async () => {
-        await Promise.all([
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market3, negPar.times('225')),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market4, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market5, INTEGERS.ZERO),
-          dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
-        ]);
-
-        const marketIdsPath = [market2, market3];
-        const amountWeisPath = [par.times('118.125'), par.times('236.25')];
-        await dolomiteMargin.liquidatorProxyV4WithGenericTrader.liquidate(
-          solidOwner,
-          solidNumber,
-          liquidOwner,
-          liquidNumber,
-          marketIdsPath,
-          amountWeisPath[0],
-          amountWeisPath[1],
-          [await getWrapperTraderParam()],
-          [],
-          noExpiry,
-          { from: operator },
-        );
-
-        const [solidMarket2Balance, solidMarket3Balance, liquidMarket2Balance, liquidMarket3Balance] =
-          await Promise.all([
-            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market2),
-            dolomiteMargin.getters.getAccountWei(solidOwner, solidNumber, market3),
-            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market2),
-            dolomiteMargin.getters.getAccountWei(liquidOwner, liquidNumber, market3),
-          ]);
-
-        expect(solidMarket2Balance).to.eql(par2);
-        expect(solidMarket3Balance).to.eql(par3.plus(amountWeisPath[1].minus(par.times('225'))));
-
-        expect(liquidMarket2Balance).to.eql(par2.minus(amountWeisPath[0]));
-        expect(liquidMarket3Balance).to.eql(INTEGERS.ZERO);
-      });
-
       it('should succeed for a simple swap that unwraps into a wrapper', async () => {
         await Promise.all([
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market1, INTEGERS.ZERO),
@@ -684,10 +551,13 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
         ]);
 
-        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
+        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTraderV2>(
           dolomiteMargin,
-          testIsolationModeUnwrapperTraderJson,
+          testIsolationModeUnwrapperTraderV2Json,
           [token3, token4, dolomiteMargin.address],
+        );
+        await dolomiteMargin.contracts.callContractFunction(
+          freshUnwrapper.methods.setVault(liquidOwner, true),
         );
         await token3Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
         await token4Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
@@ -1634,7 +1504,7 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
           liquidOwner,
           liquidNumber,
           marketIdsPath,
-          amountWeisPath[0],
+          INTEGERS.MAX_UINT,
           amountWeisPath[amountWeisPath.length - 1],
           [await getWrapperTraderParam()],
           [],
@@ -1666,10 +1536,13 @@ describe('LiquidatorProxyV4WithGenericTrader', () => {
           dolomiteMargin.testing.setAccountBalance(liquidOwner, liquidNumber, market6, INTEGERS.ZERO),
         ]);
 
-        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTrader>(
+        const freshUnwrapper = await deployContract<TestIsolationModeUnwrapperTraderV2>(
           dolomiteMargin,
-          testIsolationModeUnwrapperTraderJson,
+          testIsolationModeUnwrapperTraderV2Json,
           [token3, token4, dolomiteMargin.address],
+        );
+        await dolomiteMargin.contracts.callContractFunction(
+          freshUnwrapper.methods.setVault(liquidOwner, true),
         );
         await token3Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
         await token4Contract.setTokenConverterTrusted(freshUnwrapper.options.address, true);
@@ -2072,29 +1945,11 @@ function getUnwrapperTraderParam(): GenericTraderParam {
   };
 }
 
-function getUnwrapperTraderV2Param(): GenericTraderParam {
-  return {
-    traderType: GenericTraderType.IsolationModeUnwrapperV2,
-    makerAccountIndex: 0,
-    trader: testIsolationModeUnwrapperV2.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
-  };
-}
-
 function getWrapperTraderParam(): GenericTraderParam {
   return {
     traderType: GenericTraderType.IsolationModeWrapper,
     makerAccountIndex: 0,
     trader: testIsolationModeWrapper.options.address,
-    tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
-  };
-}
-
-function getWrapperTraderV2Param(): GenericTraderParam {
-  return {
-    traderType: GenericTraderType.IsolationModeWrapperV2,
-    makerAccountIndex: 0,
-    trader: testIsolationModeWrapperV2.options.address,
     tradeData: ethers.utils.defaultAbiCoder.encode(['bytes'], [[]]),
   };
 }

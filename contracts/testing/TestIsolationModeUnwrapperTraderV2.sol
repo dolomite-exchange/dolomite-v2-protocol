@@ -45,6 +45,9 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
     address public UNDERLYING_TOKEN;
     address public OUTPUT_TOKEN;
 
+    uint256 public enqueuedTransferAmount;
+    mapping(address => bool) public vaultMapping;
+
     constructor(
         address _inputToken,
         address _outputToken,
@@ -55,12 +58,16 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
         DOLOMITE_MARGIN = IDolomiteMargin(_dolomiteMargin);
     }
 
+    function setVault(address _vault, bool _isVault) external {
+        vaultMapping[_vault] = _isVault;
+    }
+
     function exchange(
         address,
         address _receiver,
         address _makerToken,
         address _takerToken,
-        uint256,
+        uint256 _takerAmount,
         bytes calldata _orderData
     )
     external
@@ -71,11 +78,32 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
             "Taker token must be UNDERLYING",
             _takerToken
         );
+        Require.that(
+            _takerAmount == enqueuedTransferAmount,
+            FILE,
+            "Taker amount must be enqueued",
+            _takerToken
+        );
+        enqueuedTransferAmount = 0; // reset 0
 
-        (uint256 amountOut,) = abi.decode(_orderData, (uint256, bytes));
-        TestToken(_makerToken).setBalance(address(this), amountOut);
-        TestToken(_makerToken).approve(_receiver, amountOut);
-        return amountOut;
+        (uint256 _minOutputAmount) = abi.decode(_orderData, (uint256));
+
+        uint256 makerPrice = DOLOMITE_MARGIN.getMarketPrice(
+            DOLOMITE_MARGIN.getMarketIdByTokenAddress(_makerToken)
+        ).value;
+        uint256 takerPrice = DOLOMITE_MARGIN.getMarketPrice(
+            DOLOMITE_MARGIN.getMarketIdByTokenAddress(_takerToken)
+        ).value;
+        uint256 makerAmount = DolomiteMarginMath.getPartial(takerPrice, _takerAmount, makerPrice);
+        Require.that(
+            makerAmount >= _minOutputAmount,
+            FILE,
+            "Insufficient output amount"
+        );
+
+        TestToken(_makerToken).setBalance(address(this), makerAmount);
+        TestToken(_makerToken).approve(_receiver, makerAmount);
+        return makerAmount;
     }
 
     function token() external view returns (address) {
@@ -123,7 +151,7 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
 
     function callFunction(
         address /* _sender */,
-        Account.Info memory,
+        Account.Info memory _accountInfo,
         bytes memory _data
     )
     public {
@@ -133,11 +161,33 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
             "Invalid caller",
             msg.sender
         );
-        Require.that(
-            _data.length == 0,
-            FILE,
-            "callFunction should be noop"
+
+        (uint256 transferAmount, address vault,) = abi.decode(
+            _data,
+            (uint256, address, uint256)
         );
+
+        Require.that(
+            vaultMapping[vault],
+            FILE,
+            "Account owner is not a vault",
+            vault
+        );
+
+        if (transferAmount == uint256(-1)) {
+            uint256 marketId = DOLOMITE_MARGIN.getMarketIdByTokenAddress(UNDERLYING_TOKEN);
+            /// @note   Account wei cannot be negative for Isolation Mode assets
+            /// @note   We can safely get the accountInfo's (zap account) balance here without worrying about read-only
+            ///         reentrancy
+            transferAmount = DOLOMITE_MARGIN.getAccountWei(_accountInfo, marketId).value;
+        }
+        Require.that(
+            transferAmount > 0,
+            FILE,
+            "Invalid transfer amount"
+        );
+
+        enqueuedTransferAmount = transferAmount;
     }
 
     function createActionsForUnwrapping(
@@ -158,31 +208,21 @@ contract TestIsolationModeUnwrapperTraderV2 is IIsolationModeUnwrapperTraderV2, 
             "Invalid output market",
             _params.outputMarket
         );
-        uint256 amountOut;
-        uint256 inputPrice = DOLOMITE_MARGIN.getMarketPrice(_params.inputMarket).value;
-        uint256 outputPrice = DOLOMITE_MARGIN.getMarketPrice(_params.outputMarket).value;
-        amountOut = DolomiteMarginMath.getPartial(inputPrice, _params.inputAmount, outputPrice);
-        Require.that(
-            amountOut >= _params.minOutputAmount,
-            FILE,
-            "Insufficient output amount"
-        );
 
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](ACTIONS_LENGTH);
-        actions[0] = AccountActionLib.encodeExternalSellAction(
+        actions[0] = AccountActionLib.encodeCallAction(
+            _params.primaryAccountId,
+            address(this),
+            abi.encode(_params.inputAmount, _params.otherAccountOwner, _params.otherAccountNumber)
+        );
+        actions[1] = AccountActionLib.encodeExternalSellAction(
             _params.primaryAccountId,
             _params.inputMarket,
             _params.outputMarket,
             address(this),
             _params.inputAmount,
-            amountOut,
+            _params.minOutputAmount,
             _params.orderData
-        );
-        // Unwrappers can have length > 1 so we encode a no-op to simulate there being more than one actions
-        actions[1] = AccountActionLib.encodeCallAction(
-            _params.primaryAccountId,
-            address(this),
-            bytes("")
         );
         return actions;
     }
