@@ -968,8 +968,8 @@
         },
         "42161": {
             "links": {},
-            "address": "0xfD84446AbCB9016F823904F13d16Fb7f103Ab6D7",
-            "transactionHash": "0xe34c9e3c44f1a021f52678f5eff1bc32f502c7b7c717c0a34381e5770c28817e"
+            "address": "0x34975624E992bF5c094EF0CF3344660f7AaB9CB3",
+            "transactionHash": "0x865d8530dc2ff97a3a42739ba1ba0aaf59960ec8f74f47cec2bc0a1495cb6ada"
         },
         "421613": {
             "links": {},
@@ -1035,8 +1035,8 @@
         },
         "42161": {
             "links": {},
-            "address": "0x361b242C2E4F7E002205c0d016b9Ae0ac97c93D1",
-            "transactionHash": "0xd585a7190472143a80c9a15867bd4031be5f0857dc9de2475555979e8274d6c0"
+            "address": "0x49Df0d7A2e52088e0672A91196b21CFdB4e8BF93",
+            "transactionHash": "0xeb91824bcdc89fc511e3560b7050858255e0258cf3d39b09d807bc44a650da50"
         }
     },
     "AlwaysOnlineOracleSentinel": {
