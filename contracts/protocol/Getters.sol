@@ -75,6 +75,22 @@ contract Getters is
         return GettersImpl.getLiquidationSpread(g_state);
     }
 
+    function getLiquidationSpreadForPair(
+        uint256 heldMarketId,
+        uint256 owedMarketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getLiquidationSpreadForAccountAndPair(
+            g_state,
+            /* accountOwner = */ address(0),
+            heldMarketId,
+            owedMarketId
+        );
+    }
+
     function getLiquidationSpreadForAccountAndPair(
         address accountOwner,
         uint256 heldMarketId,
@@ -327,6 +343,26 @@ contract Getters is
         return GettersImpl.getMarketLiquidationSpreadPremium(g_state, marketId);
     }
 
+    function getMarketSpreadPremium(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarketLiquidationSpreadPremium(g_state, marketId);
+    }
+
+    function getMarketMaxWei(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Types.Wei memory)
+    {
+        return GettersImpl.getMarketMaxSupplyWei(g_state, marketId);
+    }
+
     function getMarketMaxSupplyWei(
         uint256 marketId
     )
@@ -355,6 +391,16 @@ contract Getters is
         returns (Decimal.D256 memory)
     {
         return GettersImpl.getMarketEarningsRateOverride(g_state, marketId);
+    }
+
+    function getMarketInterestRate(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Interest.Rate memory)
+    {
+        return GettersImpl.getMarketBorrowInterestRatePerSecond(g_state, marketId);
     }
 
     function getMarketBorrowInterestRatePerSecond(

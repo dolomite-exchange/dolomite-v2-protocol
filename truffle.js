@@ -7,12 +7,13 @@ const covReplicaContractsDir = path.join(process.cwd(), '.coverage_contracts');
 const covContractsDir = path.join(process.cwd(), 'contracts_coverage');
 const regContractsDir = path.join(process.cwd(), 'contracts');
 
+const pollingInterval = 40000;
+
 module.exports = {
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY,
     arbiscan: process.env.ARBISCAN_API_KEY,
     optimistic_etherscan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
-    polygonscan: process.env.POLYGONSCAN_API_KEY,
   },
   compilers: {
     solc: {
@@ -29,11 +30,12 @@ module.exports = {
       },
     },
   },
-  contracts_directory: process.env.COVERAGE_REPLICA_DEPLOY === 'true'
-    ? covReplicaContractsDir
-    : process.env.COVERAGE === 'true'
-      ? covContractsDir
-      : regContractsDir,
+  contracts_directory:
+    process.env.COVERAGE_REPLICA_DEPLOY === 'true'
+      ? covReplicaContractsDir
+      : process.env.COVERAGE === 'true'
+        ? covContractsDir
+        : regContractsDir,
   mocha: {
     parallel: false, // DO NOT CHANGE
     slow: 15000, // 15 seconds
@@ -57,20 +59,6 @@ module.exports = {
       provider: () => new HDWalletProvider(process.env.DEPLOYER_PRIVATE_KEY, process.env.NODE_URL),
       gasPrice: Number(process.env.GAS_PRICE),
       gas: 6900000,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-    },
-    kovan: {
-      network_id: '42',
-      provider: () => new HDWalletProvider(
-        [process.env.DEPLOYER_PRIVATE_KEY],
-        'http://54.235.26.63:8545',
-        0,
-        1,
-      ),
-      gasPrice: 37000000000, // 37 gwei
-      gas: 6900000,
-      from: process.env.DEPLOYER_ACCOUNT,
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
     },
@@ -104,57 +92,12 @@ module.exports = {
       port: 8545,
       gasPrice: 1,
     },
-    matic: {
-      network_id: '137',
-      provider: () => new HDWalletProvider(
-        [process.env.DEPLOYER_PRIVATE_KEY],
-        'https://rpc-mainnet.maticvigil.com',
-        0,
-        1,
-      ),
-      gasPrice: 5000000000,
-      gas: 7900000,
-      confirmations: 1,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-    },
-    mumbai_matic: {
-      network_id: '80001',
-      provider: () => new HDWalletProvider(
-        [process.env.DEPLOYER_PRIVATE_KEY],
-        "https://rpc-mumbai.maticvigil.com",
-        0,
-        1,
-      ),
-      gasPrice: 5e9,
-      gas: 7900000,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-    },
     arbitrum_one: {
       network_id: '42161',
       provider: () => {
-        return new HDWalletProvider(
-          [process.env.DEPLOYER_PRIVATE_KEY],
-          process.env.ARBITRUM_NODE_URL
-        )
+        return new HDWalletProvider([process.env.DEPLOYER_PRIVATE_KEY], process.env.ARBITRUM_NODE_URL);
       },
       gasPrice: 1000000000, // 1 gwei
-      gas: 25000000,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-      confirmations: 0,
-      disableConfirmationListener: true,
-    },
-    arbitrum_rinkeby: {
-      network_id: '421611',
-      provider: () => {
-        return new HDWalletProvider(
-          [process.env.DEPLOYER_PRIVATE_KEY],
-          process.env.ARBITRUM_RINKEBY_NODE_URL
-        )
-      },
-      gasPrice: 100000000, // 0.1 gwei
       gas: 25000000,
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
@@ -164,10 +107,7 @@ module.exports = {
     arbitrum_goerli: {
       network_id: '421613',
       provider: () => {
-        return new HDWalletProvider(
-          [process.env.DEPLOYER_PRIVATE_KEY],
-          process.env.ARBITRUM_GOERLI_NODE_URL
-        )
+        return new HDWalletProvider([process.env.DEPLOYER_PRIVATE_KEY], process.env.ARBITRUM_GOERLI_NODE_URL);
       },
       gasPrice: 1000000000, // 1 gwei
       gas: 25000000,
@@ -175,7 +115,93 @@ module.exports = {
       networkCheckTimeout: 120000,
       confirmations: 0,
       disableConfirmationListener: true,
-    }
+    },
+    polygon_zkevm: {
+      network_id: '1101',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          // providerOrUrl: 'https://zkevm-rpc.com',
+          // providerOrUrl: 'https://nd-437-251-554.p2pify.com/63e7c6e48b737189c3b9b91a3d848300',
+          providerOrUrl: 'https://polygon-zkevm.drpc.org',
+          chainId: '1101',
+        });
+      },
+      gasPrice: 5000000000, // 5 gwei
+      gas: 25000000,
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://api-zkevm.polygonscan.com/api',
+        apiKey: process.env.POLYGONSCAN_API_KEY,
+        explorerUrl: 'https://zkevm.polygonscan.com/address',
+      },
+    },
+    base: {
+      network_id: '8453',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: 'https://base.llamarpc.com'
+        });
+      },
+      gasPrice: 1000000000, // 1 gwei
+      gas: 25000000,
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://api.basescan.org/api',
+        apiKey: process.env.BASESCAN_API_KEY,
+        explorerUrl: 'https://basescan.org/address',
+      },
+    },
+    base_sepolia: {
+      network_id: '84532',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: 'https://sepolia.base.org',
+        });
+      },
+      gasPrice: 1000000000, // 1 gwei
+      gas: 25000000,
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://api-sepolia.basescan.org/api',
+        apiKey: process.env.BASESCAN_API_KEY,
+        explorerUrl: 'https://sepolia.basescan.org/address',
+      },
+    },
+    x1: {
+      network_id: '195',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: 'https://testrpc.x1.tech',
+        });
+      },
+      gasPrice: 1000000000, // 1 gwei
+      gas: 25000000,
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+    },
   },
   plugins: ['truffle-plugin-verify', 'solidity-coverage'],
 };

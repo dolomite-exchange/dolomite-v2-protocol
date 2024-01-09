@@ -66,6 +66,21 @@ interface IDolomiteMargin {
      * Get the adjusted liquidation spread for some market pair. This is equal to the global liquidation spread
      * multiplied by (1 + spreadPremium) for each of the two markets.
      *
+     * Assumes the pair is not in e-mode. Backwards compatible with V1.
+     *
+     * @param  heldMarketId     The market for which the account has collateral
+     * @param  owedMarketId     The market for which the account has borrowed tokens
+     * @return                  The adjusted liquidation spread
+     */
+    function getLiquidationSpreadForPair(
+        uint256 heldMarketId,
+        uint256 owedMarketId
+    ) external view returns (Decimal.D256 memory);
+
+    /**
+     * Get the adjusted liquidation spread for some market pair. This is equal to the global liquidation spread
+     * multiplied by (1 + spreadPremium) for each of the two markets.
+     *
      * If the pair is in e-mode and has a liquidation spread override, then the override is used instead.
      *
      * @param  accountOwner     The account whose liquidation spread is being queried. This is used to determine if
@@ -210,19 +225,6 @@ interface IDolomiteMargin {
     ) external view returns (address);
 
     /**
-     * Return the maximum amount of the market that can be supplied on Dolomite. Always 0 or positive.
-     *
-     * @param  marketId  The market to query
-     * @return           The max amount of the market that can be supplied
-     */
-    function getMarketMaxWei(
-        uint256 marketId
-    )
-    external
-    view
-    returns (Types.Wei memory);
-
-    /**
      * Return true if a particular market is in closing mode. Additional borrows cannot be taken
      * from a market that is closing.
      *
@@ -329,10 +331,33 @@ interface IDolomiteMargin {
     ) external view returns (Decimal.D256 memory);
 
     /**
+     * Same as getMarketLiquidationSpreadPremium. Added for backwards-compatibility.
+     *
+     * @param  marketId  The market to query
+     * @return           The market's spread premium
+     */
+    function getMarketSpreadPremium(
+        uint256 marketId
+    ) external view returns (Decimal.D256 memory);
+
+    /**
+     * Same as getMarketMaxSupplyWei. Added for backwards-compatibility.
+     *
+     * @param  marketId  The market to query
+     * @return           The max amount of the market that can be supplied. Always 0 or positive.
+     */
+    function getMarketMaxWei(
+        uint256 marketId
+    )
+    external
+    view
+    returns (Types.Wei memory);
+
+    /**
      * Get the max supply amount for a a market.
      *
      * @param  marketId  The market to query
-     * @return           The market's max supply amount. Always positive.
+     * @return           The market's max supply amount. Always 0 or positive.
      */
     function getMarketMaxSupplyWei(
         uint256 marketId
@@ -345,7 +370,7 @@ interface IDolomiteMargin {
      * Get the max borrow amount for a a market.
      *
      * @param  marketId  The market to query
-     * @return           The market's max borrow amount. Always negative.
+     * @return           The market's max borrow amount. Always negative or 0.
      */
     function getMarketMaxBorrowWei(
         uint256 marketId
@@ -375,6 +400,16 @@ interface IDolomiteMargin {
      * @return           The current borrow interest rate
      */
     function getMarketBorrowInterestRatePerSecond(
+        uint256 marketId
+    ) external view returns (Interest.Rate memory);
+
+    /**
+     * Same as getMarketBorrowInterestRatePerSecond. Added for backwards-compatibility.
+     *
+     * @param  marketId  The market to query
+     * @return           The current borrow interest rate
+     */
+    function getMarketInterestRate(
         uint256 marketId
     ) external view returns (Interest.Rate memory);
 
@@ -743,6 +778,9 @@ interface IDolomiteMargin {
     )
     external;
 
+    /**
+     * Sets the earnings rate override for a given `marketId`. Set it to 0 unset the override.
+     */
     function ownerSetEarningsRateOverride(
         uint256 marketId,
         Decimal.D256 calldata earningsRateOverride

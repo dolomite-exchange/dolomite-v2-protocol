@@ -5,7 +5,7 @@ import deployed from '../migrations/deployed.json';
 
 const writeFileAsync = promisify(fs.writeFile);
 
-const NETWORK_IDS = ['1', '5', '42', '137', '80001', '42161', '421611', '421613'];
+const NETWORK_IDS = ['1', '42161', '421613', '1101', '8453', '84532', '195'];
 
 async function run() {
   Object.keys(contracts).forEach((contractName) => {

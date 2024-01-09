@@ -20,7 +20,6 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import { Ownable } from "@openzeppelin/contracts/ownership/Ownable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IAutoTrader } from "../../protocol/interfaces/IAutoTrader.sol";
 import { ICallee } from "../../protocol/interfaces/ICallee.sol";
@@ -44,7 +43,6 @@ import { IExpiry } from "../interfaces/IExpiry.sol";
  * Expiry contract that also allows approved senders to set expiry to be 28 days in the future.
  */
 contract Expiry is
-    Ownable,
     OnlyDolomiteMargin,
     IExpiry,
     ICallee,
@@ -109,10 +107,10 @@ contract Expiry is
         uint256 newExpiryRampTime
     )
         external
-        onlyOwner
+        onlyDolomiteMarginOwner(msg.sender)
     {
-        emit LogExpiryRampTimeSet(newExpiryRampTime);
         g_expiryRampTime = newExpiryRampTime;
+        emit LogExpiryRampTimeSet(newExpiryRampTime);
     }
 
     // ============ Approval Functions ============

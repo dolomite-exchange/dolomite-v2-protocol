@@ -6,6 +6,7 @@ import AAVECopyCatAltCoinInterestSetter from '../build/contracts/AAVECopyCatAltC
 import AAVECopyCatStableCoinInterestSetter from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
 import AdminImpl from '../build/contracts/AdminImpl.json';
 import AlwaysOnlineOracleSentinel from '../build/contracts/AlwaysOnlineOracleSentinel.json';
+import AlwaysZeroInterestSetter from '../build/contracts/AlwaysZeroInterestSetter.json';
 import AmmRebalancerProxyV1 from '../build/contracts/AmmRebalancerProxyV1.json';
 import AmmRebalancerProxyV2 from '../build/contracts/AmmRebalancerProxyV2.json';
 import ArbitrumMultiCall from '../build/contracts/ArbitrumMultiCall.json';
@@ -43,6 +44,7 @@ import LiquidatorProxyV1WithAmm from '../build/contracts/LiquidatorProxyV1WithAm
 import LiquidatorProxyV2WithExternalLiquidity from '../build/contracts/LiquidatorProxyV2WithExternalLiquidity.json';
 import LiquidatorProxyV3WithLiquidityToken from '../build/contracts/LiquidatorProxyV3WithLiquidityToken.json';
 import LiquidatorProxyV4WithGenericTrader from '../build/contracts/LiquidatorProxyV4WithGenericTrader.json';
+import Migrations from '../build/contracts/Migrations.json';
 import MultiCall from '../build/contracts/MultiCall.json';
 import OperationImpl from '../build/contracts/OperationImpl.json';
 import PartiallyDelayedMultiSig from '../build/contracts/PartiallyDelayedMultiSig.json';
@@ -63,6 +65,7 @@ export default {
   AAVECopyCatStableCoinInterestSetter,
   AdminImpl,
   AlwaysOnlineOracleSentinel,
+  AlwaysZeroInterestSetter,
   AmmRebalancerProxyV1,
   AmmRebalancerProxyV2,
   ArbitrumMultiCall,
@@ -100,6 +103,7 @@ export default {
   LiquidatorProxyV2WithExternalLiquidity,
   LiquidatorProxyV3WithLiquidityToken,
   LiquidatorProxyV4WithGenericTrader,
+  Migrations,
   MultiCall,
   OperationImpl,
   PartiallyDelayedMultiSig,

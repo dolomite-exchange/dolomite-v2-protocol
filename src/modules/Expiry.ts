@@ -23,15 +23,6 @@ export class Expiry {
     return this.contracts.expiry.options.address;
   }
 
-  public async getAdmin(
-    options?: ContractConstantCallOptions,
-  ): Promise<address> {
-    return this.contracts.callConstantContractFunction(
-      this.contracts.expiry.methods.owner(),
-      options,
-    );
-  }
-
   public async getExpiry(
     accountOwner: address,
     accountNumber: Integer,

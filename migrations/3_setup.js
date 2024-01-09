@@ -23,15 +23,14 @@
 const {
   isDevNetwork,
   isDocker,
-  isMaticProd,
-  isMumbaiMatic,
+  isPolygonZkEvm,
   isArbitrumOne,
   isArbitrumGoerli,
+  isBaseNetwork,
 } = require('./helpers');
 const {
   getDaiAddress,
   getLinkAddress,
-  getMaticAddress,
   getUsdcAddress,
   getWethAddress,
   getWbtcAddress,
@@ -57,7 +56,7 @@ const TestWETH = artifacts.require('TestWETH');
 const TestPriceOracle = artifacts.require('TestPriceOracle');
 
 // Interest Setters
-const DoubleExponentInterestSetter = artifacts.require('DoubleExponentInterestSetter');
+const AlwaysZeroInterestSetter = artifacts.require('AlwaysZeroInterestSetter');
 
 // ============ Main Migration ============
 
@@ -90,8 +89,8 @@ async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters)
   const marginPremium = { value: '0' };
   const liquidationSpreadPremium = { value: '0' };
   const maxWei = '0';
-  const isClosed = false;
-  const isRecyclable = false;
+  const isClosing = false;
+  const earningsRateOverride = '0';
 
   for (let i = 0; i < tokens.length; i += 1) {
     // eslint-disable-next-line no-await-in-loop
@@ -102,8 +101,9 @@ async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters)
       marginPremium,
       liquidationSpreadPremium,
       maxWei,
-      isClosed,
-      isRecyclable,
+      maxWei,
+      { value: earningsRateOverride },
+      isClosing,
     );
   }
 }
@@ -118,20 +118,9 @@ async function getDolomiteMargin(network) {
 }
 
 function getTokens(network) {
-  if (isMaticProd(network)) {
+  if (isPolygonZkEvm(network) || isBaseNetwork(network)) {
     return [
       { address: getWethAddress(network, TestWETH) },
-      { address: getDaiAddress(network, TokenB) },
-      { address: getMaticAddress(network, TokenD) },
-      { address: getUsdcAddress(network, TokenA) },
-      { address: getLinkAddress(network, TokenF) },
-    ];
-  } else if (isMumbaiMatic(network)) {
-    return [
-      { address: getWethAddress(network, TestWETH) },
-      { address: getDaiAddress(network, TokenB) },
-      { address: getMaticAddress(network, TokenD) },
-      { address: getUsdcAddress(network, TokenA) },
     ];
   } else if (isArbitrumOne(network) || isArbitrumGoerli(network)) {
     const tokens = [
@@ -147,7 +136,7 @@ function getTokens(network) {
     return tokens;
   }
 
-  throw new Error('unknown network');
+  throw new Error(`Could not get tokens for network: ${network}`);
 }
 
 async function getOracles(network) {
@@ -162,5 +151,5 @@ async function getOracles(network) {
 
 async function getSetters(network) {
   const tokens = getTokens(network);
-  return tokens.map(() => ({ address: DoubleExponentInterestSetter.address }));
+  return tokens.map(() => ({ address: AlwaysZeroInterestSetter.address }));
 }

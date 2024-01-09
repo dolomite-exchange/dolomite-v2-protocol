@@ -26,14 +26,9 @@ const {
   getGnosisSafeAddress,
 } = require('./helpers');
 
-const {
-  getChainlinkPriceOracleContract,
-} = require('./oracle_helpers');
-
 // ============ Contracts ============
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
-const Expiry = artifacts.require('Expiry');
 const SignedOperationProxy = artifacts.require('SignedOperationProxy');
 const SimpleFeeOwner = artifacts.require('SimpleFeeOwner');
 const DolomiteAmmFactory = artifacts.require('DolomiteAmmFactory');
@@ -46,39 +41,33 @@ const migration = async (deployer, network) => {
   if (!isDevNetwork(network)) {
     const delayedMultisig = getDelayedMultisigAddress(network);
 
-    const [
-      deployedDolomiteMargin,
-      deployedExpiry,
-      deployedSignedOperationProxy,
-      deployedSimpleFeeOwner,
-      deployedChainlinkPriceOracleV1,
-      dolomiteAmmFactory,
-      deployedAmmRebalancerProxyV1,
-    ] = await Promise.all([
-      DolomiteMargin.deployed(),
-      Expiry.deployed(),
-      SignedOperationProxy.deployed(),
-      SimpleFeeOwner.deployed(),
-      getChainlinkPriceOracleContract(network, artifacts).deployed(),
-      DolomiteAmmFactory.deployed(),
-      AmmRebalancerProxyV1.deployed(),
-    ]);
-
-    await Promise.all([
-      deployedDolomiteMargin.transferOwnership(delayedMultisig),
-      deployedExpiry.transferOwnership(delayedMultisig),
-      deployedSignedOperationProxy.transferOwnership(delayedMultisig),
-      deployedSimpleFeeOwner.transferOwnership(delayedMultisig),
-      deployedChainlinkPriceOracleV1.transferOwnership(delayedMultisig),
-      dolomiteAmmFactory.setFeeToSetter(delayedMultisig),
-    ]);
-
-    const gnosisSafe = getGnosisSafeAddress(network);
-    await Promise.all([
-      deployedAmmRebalancerProxyV1.transferOwnership(gnosisSafe),
-    ]);
+    const deployedDolomiteMargin = await DolomiteMargin.deployed();
+    await deployedDolomiteMargin.transferOwnership(delayedMultisig);
 
     if (isDevNetwork(network)) {
+      const [
+        dolomiteAmmFactory,
+        deployedAmmRebalancerProxyV1,
+        deployedSignedOperationProxy,
+        deployedSimpleFeeOwner,
+      ] = await Promise.all([
+        DolomiteAmmFactory.deployed(),
+        AmmRebalancerProxyV1.deployed(),
+        SignedOperationProxy.deployed(),
+        SimpleFeeOwner.deployed(),
+      ]);
+
+      await Promise.all([
+        dolomiteAmmFactory.setFeeToSetter(delayedMultisig),
+        deployedSignedOperationProxy.transferOwnership(delayedMultisig),
+        deployedSimpleFeeOwner.transferOwnership(delayedMultisig),
+      ]);
+
+      const gnosisSafe = getGnosisSafeAddress(network);
+      await Promise.all([
+        deployedAmmRebalancerProxyV1.transferOwnership(gnosisSafe),
+      ]);
+
       const uniswapV2Factory = await UniswapV2Factory.deployed();
       await uniswapV2Factory.setFeeToSetter(delayedMultisig);
     }

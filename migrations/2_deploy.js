@@ -24,7 +24,6 @@ const ethers = require('ethers');
 
 const {
   isDevNetwork,
-  isKovan,
   isEthereumMainnet,
   getPolynomialParams,
   getDoubleExponentParams,
@@ -33,9 +32,6 @@ const {
   getExpiryRampTime,
   getSenderAddress,
   getChainId,
-  isMaticProd,
-  isMumbaiMatic,
-  isArbitrumOne,
   getChainlinkOracleSentinelGracePeriod,
   getChainlinkSequencerUptimeFeed,
   getUniswapV3MultiRouter,
@@ -43,12 +39,27 @@ const {
   getNoOverwriteParams,
   isArbitrumGoerli,
   isArbitrumNetwork,
+  isPolygonZkEvmNetwork,
+  isBaseNetwork,
+  isX1Network,
 } = require('./helpers');
-const { getChainlinkPriceOracleContract, getChainlinkPriceOracleV1Params } = require('./oracle_helpers');
-const { getParaswapAugustusRouter, getParaswapTransferProxy } = require('./liquidator_helpers');
-const { getWethAddress, getWrappedCurrencyAddress } = require('./token_helpers');
+const {
+  getChainlinkPriceOracleContract,
+  getChainlinkPriceOracleV1Params
+} = require('./oracle_helpers');
+const {
+  getParaswapAugustusRouter,
+  getParaswapTransferProxy
+} = require('./liquidator_helpers');
+const {
+  getWethAddress,
+  getWrappedCurrencyAddress
+} = require('./token_helpers');
 const { bytecode: uniswapV2PairBytecode } = require('../build/contracts/UniswapV2Pair.json');
-const { getRebalancerV1Routers, getRebalancerV1InitHashes } = require('./rebalancer_helpers');
+const {
+  getRebalancerV1Routers,
+  getRebalancerV1InitHashes
+} = require('./rebalancer_helpers');
 
 // ============ Contracts ============
 
@@ -134,9 +145,10 @@ const AlwaysOnlineOracleSentinel = artifacts.require('AlwaysOnlineOracleSentinel
 const ChainlinkOracleSentinel = artifacts.require('ChainlinkOracleSentinel');
 
 // Interest Setters
-const DoubleExponentInterestSetter = artifacts.require('DoubleExponentInterestSetter');
 const AAVECopyCatAltCoinInterestSetter = artifacts.require('AAVECopyCatAltCoinInterestSetter');
 const AAVECopyCatStableCoinInterestSetter = artifacts.require('AAVECopyCatStableCoinInterestSetter');
+const AlwaysZeroInterestSetter = artifacts.require('AlwaysZeroInterestSetter');
+const DoubleExponentInterestSetter = artifacts.require('DoubleExponentInterestSetter');
 
 // Amm
 const DolomiteAmmFactory = artifacts.require('DolomiteAmmFactory');
@@ -229,13 +241,6 @@ async function deployBaseProtocol(deployer, network) {
     await deployer.deploy(WithdrawalImpl, getNoOverwriteParams());
   }
 
-  OperationImpl.link('CallImpl', CallImpl.address);
-  OperationImpl.link('DepositImpl', DepositImpl.address);
-  OperationImpl.link('LiquidateOrVaporizeImpl', LiquidateOrVaporizeImpl.address);
-  OperationImpl.link('TradeImpl', TradeImpl.address);
-  OperationImpl.link('TransferImpl', TransferImpl.address);
-  OperationImpl.link('WithdrawalImpl', WithdrawalImpl.address);
-
   if (shouldOverwrite(AdminImpl, network)) {
     await deployer.deploy(AdminImpl);
   } else {
@@ -248,6 +253,12 @@ async function deployBaseProtocol(deployer, network) {
     await deployer.deploy(GettersImpl, getNoOverwriteParams());
   }
 
+  OperationImpl.link('CallImpl', CallImpl.address);
+  OperationImpl.link('DepositImpl', DepositImpl.address);
+  OperationImpl.link('LiquidateOrVaporizeImpl', LiquidateOrVaporizeImpl.address);
+  OperationImpl.link('TradeImpl', TradeImpl.address);
+  OperationImpl.link('TransferImpl', TransferImpl.address);
+  OperationImpl.link('WithdrawalImpl', WithdrawalImpl.address);
   if (shouldOverwrite(OperationImpl, network)) {
     await deployer.deploy(OperationImpl);
   } else {
@@ -259,12 +270,11 @@ async function deployBaseProtocol(deployer, network) {
     await deployer.deploy(TestOperationImpl);
     dolomiteMargin = TestDolomiteMargin;
   } else if (
-    isKovan(network) ||
     isEthereumMainnet(network) ||
-    isMaticProd(network) ||
-    isMumbaiMatic(network) ||
-    isArbitrumOne(network) ||
-    isArbitrumGoerli(network)
+    isPolygonZkEvmNetwork(network) ||
+    isBaseNetwork(network) ||
+    isArbitrumNetwork(network) ||
+    isX1Network(network)
   ) {
     dolomiteMargin = DolomiteMargin;
   } else {
@@ -303,12 +313,13 @@ async function deployBaseProtocol(deployer, network) {
     await deployer.deploy(dolomiteMargin, getNoOverwriteParams());
   }
 
-  if (isDevNetwork(network) || isArbitrumNetwork(network)) {
+  let uptimeFeed = getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggregator);
+  if (uptimeFeed) {
     if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
       await deployer.deploy(
         ChainlinkOracleSentinel,
         getChainlinkOracleSentinelGracePeriod(),
-        getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggregator),
+        uptimeFeed,
         dolomiteMargin.address,
       );
     } else {
@@ -342,12 +353,6 @@ async function deployInterestSetters(deployer, network) {
     await deployer.deploy(TestInterestSetter);
   }
 
-  if (shouldOverwrite(DoubleExponentInterestSetter, network)) {
-    await deployer.deploy(DoubleExponentInterestSetter, getDoubleExponentParams(network));
-  } else {
-    await deployer.deploy(DoubleExponentInterestSetter, getNoOverwriteParams());
-  }
-
   if (shouldOverwrite(AAVECopyCatAltCoinInterestSetter, network)) {
     await deployer.deploy(AAVECopyCatAltCoinInterestSetter);
   } else {
@@ -359,10 +364,22 @@ async function deployInterestSetters(deployer, network) {
   } else {
     await deployer.deploy(AAVECopyCatStableCoinInterestSetter, getNoOverwriteParams());
   }
+
+  if (shouldOverwrite(AlwaysZeroInterestSetter, network)) {
+    await deployer.deploy(AlwaysZeroInterestSetter);
+  } else {
+    await deployer.deploy(AlwaysZeroInterestSetter, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(DoubleExponentInterestSetter, network)) {
+    await deployer.deploy(DoubleExponentInterestSetter, getDoubleExponentParams(network));
+  } else {
+    await deployer.deploy(DoubleExponentInterestSetter, getNoOverwriteParams());
+  }
 }
 
 async function deployPriceOracles(deployer, network) {
-  if (isDevNetwork(network) || isKovan(network)) {
+  if (isDevNetwork(network)) {
     await deployer.deploy(TestPriceOracle);
   }
 
@@ -400,7 +417,7 @@ async function deployPriceOracles(deployer, network) {
   const oracleContract = getChainlinkPriceOracleContract(network, artifacts);
   const params = getChainlinkPriceOracleV1Params(network, tokens, aggregators);
 
-  if (shouldOverwrite(oracleContract, network)) {
+  if (params && shouldOverwrite(oracleContract, network)) {
     const dolomiteMargin = await getDolomiteMargin(network);
     await deployer.deploy(
       oracleContract,
@@ -431,75 +448,71 @@ async function deploySecondLayer(deployer, network, accounts) {
     await UniswapV2Router02.deployed();
   }
 
-  const transferProxy = TransferProxy;
-  if (shouldOverwrite(transferProxy, network)) {
-    await deployer.deploy(transferProxy, dolomiteMargin.address);
+  if (shouldOverwrite(TransferProxy, network)) {
+    await deployer.deploy(TransferProxy, dolomiteMargin.address);
   } else {
-    await deployer.deploy(transferProxy, getNoOverwriteParams());
+    await deployer.deploy(TransferProxy, getNoOverwriteParams());
   }
 
-  const borrowPositionProxyV1 = BorrowPositionProxyV1;
-  if (shouldOverwrite(borrowPositionProxyV1, network)) {
-    await deployer.deploy(borrowPositionProxyV1, dolomiteMargin.address);
+  if (shouldOverwrite(BorrowPositionProxyV1, network)) {
+    await deployer.deploy(BorrowPositionProxyV1, dolomiteMargin.address);
   } else {
-    await deployer.deploy(borrowPositionProxyV1, getNoOverwriteParams());
+    await deployer.deploy(BorrowPositionProxyV1, getNoOverwriteParams());
   }
 
-  const borrowPositionProxyV2 = BorrowPositionProxyV2;
-  if (shouldOverwrite(borrowPositionProxyV2, network)) {
-    await deployer.deploy(borrowPositionProxyV2, dolomiteMargin.address);
+  if (shouldOverwrite(BorrowPositionProxyV2, network)) {
+    await deployer.deploy(BorrowPositionProxyV2, dolomiteMargin.address);
   } else {
-    await deployer.deploy(borrowPositionProxyV2, getNoOverwriteParams());
+    await deployer.deploy(BorrowPositionProxyV2, getNoOverwriteParams());
   }
 
-  const depositWithdrawalProxy = DepositWithdrawalProxy;
-  if (shouldOverwrite(depositWithdrawalProxy, network)) {
-    await deployer.deploy(depositWithdrawalProxy, dolomiteMargin.address);
+  if (shouldOverwrite(DepositWithdrawalProxy, network)) {
+    await deployer.deploy(DepositWithdrawalProxy, dolomiteMargin.address);
   } else {
-    await deployer.deploy(depositWithdrawalProxy, getNoOverwriteParams());
+    await deployer.deploy(DepositWithdrawalProxy, getNoOverwriteParams());
   }
 
-  const dolomiteAmmFactory = DolomiteAmmFactory;
-  if (shouldOverwrite(dolomiteAmmFactory, network)) {
-    await deployer.deploy(
-      dolomiteAmmFactory,
-      getSenderAddress(network, accounts),
-      dolomiteMargin.address,
-      transferProxy.address,
-    );
-  } else {
-    await deployer.deploy(dolomiteAmmFactory, getNoOverwriteParams());
-  }
-
-  const simpleFeeOwner = SimpleFeeOwner;
-  if (shouldOverwrite(simpleFeeOwner, network)) {
-    await deployer.deploy(simpleFeeOwner, dolomiteAmmFactory.address, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(simpleFeeOwner, getNoOverwriteParams());
-  }
-
-  const expiry = Expiry;
-  if (shouldOverwrite(expiry, network)) {
-    await deployer.deploy(expiry, dolomiteMargin.address, getExpiryRampTime(network));
-  } else {
-    await deployer.deploy(expiry, getNoOverwriteParams());
-  }
-
-  const dolomiteAmmRouterProxy = DolomiteAmmRouterProxy;
-  if (shouldOverwrite(dolomiteAmmRouterProxy, network)) {
-    try {
-      await deployer.deploy(dolomiteAmmRouterProxy, dolomiteMargin.address, dolomiteAmmFactory.address, expiry.address);
-    } catch (e) {
-      const pairInitCodeHash = await (await DolomiteAmmFactory.deployed()).getPairInitCodeHash();
-      console.log('\n\nError deploying DolomiteAmmRouterProxy. Hash: ', pairInitCodeHash, '\n\n');
-      throw e;
+  if (isDevNetwork(network)) {
+    if (shouldOverwrite(DolomiteAmmFactory, network)) {
+      await deployer.deploy(
+        DolomiteAmmFactory,
+        getSenderAddress(network, accounts),
+        dolomiteMargin.address,
+        TransferProxy.address,
+      );
+    } else {
+      await deployer.deploy(DolomiteAmmFactory, getNoOverwriteParams());
     }
-  } else {
-    await deployer.deploy(dolomiteAmmRouterProxy, getNoOverwriteParams());
+
+    if (shouldOverwrite(SimpleFeeOwner, network)) {
+      await deployer.deploy(SimpleFeeOwner, DolomiteAmmFactory.address, dolomiteMargin.address);
+    } else {
+      await deployer.deploy(SimpleFeeOwner, getNoOverwriteParams());
+    }
   }
 
-  if (isDevNetwork(network) || isMumbaiMatic(network) || isArbitrumGoerli(network)) {
-    await deployer.deploy(TestAmmRebalancerProxy, dolomiteMargin.address, dolomiteAmmFactory.address);
+  if (shouldOverwrite(Expiry, network)) {
+    await deployer.deploy(Expiry, dolomiteMargin.address, getExpiryRampTime(network));
+  } else {
+    await deployer.deploy(Expiry, getNoOverwriteParams());
+  }
+
+  if (isDevNetwork(network)) {
+    if (shouldOverwrite(DolomiteAmmRouterProxy, network)) {
+      try {
+        await deployer.deploy(DolomiteAmmRouterProxy, dolomiteMargin.address, DolomiteAmmFactory.address, Expiry.address);
+      } catch (e) {
+        const pairInitCodeHash = await (await DolomiteAmmFactory.deployed()).getPairInitCodeHash();
+        console.log('\n\nError deploying DolomiteAmmRouterProxy. Hash: ', pairInitCodeHash, '\n\n');
+        throw e;
+      }
+    } else {
+      await deployer.deploy(DolomiteAmmRouterProxy, getNoOverwriteParams());
+    }
+  }
+
+  if (isDevNetwork(network) || isArbitrumGoerli(network)) {
+    await deployer.deploy(TestAmmRebalancerProxy, dolomiteMargin.address, DolomiteAmmFactory.address);
     await deployer.deploy(TestUniswapAmmRebalancerProxy);
   }
 
@@ -510,16 +523,16 @@ async function deploySecondLayer(deployer, network, accounts) {
     await deployer.deploy(
       AmmRebalancerProxyV1,
       dolomiteMargin.address,
-      dolomiteAmmFactory.address,
+      DolomiteAmmFactory.address,
       [uniswapV2Router.address],
       [ethers.utils.solidityKeccak256(['bytes'], [uniswapV2PairBytecode])],
     );
-  } else {
+  } else if (isArbitrumNetwork(network)) {
     if (shouldOverwrite(AmmRebalancerProxyV1, network)) {
       await deployer.deploy(
         AmmRebalancerProxyV1,
         dolomiteMargin.address,
-        dolomiteAmmFactory.address,
+        DolomiteAmmFactory.address,
         getRebalancerV1Routers(network),
         getRebalancerV1InitHashes(network),
       );
@@ -528,166 +541,172 @@ async function deploySecondLayer(deployer, network, accounts) {
     }
   }
 
-  if (isDevNetwork(network) || isMumbaiMatic(network) || isArbitrumGoerli(network)) {
+  if (isDevNetwork(network) || isArbitrumGoerli(network)) {
     await deployer.deploy(
       TestAmmRebalancerProxy,
       dolomiteMargin.address,
-      dolomiteAmmFactory.address,
+      DolomiteAmmFactory.address,
       getNoOverwriteParams(),
     );
     await deployer.deploy(TestUniswapAmmRebalancerProxy, getNoOverwriteParams());
   }
 
-  const ammRebalancerProxyV2 = AmmRebalancerProxyV2;
-  if (shouldOverwrite(ammRebalancerProxyV2, network)) {
-    await deployer.deploy(
-      ammRebalancerProxyV2,
-      dolomiteMargin.address,
-      dolomiteAmmFactory.address,
-      getUniswapV3MultiRouter(network, TestUniswapV3MultiRouter),
-    );
-  } else {
-    await deployer.deploy(ammRebalancerProxyV2, getNoOverwriteParams());
-  }
-
-  const eventEmitterRegistry = EventEmitterRegistry;
-  if (shouldOverwrite(eventEmitterRegistry, network)) {
-    await deployer.deploy(eventEmitterRegistry, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(eventEmitterRegistry, getNoOverwriteParams());
-  }
-
-  const genericTraderProxyV1 = GenericTraderProxyV1;
-  if (shouldOverwrite(genericTraderProxyV1, network)) {
-    await deployer.deploy(GenericTraderProxyV1Lib);
-    genericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);
-    await deployer.deploy(genericTraderProxyV1, Expiry.address, eventEmitterRegistry.address, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(genericTraderProxyV1, getNoOverwriteParams());
-  }
-
-  const payableProxy = PayableProxy;
-  if (shouldOverwrite(payableProxy, network)) {
-    await deployer.deploy(payableProxy, dolomiteMargin.address, getWrappedCurrencyAddress(network, TestWETH));
-  } else {
-    await deployer.deploy(payableProxy, getNoOverwriteParams());
-  }
-
-  const liquidatorAssetRegistry = LiquidatorAssetRegistry;
-  if (shouldOverwrite(liquidatorAssetRegistry, network)) {
-    await deployer.deploy(liquidatorAssetRegistry, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(liquidatorAssetRegistry, getNoOverwriteParams());
-  }
-
-  const expiryProxy = ExpiryProxy;
-  if (shouldOverwrite(expiryProxy, network)) {
-    await deployer.deploy(expiryProxy, liquidatorAssetRegistry.address, Expiry.address, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(expiryProxy, getNoOverwriteParams());
-  }
-
-  const liquidatorProxyV1 = LiquidatorProxyV1;
-  if (shouldOverwrite(liquidatorProxyV1, network)) {
-    await deployer.deploy(liquidatorProxyV1, liquidatorAssetRegistry.address, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(liquidatorProxyV1, getNoOverwriteParams());
-  }
-
-  const liquidatorProxyV1WithAmm = LiquidatorProxyV1WithAmm;
-  if (shouldOverwrite(liquidatorProxyV1WithAmm, network)) {
-    await deployer.deploy(
-      liquidatorProxyV1WithAmm,
-      dolomiteMargin.address,
-      DolomiteAmmRouterProxy.address,
-      Expiry.address,
-      liquidatorAssetRegistry.address,
-    );
-  } else {
-    await deployer.deploy(liquidatorProxyV1WithAmm, getNoOverwriteParams());
-  }
-
-  const liquidatorProxyV2WithExternalLiquidity = LiquidatorProxyV2WithExternalLiquidity;
-  if (shouldOverwrite(liquidatorProxyV2WithExternalLiquidity, network)) {
-    if (isDevNetwork(network)) {
-      await deployer.deploy(TestParaswapTransferProxy);
-      await deployer.deploy(TestParaswapAugustusRouter, TestParaswapTransferProxy.address);
+  if (isArbitrumNetwork(network)) {
+    if (shouldOverwrite(AmmRebalancerProxyV2, network)) {
       await deployer.deploy(
-        TestParaswapTrader,
-        TestParaswapAugustusRouter.address,
-        TestParaswapTransferProxy.address,
+        AmmRebalancerProxyV2,
         dolomiteMargin.address,
+        DolomiteAmmFactory.address,
+        getUniswapV3MultiRouter(network, TestUniswapV3MultiRouter),
       );
+    } else {
+      await deployer.deploy(AmmRebalancerProxyV2, getNoOverwriteParams());
+    }
+  }
+
+  if (shouldOverwrite(EventEmitterRegistry, network)) {
+    await deployer.deploy(EventEmitterRegistry, dolomiteMargin.address);
+  } else {
+    await deployer.deploy(EventEmitterRegistry, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(GenericTraderProxyV1, network)) {
+    await deployer.deploy(GenericTraderProxyV1Lib);
+    GenericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);
+    await deployer.deploy(GenericTraderProxyV1, Expiry.address, EventEmitterRegistry.address, dolomiteMargin.address);
+  } else {
+    await deployer.deploy(GenericTraderProxyV1, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(PayableProxy, network)) {
+    await deployer.deploy(PayableProxy, dolomiteMargin.address, getWrappedCurrencyAddress(network, TestWETH));
+  } else {
+    await deployer.deploy(PayableProxy, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(LiquidatorAssetRegistry, network)) {
+    await deployer.deploy(LiquidatorAssetRegistry, dolomiteMargin.address);
+  } else {
+    await deployer.deploy(LiquidatorAssetRegistry, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(ExpiryProxy, network)) {
+    await deployer.deploy(ExpiryProxy, LiquidatorAssetRegistry.address, Expiry.address, dolomiteMargin.address);
+  } else {
+    await deployer.deploy(ExpiryProxy, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(LiquidatorProxyV1, network)) {
+    await deployer.deploy(LiquidatorProxyV1, LiquidatorAssetRegistry.address, dolomiteMargin.address);
+  } else {
+    await deployer.deploy(LiquidatorProxyV1, getNoOverwriteParams());
+  }
+
+  if (isDevNetwork(network)) {
+    if (shouldOverwrite(LiquidatorProxyV1WithAmm, network)) {
+      await deployer.deploy(
+        LiquidatorProxyV1WithAmm,
+        dolomiteMargin.address,
+        DolomiteAmmRouterProxy.address,
+        Expiry.address,
+        LiquidatorAssetRegistry.address,
+      );
+    } else {
+      await deployer.deploy(LiquidatorProxyV1WithAmm, getNoOverwriteParams());
     }
 
-    await deployer.deploy(
-      liquidatorProxyV2WithExternalLiquidity,
-      Expiry.address,
-      getParaswapAugustusRouter(network, TestParaswapAugustusRouter),
-      getParaswapTransferProxy(network, TestParaswapTransferProxy),
-      dolomiteMargin.address,
-      liquidatorAssetRegistry.address,
-    );
-  } else {
-    await deployer.deploy(liquidatorProxyV2WithExternalLiquidity, getNoOverwriteParams());
-  }
+    if (shouldOverwrite(LiquidatorProxyV2WithExternalLiquidity, network)) {
+      if (isDevNetwork(network)) {
+        await deployer.deploy(TestParaswapTransferProxy);
+        await deployer.deploy(TestParaswapAugustusRouter, TestParaswapTransferProxy.address);
+        await deployer.deploy(
+          TestParaswapTrader,
+          TestParaswapAugustusRouter.address,
+          TestParaswapTransferProxy.address,
+          dolomiteMargin.address,
+        );
+      }
 
-  const liquidatorProxyV3WithLiquidityToken = LiquidatorProxyV3WithLiquidityToken;
-  if (shouldOverwrite(liquidatorProxyV3WithLiquidityToken, network)) {
-    if (isDevNetwork(network)) {
-      await deployer.deploy(TestParaswapTransferProxy);
-      await deployer.deploy(TestParaswapAugustusRouter, TestParaswapTransferProxy.address);
+      await deployer.deploy(
+        LiquidatorProxyV2WithExternalLiquidity,
+        Expiry.address,
+        getParaswapAugustusRouter(network, TestParaswapAugustusRouter),
+        getParaswapTransferProxy(network, TestParaswapTransferProxy),
+        dolomiteMargin.address,
+        LiquidatorAssetRegistry.address,
+      );
+    } else {
+      await deployer.deploy(LiquidatorProxyV2WithExternalLiquidity, getNoOverwriteParams());
     }
 
+    if (shouldOverwrite(LiquidatorProxyV3WithLiquidityToken, network)) {
+      if (isDevNetwork(network)) {
+        await deployer.deploy(TestParaswapTransferProxy);
+        await deployer.deploy(TestParaswapAugustusRouter, TestParaswapTransferProxy.address);
+      }
+
+      await deployer.deploy(
+        LiquidatorProxyV3WithLiquidityToken,
+        Expiry.address,
+        getParaswapAugustusRouter(network, TestParaswapAugustusRouter),
+        getParaswapTransferProxy(network, TestParaswapTransferProxy),
+        dolomiteMargin.address,
+        LiquidatorAssetRegistry.address,
+      );
+    } else {
+      await deployer.deploy(LiquidatorProxyV3WithLiquidityToken, getNoOverwriteParams());
+    }
+  }
+
+  if (shouldOverwrite(LiquidatorProxyV4WithGenericTrader, network)) {
     await deployer.deploy(
-      liquidatorProxyV3WithLiquidityToken,
+      LiquidatorProxyV4WithGenericTrader,
       Expiry.address,
-      getParaswapAugustusRouter(network, TestParaswapAugustusRouter),
-      getParaswapTransferProxy(network, TestParaswapTransferProxy),
       dolomiteMargin.address,
-      liquidatorAssetRegistry.address,
+      LiquidatorAssetRegistry.address,
     );
   } else {
-    await deployer.deploy(liquidatorProxyV3WithLiquidityToken, getNoOverwriteParams());
+    await deployer.deploy(LiquidatorProxyV4WithGenericTrader, getNoOverwriteParams());
   }
 
-  const liquidatorProxyV4WithGenericTrader = LiquidatorProxyV4WithGenericTrader;
-  if (shouldOverwrite(liquidatorProxyV4WithGenericTrader, network)) {
-    await deployer.deploy(
-      liquidatorProxyV4WithGenericTrader,
-      Expiry.address,
-      dolomiteMargin.address,
-      liquidatorAssetRegistry.address,
-    );
+  if (shouldOverwrite(SignedOperationProxy, network)) {
+    await deployer.deploy(SignedOperationProxy, dolomiteMargin.address, getChainId(network));
   } else {
-    await deployer.deploy(liquidatorProxyV4WithGenericTrader, getNoOverwriteParams());
+    await deployer.deploy(SignedOperationProxy, getNoOverwriteParams());
   }
 
-  const signedOperationProxy = SignedOperationProxy;
-  if (shouldOverwrite(signedOperationProxy, network)) {
-    await deployer.deploy(signedOperationProxy, dolomiteMargin.address, getChainId(network));
+  if (isDevNetwork(network)) {
+    await Promise.all([
+      dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV2.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(ExpiryProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmFactory.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmRouterProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1WithAmm.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV2WithExternalLiquidity.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV3WithLiquidityToken.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV4WithGenericTrader.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(PayableProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(SignedOperationProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
+    ]);
   } else {
-    await deployer.deploy(signedOperationProxy, getNoOverwriteParams());
+    await Promise.all([
+      dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV2.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(ExpiryProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV4WithGenericTrader.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
+    ]);
   }
-
-  await Promise.all([
-    dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV1.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV2.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(ExpiryProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmFactory.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(DolomiteAmmRouterProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1WithAmm.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV2WithExternalLiquidity.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV3WithLiquidityToken.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV4WithGenericTrader.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(PayableProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(SignedOperationProxy.address, true),
-    dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
-  ]);
 }
 
 async function getDolomiteMargin(network) {

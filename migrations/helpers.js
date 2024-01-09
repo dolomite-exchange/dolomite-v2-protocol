@@ -1,4 +1,3 @@
-const Web3 = require('web3');
 const {
   coefficientsToString,
   decimalToString
@@ -8,83 +7,96 @@ const {
 
 function isDevNetwork(network) {
   verifyNetwork(network);
-  return network.startsWith('development')
-    || network.startsWith('test')
-    || network.startsWith('test_ci')
-    || network.startsWith('develop')
-    || network.startsWith('dev')
-    || network.startsWith('docker')
-    || network.startsWith('coverage');
+  return network === 'dev'
+    || network === 'docker'
+    || isCoverageTestNetwork(network)
+    || isLocalTestNetwork(network);
+}
+
+function isLocalTestNetwork(network) {
+  verifyNetwork(network);
+  return network.startsWith('test');
+}
+
+function isCoverageTestNetwork(network) {
+  verifyNetwork(network);
+  return network.startsWith('coverage');
 }
 
 // ================== Filtered Networks ==================
 
 function isEthereumNetwork(network) {
-  return isEthereumMainnet(network) || isKovan(network) || isGoerli(network);
+  return isEthereumMainnet(network);
 }
 
 function isArbitrumNetwork(network) {
   return isArbitrumOne(network) || isArbitrumGoerli(network);
 }
 
-function isMaticNetwork(network) {
-  return isMaticProd(network) || isMumbaiMatic(network);
+function isPolygonZkEvmNetwork(network) {
+  return isPolygonZkEvm(network);
+}
+
+function isBaseNetwork(network) {
+  return isBase(network) || isBaseSepolia(network);
 }
 
 function isProductionNetwork(network) {
-  return isEthereumMainnet(network) || isMaticProd(network) || isArbitrumOne(network);
+  return isEthereumMainnet(network) || isPolygonZkEvm(network) || isArbitrumOne(network) || isBase(network) || isX1(network);
 }
 
 // ================== Production Networks ==================
 
 function isEthereumMainnet(network) {
   verifyNetwork(network);
-  return network.startsWith('mainnet');
+  return network === 'mainnet';
 }
 
-function isMaticProd(network) {
+function isPolygonZkEvm(network) {
   verifyNetwork(network);
-  return network.startsWith('matic');
+  return network === 'polygon_zkevm';
 }
 
 function isArbitrumOne(network) {
   verifyNetwork(network);
-  return network.startsWith('arbitrum_one');
+  return network === 'arbitrum_one';
+}
+
+function isBase(network) {
+  verifyNetwork(network);
+  return network === 'base';
+}
+
+function isX1(network) {
+  verifyNetwork(network);
+  return network === 'x1';
+}
+
+function isX1Network(network) {
+  verifyNetwork(network);
+  return isX1(network);
 }
 
 // ================== Test Networks ==================
 
-function isKovan(network) {
-  verifyNetwork(network);
-  return network.startsWith('kovan');
-}
-
-function isGoerli(network) {
-  verifyNetwork(network);
-  return network.startsWith('goerli');
-}
-
-function isMumbaiMatic(network) {
-  verifyNetwork(network);
-  return network.startsWith('mumbai_matic');
-}
-
 function isArbitrumGoerli(network) {
   verifyNetwork(network);
-  return network.startsWith('arbitrum_goerli');
+  return network === 'arbitrum_goerli';
+}
+
+function isBaseSepolia(network) {
+  verifyNetwork(network);
+  return network === 'base_sepolia';
 }
 
 function isDocker(network) {
   verifyNetwork(network);
-  return network.startsWith('docker');
+  return network === 'docker';
 }
 
 function getChainId(network) {
   if (isEthereumMainnet(network)) {
     return 1;
-  }
-  if (isGoerli(network)) {
-    return 5;
   }
   if (isArbitrumOne(network)) {
     return 42161;
@@ -92,22 +104,22 @@ function getChainId(network) {
   if (isArbitrumGoerli(network)) {
     return 421613;
   }
-  if (isMaticProd(network)) {
-    return 137;
+  if (isPolygonZkEvm(network)) {
+    return 1101;
   }
-  if (isMumbaiMatic(network)) {
-    return 80001;
+  if (isBase(network)) {
+    return 8453;
   }
-  if (isKovan(network)) {
-    return 42;
+  if (isBaseSepolia(network)) {
+    return 84532;
   }
-  if (network.startsWith('coverage')) {
+  if (isCoverageTestNetwork(network)) {
     return 1002;
   }
-  if (network.startsWith('docker')) {
+  if (network === 'docker') {
     return 1313;
   }
-  if (network.startsWith('test') || network.startsWith('test_ci')) {
+  if (isLocalTestNetwork(network)) {
     return 1001;
   }
   throw new Error('No chainId for network ' + network);
@@ -134,10 +146,10 @@ async function getRiskParams(network) {
   return {
     marginRatio: { value: decimalToString('0.15') },
     liquidationSpread: { value: decimalToString('0.05') },
-    earningsRate: { value: decimalToString('0.90') },
+    earningsRate: { value: decimalToString('0.85') },
     minBorrowedValue: { value: decimalToString(minBorrowedValue) },
     accountMaxNumberOfMarketsWithBalances: '32',
-    callbackGasLimit: '2000000', // 2M
+    callbackGasLimit: 2000000, // 2M
   };
 }
 
@@ -155,12 +167,8 @@ async function getDoubleExponentParams() {
   };
 }
 
-function getExpiryRampTime(network) {
-  if (isArbitrumNetwork(network) || isMaticNetwork(network)) {
-    return '300';
-  } else {
-    return '3600';
-  }
+function getExpiryRampTime() {
+  return '300'; // 5 minutes
 }
 
 function verifyNetwork(network) {
@@ -170,53 +178,33 @@ function verifyNetwork(network) {
 }
 
 function getSenderAddress(network, accounts) {
-  const web3 = new Web3(process.env.NODE_URL);
-  if (isEthereumMainnet(network) || isKovan(network) || isGoerli(network)) {
-    return accounts[0];
-  }
-  if (isDevNetwork(network)) {
-    return accounts[0];
-  }
-  if (isMumbaiMatic(network)) {
-    return accounts[0];
-  }
-  if (isMaticProd(network)) {
-    return accounts[0];
-  }
-  if (isArbitrumOne(network) || isArbitrumGoerli(network)) {
-    return web3.eth.accounts.privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY).address;
-  }
-  throw new Error('Cannot find Sender address');
+  return accounts[0];
 }
 
 function getDelayedMultisigAddress(network) {
   if (
     isEthereumMainnet(network)
-    || isGoerli(network)
-    || isArbitrumOne(network)
-    || isArbitrumGoerli(network)
+    || isArbitrumNetwork(network)
+    || isPolygonZkEvmNetwork(network)
+    || isBaseNetwork(network)
+    || isX1(network)
   ) {
-    return '0xE412991Fb026df586C2f2F9EE06ACaD1A34f585B';
-  }
-  if (isKovan(network)) {
-    throw new Error('No Kovan multisig');
-  }
-  if (isMumbaiMatic(network)) {
-    return '0x874Ad8fb87a67B1A33C5834CC8820DBa80D18Bbb';
+    return '0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9';
   }
   throw new Error('Cannot find DelayedMultisig for network: ' + network);
 }
 
 function getGnosisSafeAddress(network) {
-  if (isEthereumMainnet(network) || isGoerli(network) || isArbitrumOne(network)) {
+  if (isEthereumMainnet(network) || isArbitrumOne(network) || isPolygonZkEvm(network)) {
     return '0xa75c21C5BE284122a87A37a76cc6C4DD3E55a1D4';
   }
-  if (isArbitrumGoerli(network)) {
-    return '0xE412991Fb026df586C2f2F9EE06ACaD1A34f585B'; // use the delayed multi sig
+  if (isBase(network)) {
+    return '0x145637A4Aa6B2001DC9ECBc89CEf75bB960F90B2';
   }
-  if (isMumbaiMatic(network)) {
-    return '0x874Ad8fb87a67B1A33C5834CC8820DBa80D18Bbb'; // use the delayed multi sig
+  if (isArbitrumGoerli(network) || isBaseSepolia(network)) {
+    return getDelayedMultisigAddress(network); // use the delayed multi sig
   }
+  // TODO: x1
   throw new Error('Cannot find GnosisSafe for network: ' + network);
 }
 
@@ -224,15 +212,24 @@ function getChainlinkOracleSentinelGracePeriod() {
   return 3600; // 1 hour
 }
 
-function getChainlinkSequencerUptimeFeed(network, TestChainlinkFlags) {
+function getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggregator) {
   if (isDevNetwork(network)) {
-    return TestChainlinkFlags.address;
+    return TestSequencerUptimeFeedAggregator.address;
   } else if (isArbitrumOne(network)) {
     return '0xFdB631F5EE196F0ed6FAa767959853A9F217697D';
   } else if (isArbitrumGoerli(network)) {
     return '0x4da69F028a5790fCCAfe81a75C0D24f46ceCDd69';
+  } else if (isBase(network)) {
+    return '0xBCF85224fc0756B9Fa45aA7892530B47e10b6433';
+  } else if (isBaseSepolia(network)) {
+    return null;
+  } else if (isPolygonZkEvm(network)) {
+    return null;
+  } else if (isX1(network)) {
+    throw null;
   }
-  return '0x0000000000000000000000000000000000000000';
+
+  throw new Error(`Cannot find Sequencer Uptime Feed for ${network}`);
 }
 
 function getUniswapV3MultiRouter(network, TestUniswapV3MultiRouter) {
@@ -262,17 +259,17 @@ const getNoOverwriteParams = () => ({ overwrite: false });
 module.exports = {
   isEthereumNetwork,
   isArbitrumNetwork,
-  isMaticNetwork,
+  isBase,
+  isBaseNetwork,
+  isPolygonZkEvmNetwork,
   isProductionNetwork,
-  isGoerli,
   isArbitrumOne,
   isArbitrumGoerli,
+  isX1Network,
   getChainId,
   isDevNetwork,
   isEthereumMainnet,
-  isMaticProd,
-  isMumbaiMatic,
-  isKovan,
+  isPolygonZkEvm,
   isDocker,
   getRiskLimits,
   getRiskParams,

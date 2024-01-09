@@ -717,10 +717,6 @@ export class Getters {
     return this.contracts.callConstantContractFunction(this.contracts.dolomiteMargin.methods.owner(), options);
   }
 
-  public async getExpiryAdmin(options?: ContractConstantCallOptions): Promise<address> {
-    return this.contracts.callConstantContractFunction(this.contracts.expiry.methods.owner(), options);
-  }
-
   public async getExpiry(
     accountOwner: address,
     accountNumber: Integer,
