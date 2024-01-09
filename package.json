@@ -38,6 +38,7 @@
     "lint:js": "eslint --ext .js --ignore-path .gitignore migrations/**/*.js",
     "lint:sol": "solium --debug --fix -d contracts/",
     "lint:dolomite-margin": "python util/lintcontracts.py",
+    "prepublishOnly": "./scripts/check-branch-and-revert.sh",
     "coverage": "RPC_NODE_URI=http://127.0.01:8555 COVERAGE=true NETWORK_ID=1002 NODE_ENV=test node --max-old-space-size=16384 node_modules/.bin/truffle run coverage --network coverage --temp build",
     "coverage_only_specific": "RPC_NODE_URI=http://127.0.01:8555 COVERAGE=true NETWORK_ID=1002 NODE_ENV=test node --max-old-space-size=16384 node_modules/.bin/truffle run coverage --network coverage --temp build --file=\"test/**/(*GenericTraderProxyV1*|*LiquidatorProxyV4WithGenericTrader*)*.ts\"",
     "coverage_node": "ganache-cli --allowUnlimitedContractSize --deterministic --gasLimit 0xffffffffff --gasPrice 1 --keepAliveTimeout 10000 -i 1002 -p 8545",
