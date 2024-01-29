@@ -104,7 +104,7 @@ library Storage {
 
         // The maximum amount that can be borrowed by the protocol. This allows the protocol to cap any additional risk
         // that is inferred by allowing borrowing against low-cap or assets with increased volatility. Setting this
-        // value to 0 is analogous to having no limit. This value can never be below 0.
+        // value to 0 is analogous to having no limit. This value can never be greater than 0.
         Types.Wei maxBorrowWei;
 
         // The percentage of interest paid that is passed along from borrowers to suppliers. Setting this to 0 will
