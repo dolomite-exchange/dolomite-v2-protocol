@@ -116,7 +116,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256 owedPriceAdj;
         if (_constants.expiry != 0) {
             (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
-                _constants.liquidAccount.owner,
+                _constants.liquidAccount,
                 _constants.heldMarket,
                 _constants.owedMarket,
                 _constants.expiry
@@ -124,7 +124,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             owedPriceAdj = owedPricePrice.value;
         } else {
             Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
-                _constants.liquidAccount.owner,
+                _constants.liquidAccount,
                 _constants.heldMarket,
                 _constants.owedMarket
             );
@@ -275,44 +275,27 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
     }
 
     function _calculateAndSetActualLiquidationAmount(
-        uint256 _inputAmountWei,
         uint256 _minOutputAmountWei,
         LiquidatorProxyCache memory _cache
     )
         internal
         pure
-        returns (uint256 _newInputAmountWei, uint256 _newMinOutputAmountWei)
+        returns (uint256 _newMinOutputAmountWei)
     {
         // at this point, _cache.owedWeiToLiquidate should be the max amount that can be liquidated on the user.
       /*assert(_cache.owedWeiToLiquidate != 0);*/ // assert it was initialized
 
-        uint256 desiredLiquidationOwedAmount = _minOutputAmountWei;
-        if (
-            desiredLiquidationOwedAmount < _cache.owedWeiToLiquidate
-            && desiredLiquidationOwedAmount.mul(_cache.owedPriceAdj) < _cache.heldPrice.mul(_cache.liquidHeldWei.value)
-        ) {
-            // The user wants to liquidate less than the max amount, and the held collateral is worth more than the
-            // desired debt to liquidate
-            _cache.owedWeiToLiquidate = desiredLiquidationOwedAmount;
+        _newMinOutputAmountWei = _minOutputAmountWei;
+
+        if (_newMinOutputAmountWei == uint256(-1)) {
+            _newMinOutputAmountWei = _cache.owedWeiToLiquidate;
+        } else if (_newMinOutputAmountWei < _cache.owedWeiToLiquidate) {
+            _cache.owedWeiToLiquidate = _newMinOutputAmountWei;
             _cache.solidHeldUpdateWithReward = DolomiteMarginMath.getPartial(
-                desiredLiquidationOwedAmount,
+                _newMinOutputAmountWei,
                 _cache.owedPriceAdj,
                 _cache.heldPrice
             );
-        }
-
-        if (_inputAmountWei == uint(-1)) {
-            // This is analogous to saying "sell all of the collateral I receive from the liquidation"
-            _newInputAmountWei = _cache.solidHeldUpdateWithReward;
-        } else {
-            _newInputAmountWei = _inputAmountWei;
-        }
-
-        if (_minOutputAmountWei == uint(-1)) {
-            // Setting the value to uint(-1) is analogous to saying "liquidate all"
-            _newMinOutputAmountWei = _cache.owedWeiToLiquidate;
-        } else {
-            _newMinOutputAmountWei = _minOutputAmountWei;
         }
     }
 
@@ -389,19 +372,18 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256[] memory solidMarkets,
         uint256[] memory liquidMarkets
     ) internal view returns (MarketInfo[] memory) {
-        uint[] memory marketBitmaps = Bits.createBitmaps(dolomiteMargin.getNumMarkets());
-        uint marketsLength = 0;
+        uint256[] memory marketBitmaps = Bits.createBitmaps(dolomiteMargin.getNumMarkets());
+        uint256 marketsLength = 0;
         marketsLength = _addMarketsToBitmap(solidMarkets, marketBitmaps, marketsLength);
         marketsLength = _addMarketsToBitmap(liquidMarkets, marketBitmaps, marketsLength);
 
         uint256 counter;
-        uint256 marketBitmapsLength = marketBitmaps.length;
         MarketInfo[] memory marketInfos = new MarketInfo[](marketsLength);
-        for (uint256 i; i < marketBitmapsLength; ++i) {
-            uint bitmap = marketBitmaps[i];
+        for (uint256 i; i < marketBitmaps.length; ++i) {
+            uint256 bitmap = marketBitmaps[i];
             while (bitmap != 0) {
-                uint nextSetBit = Bits.getLeastSignificantBit(bitmap);
-                uint marketId = Bits.getMarketIdFromBit(i, nextSetBit);
+                uint256 nextSetBit = Bits.getLeastSignificantBit(bitmap);
+                uint256 marketId = Bits.getMarketIdFromBit(i, nextSetBit);
 
                 marketInfos[counter++] = MarketInfo({
                     marketId: marketId,
@@ -422,7 +404,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
 
     function _binarySearch(
         MarketInfo[] memory markets,
-        uint marketId
+        uint256 marketId
     ) internal pure returns (MarketInfo memory) {
         return _binarySearch(
             markets,
@@ -474,7 +456,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
     function _addMarketsToBitmap(
         uint256[] memory markets,
         uint256[] memory bitmaps,
-        uint marketsLength
+        uint256 marketsLength
     ) private pure returns (uint) {
         for (uint256 i; i < markets.length; ++i) {
             if (!Bits.hasBit(bitmaps, markets[i])) {
@@ -487,17 +469,19 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
 
     function _binarySearch(
         MarketInfo[] memory markets,
-        uint beginInclusive,
-        uint endExclusive,
-        uint marketId
+        uint256 beginInclusive,
+        uint256 endExclusive,
+        uint256 marketId
     ) private pure returns (MarketInfo memory) {
-        uint len = endExclusive - beginInclusive;
-        if (len == 0 || (len == 1 && markets[beginInclusive].marketId != marketId)) {
-            revert("LiquidatorProxyBase: Market not found");
-        }
+        uint256 len = endExclusive - beginInclusive;
+        /* ignore-coverage */ Require.that(
+            len != 0 && (len != 1 || markets[beginInclusive].marketId == marketId),
+            FILE,
+            "Market not found"
+        );
 
-        uint mid = beginInclusive + (len >> 1);
-        uint midMarketId = markets[mid].marketId;
+        uint256 mid = beginInclusive + (len >> 1);
+        uint256 midMarketId = markets[mid].marketId;
         if (marketId < midMarketId) {
             return _binarySearch(
                 markets,

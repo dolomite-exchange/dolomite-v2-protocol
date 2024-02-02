@@ -1,6 +1,6 @@
 import { decimalToString } from '../../src/lib/Helpers';
 import { TestContracts } from './TestContracts';
-import { address, Decimal, TxResult } from '../../src';
+import { AccountInfo, Decimal, TxResult } from '../../src';
 import { TestAccountRiskOverrideSetter as TestAccountRiskOverrideSetterContract } from '../../build/testing_wrappers/TestAccountRiskOverrideSetter';
 import { AccountRiskOverrideSetter } from '../../src/modules/AccountRiskOverrideSetter';
 
@@ -18,13 +18,13 @@ export class TestAccountRiskOverrideSetter {
   }
 
   public async setAccountRiskOverride(
-    accountOwner: address,
+    account: AccountInfo,
     marginRatioOverride: Decimal,
     liquidationSpreadOverride: Decimal,
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
       this.testAccountRiskOverrideSetter.methods.setAccountRiskOverride(
-        accountOwner,
+        account,
         { value: decimalToString(marginRatioOverride) },
         { value: decimalToString(liquidationSpreadOverride) },
       ),
@@ -32,9 +32,9 @@ export class TestAccountRiskOverrideSetter {
   }
 
   public async getAccountRiskOverride(
-    accountOwner: address,
+    account: AccountInfo,
   ) {
     const setter = new AccountRiskOverrideSetter(this.contracts, this.address);
-    return setter.getAccountRiskOverride(accountOwner);
+    return setter.getAccountRiskOverride(account);
   }
 }

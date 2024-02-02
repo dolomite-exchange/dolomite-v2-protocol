@@ -56,7 +56,10 @@ module.exports = {
     },
     mainnet: {
       network_id: '1',
-      provider: () => new HDWalletProvider(process.env.DEPLOYER_PRIVATE_KEY, process.env.NODE_URL),
+      provider: () => new HDWalletProvider({
+        privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+        providerOrUrl: process.env.NODE_URL,
+      }),
       gasPrice: Number(process.env.GAS_PRICE),
       gas: 6900000,
       timeoutBlocks: 5000,
@@ -95,7 +98,10 @@ module.exports = {
     arbitrum_one: {
       network_id: '42161',
       provider: () => {
-        return new HDWalletProvider([process.env.DEPLOYER_PRIVATE_KEY], process.env.ARBITRUM_NODE_URL);
+        return new HDWalletProvider({
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: process.env.ARBITRUM_NODE_URL,
+        });
       },
       gasPrice: 1000000000, // 1 gwei
       gas: 25000000,
@@ -107,7 +113,10 @@ module.exports = {
     arbitrum_goerli: {
       network_id: '421613',
       provider: () => {
-        return new HDWalletProvider([process.env.DEPLOYER_PRIVATE_KEY], process.env.ARBITRUM_GOERLI_NODE_URL);
+        return new HDWalletProvider({
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: process.env.ARBITRUM_GOERLI_NODE_URL,
+        });
       },
       gasPrice: 1000000000, // 1 gwei
       gas: 25000000,
@@ -122,14 +131,11 @@ module.exports = {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          // providerOrUrl: 'https://zkevm-rpc.com',
-          // providerOrUrl: 'https://nd-437-251-554.p2pify.com/63e7c6e48b737189c3b9b91a3d848300',
           providerOrUrl: 'https://polygon-zkevm.drpc.org',
-          chainId: '1101',
         });
       },
-      gasPrice: 5000000000, // 5 gwei
-      gas: 25000000,
+      gasPrice: 7500000000, // 7.5 gwei
+      gas: 12000000,
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
       confirmations: 0,
@@ -147,7 +153,7 @@ module.exports = {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: 'https://base.llamarpc.com'
+          providerOrUrl: 'https://base.publicnode.com',
         });
       },
       gasPrice: 1000000000, // 1 gwei

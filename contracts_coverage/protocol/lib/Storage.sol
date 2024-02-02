@@ -104,7 +104,7 @@ library Storage {
 
         // The maximum amount that can be borrowed by the protocol. This allows the protocol to cap any additional risk
         // that is inferred by allowing borrowing against low-cap or assets with increased volatility. Setting this
-        // value to 0 is analogous to having no limit. This value can never be below 0.
+        // value to 0 is analogous to having no limit. This value can never be greater than 0.
         Types.Wei maxBorrowWei;
 
         // The percentage of interest paid that is passed along from borrowers to suppliers. Setting this to 0 will
@@ -138,6 +138,10 @@ library Storage {
         // could lead to DOS attacks on the protocol; however, hard coding a max value isn't preferred since some chains
         // can calculate gas usage differently (like ArbGas before Arbitrum rolled out nitro)
         uint256 callbackGasLimit;
+
+        // The default account risk override setter. By default, we ping this for any overrides in risk controls,
+        // if the `accountRiskOverrideSetterMap` resolves to 0x0. If this value is set to `0x0` there is no default.
+        IAccountRiskOverrideSetter defaultAccountRiskOverrideSetter;
 
         // Certain addresses are allowed to borrow with different LTV requirements. When an account's risk is overrode,
         // the global risk parameters are ignored and the account's risk parameters are used instead.
@@ -375,7 +379,7 @@ library Storage {
 
     function getLiquidationSpreadForAccountAndPair(
         Storage.State storage state,
-        address liquidAccountOwner,
+        Account.Info memory account,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -383,7 +387,7 @@ library Storage {
         view
         returns (Decimal.D256 memory)
     {
-        (, Decimal.D256 memory liquidationSpreadOverride) = getAccountRiskOverride(state, liquidAccountOwner);
+        (, Decimal.D256 memory liquidationSpreadOverride) = getAccountRiskOverride(state, account);
         if (liquidationSpreadOverride.value != 0) {
             return liquidationSpreadOverride;
         }
@@ -475,7 +479,8 @@ library Storage {
         Storage.State storage state,
         Account.Info memory account,
         Cache.MarketCache memory cache,
-        bool adjustForLiquidity
+        bool adjustForLiquidity,
+        Decimal.D256 memory marginRatioOverride
     )
         internal
         view
@@ -483,7 +488,6 @@ library Storage {
     {
         Monetary.Value memory supplyValue;
         Monetary.Value memory borrowValue;
-        (Decimal.D256 memory marginRatioOverride,) = getAccountRiskOverride(state, account.owner);
 
         // Only adjust for liquidity if prompted AND if there is no override
         adjustForLiquidity = adjustForLiquidity && marginRatioOverride.value == 0;
@@ -528,14 +532,15 @@ library Storage {
         }
 
         // get account values (adjusted for liquidity, if there isn't a margin ratio override)
-        (Decimal.D256 memory marginRatio,) = getAccountRiskOverride(state, account.owner);
+        (Decimal.D256 memory marginRatio,) = getAccountRiskOverride(state, account);
         (
             Monetary.Value memory supplyValue,
             Monetary.Value memory borrowValue
         ) = state.getAccountValues(
             account,
             cache,
-            /* adjustForLiquidity = */ marginRatio.value == 0
+            /* adjustForLiquidity = */ true,
+            marginRatio
         );
 
         if (requireMinBorrow) {
@@ -631,20 +636,28 @@ library Storage {
 
     function getAccountRiskOverride(
         Storage.State storage state,
-        address accountOwner
+        Account.Info memory account
     )
         internal
         view
         returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
     {
-        IAccountRiskOverrideSetter riskOverrideSetter = state.riskParams.accountRiskOverrideSetterMap[accountOwner];
+        IAccountRiskOverrideSetter riskOverrideSetter = state.riskParams.accountRiskOverrideSetterMap[account.owner];
         if (address(riskOverrideSetter) != address(0)) {
-            (marginRatioOverride, liquidationSpreadOverride) =
-                riskOverrideSetter.getAccountRiskOverride(accountOwner);
+            (marginRatioOverride, liquidationSpreadOverride) = riskOverrideSetter.getAccountRiskOverride(account);
             validateAccountRiskOverrideValues(state, marginRatioOverride, liquidationSpreadOverride);
+            return (marginRatioOverride, liquidationSpreadOverride);
+        }
+
+        riskOverrideSetter = state.riskParams.defaultAccountRiskOverrideSetter;
+        if (address(riskOverrideSetter) != address(0)) {
+            (marginRatioOverride, liquidationSpreadOverride) = riskOverrideSetter.getAccountRiskOverride(account);
+            validateAccountRiskOverrideValues(state, marginRatioOverride, liquidationSpreadOverride);
+            return (marginRatioOverride, liquidationSpreadOverride);
         } else {
             marginRatioOverride = Decimal.zero();
             liquidationSpreadOverride = Decimal.zero();
+            return (marginRatioOverride, liquidationSpreadOverride);
         }
     }
 

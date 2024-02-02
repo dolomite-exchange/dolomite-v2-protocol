@@ -109,7 +109,7 @@ library LiquidateOrVaporizeImpl {
         ) = _getLiquidationPrices(
             state,
             cache,
-            args.liquidAccount.owner,
+            args.liquidAccount,
             args.heldMarket,
             args.owedMarket
         );
@@ -245,23 +245,24 @@ library LiquidateOrVaporizeImpl {
             args.amount
         );
 
+        // For vaporizations, we do not want to use account-based risk overrides for the prices
         (
             Monetary.Price memory heldPrice,
-            Monetary.Price memory owedPrice
+            Monetary.Price memory owedPriceAdj
         ) = _getLiquidationPrices(
             state,
             cache,
-            args.vaporAccount.owner,
+            /* liquidAccount = */ Account.Info(address(0), 0),
             args.heldMarket,
             args.owedMarket
         );
 
-        Types.Wei memory heldWei = _owedWeiToHeldWei(owedWei, heldPrice, owedPrice);
+        Types.Wei memory heldWei = _owedWeiToHeldWei(owedWei, heldPrice, owedPriceAdj);
 
         // if attempting to over-borrow the held asset, bound it by the maximum
         if (heldWei.value > maxHeldWei.value) {
             heldWei = maxHeldWei.negative();
-            owedWei = _heldWeiToOwedWei(heldWei, heldPrice, owedPrice);
+            owedWei = _heldWeiToOwedWei(heldWei, heldPrice, owedPriceAdj);
 
             state.setParFromDeltaWei(
                 args.vaporAccount,
@@ -415,7 +416,7 @@ library LiquidateOrVaporizeImpl {
     function _getLiquidationPrices(
         Storage.State storage state,
         Cache.MarketCache memory cache,
-        address liquidAccountOwner,
+        Account.Info memory liquidAccount,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -428,7 +429,7 @@ library LiquidateOrVaporizeImpl {
     {
         uint256 owedPrice = cache.get(owedMarketId).price.value;
         Decimal.D256 memory spread = state.getLiquidationSpreadForAccountAndPair(
-            liquidAccountOwner,
+            liquidAccount,
             heldMarketId,
             owedMarketId
         );

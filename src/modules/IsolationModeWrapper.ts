@@ -30,7 +30,9 @@ export class IsolationModeWrapper {
     solidAccountId: Integer,
     liquidAccountId: Integer,
     solidAccountOwner: address,
+    solidAccountNumber: Integer,
     liquidAccountOwner: address,
+    liquidAccountNumber: Integer,
     outputMarket: Integer,
     inputMarket: Integer,
     minOutputAmount: Integer,
@@ -38,17 +40,19 @@ export class IsolationModeWrapper {
     orderDataHexString: string,
   ): Promise<ActionArgs[]> {
     return this.contracts.callConstantContractFunction(
-      this.wrapperContract.methods.createActionsForWrapping(
-        solidAccountId.toFixed(),
-        liquidAccountId.toFixed(),
-        solidAccountOwner,
-        liquidAccountOwner,
-        outputMarket.toFixed(),
-        inputMarket.toFixed(),
-        minOutputAmount.toFixed(),
-        inputAmount.toFixed(),
-        toBytesNoPadding(orderDataHexString),
-      ),
+      this.wrapperContract.methods.createActionsForWrapping({
+        primaryAccountId: solidAccountId.toFixed(),
+        otherAccountId: liquidAccountId.toFixed(),
+        primaryAccountOwner: solidAccountOwner,
+        primaryAccountNumber: solidAccountNumber.toFixed(),
+        otherAccountOwner: liquidAccountOwner,
+        otherAccountNumber: liquidAccountNumber.toFixed(),
+        outputMarket: outputMarket.toFixed(),
+        inputMarket: inputMarket.toFixed(),
+        minOutputAmount: minOutputAmount.toFixed(),
+        inputAmount: inputAmount.toFixed(),
+        orderData: toBytesNoPadding(orderDataHexString),
+      }),
     );
   }
 

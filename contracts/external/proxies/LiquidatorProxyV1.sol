@@ -347,7 +347,7 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
             !_isCollateralized(
                 liquidSupplyValue.value,
                 liquidBorrowValue.value,
-                _constants.dolomiteMargin.getMarginRatioForAccount(_constants.liquidAccount.owner)
+                _constants.dolomiteMargin.getMarginRatioForAccount(_constants.liquidAccount)
             ),
             FILE,
             "Liquid account not liquidatable",
@@ -436,7 +436,7 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
         uint256 heldPrice = heldMarketInfo.price.value;
         uint256 owedPrice = owedMarketInfo.price.value;
         Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
-            _constants.liquidAccount.owner,
+            _constants.liquidAccount,
             _heldMarket,
             _owedMarket
         );

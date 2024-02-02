@@ -20,7 +20,6 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import { Ownable } from "@openzeppelin/contracts/ownership/Ownable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IAutoTrader } from "../../protocol/interfaces/IAutoTrader.sol";
 import { ICallee } from "../../protocol/interfaces/ICallee.sol";
@@ -44,7 +43,6 @@ import { IExpiry } from "../interfaces/IExpiry.sol";
  * Expiry contract that also allows approved senders to set expiry to be 28 days in the future.
  */
 contract Expiry is
-    Ownable,
     OnlyDolomiteMargin,
     IExpiry,
     ICallee,
@@ -109,10 +107,10 @@ contract Expiry is
         uint256 newExpiryRampTime
     )
         external
-        onlyOwner
+        onlyDolomiteMarginOwner(msg.sender)
     {
-        emit LogExpiryRampTimeSet(newExpiryRampTime);
         g_expiryRampTime = newExpiryRampTime;
+        emit LogExpiryRampTimeSet(newExpiryRampTime);
     }
 
     // ============ Approval Functions ============
@@ -221,7 +219,7 @@ contract Expiry is
     }
 
     function getLiquidationSpreadAdjustedPrices(
-        address liquidAccountOwner,
+        Account.Info memory liquidAccount,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry
@@ -235,7 +233,7 @@ contract Expiry is
     {
         return _getLiquidationSpreadAdjustedPrices(
             DOLOMITE_MARGIN,
-            liquidAccountOwner,
+            liquidAccount,
             heldMarketId,
             owedMarketId,
             expiry
@@ -246,7 +244,7 @@ contract Expiry is
 
     function _getLiquidationSpreadAdjustedPrices(
         IDolomiteMargin dolomiteMargin,
-        address liquidAccountOwner,
+        Account.Info memory liquidAccount,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry
@@ -259,7 +257,7 @@ contract Expiry is
         )
     {
         Decimal.D256 memory spread = dolomiteMargin.getLiquidationSpreadForAccountAndPair(
-            liquidAccountOwner,
+            liquidAccount,
             heldMarketId,
             owedMarketId
         );
@@ -373,7 +371,7 @@ contract Expiry is
             );
             output = _owedWeiToHeldWei(
                 dolomiteMargin,
-                makerAccount.owner,
+                makerAccount,
                 inputWei,
                 outputMarketId,
                 inputMarketId,
@@ -407,7 +405,7 @@ contract Expiry is
             );
             output = _heldWeiToOwedWei(
                 dolomiteMargin,
-                makerAccount.owner,
+                makerAccount,
                 inputWei,
                 inputMarketId,
                 outputMarketId,
@@ -461,7 +459,7 @@ contract Expiry is
 
     function _heldWeiToOwedWei(
         IDolomiteMargin dolomiteMargin,
-        address liquidAccountOwner,
+        Account.Info memory liquidAccount,
         Types.Wei memory heldWei,
         uint256 heldMarketId,
         uint256 owedMarketId,
@@ -476,7 +474,7 @@ contract Expiry is
             Monetary.Price memory owedPrice
         ) = _getLiquidationSpreadAdjustedPrices(
             dolomiteMargin,
-            liquidAccountOwner,
+            liquidAccount,
             heldMarketId,
             owedMarketId,
             expiry
@@ -498,7 +496,7 @@ contract Expiry is
 
     function _owedWeiToHeldWei(
         IDolomiteMargin dolomiteMargin,
-        address liquidAccountOwner,
+        Account.Info memory liquidAccount,
         Types.Wei memory owedWei,
         uint256 heldMarketId,
         uint256 owedMarketId,
@@ -513,7 +511,7 @@ contract Expiry is
             Monetary.Price memory owedPrice
         ) = _getLiquidationSpreadAdjustedPrices(
             dolomiteMargin,
-            liquidAccountOwner,
+            liquidAccount,
             heldMarketId,
             owedMarketId,
             expiry

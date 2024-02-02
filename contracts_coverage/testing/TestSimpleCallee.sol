@@ -32,7 +32,7 @@ import { Account } from "../protocol/lib/Account.sol";
  */
 contract TestSimpleCallee is
     ICallee,
-OnlyDolomiteMargin
+    OnlyDolomiteMargin
 {
     // ============ Constants ============
 

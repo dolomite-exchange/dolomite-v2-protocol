@@ -55,7 +55,7 @@ interface IExpiry {
     function g_expiryRampTime() external view returns (uint256);
 
     function getLiquidationSpreadAdjustedPrices(
-        address liquidAccountOwner,
+        Account.Info calldata liquidAccount,
         uint256 heldMarketId,
         uint256 owedMarketId,
         uint32 expiry

@@ -29,12 +29,10 @@ import erroringTokenJson from '../../build/testing_contracts/ErroringToken.json'
 import malformedTokenJson from '../../build/testing_contracts/MalformedToken.json';
 import omiseTokenJson from '../../build/testing_contracts/OmiseToken.json';
 import testAccountRiskOverrideSetterJson from '../../build/testing_contracts/TestAccountRiskOverrideSetter.json';
-import testAmmRebalancerProxyJson from '../../build/testing_contracts/TestAmmRebalancerProxy.json';
 import testAutoTraderJson from '../../build/testing_contracts/TestAutoTrader.json';
 import testCalleeJson from '../../build/testing_contracts/TestCallee.json';
 import testChainlinkPriceAggregatorJson from '../../build/testing_contracts/TestChainlinkAggregator.json';
 import testChainlinkPriceOracleJson from '../../build/testing_contracts/TestChainlinkPriceOracleV1.json';
-import testDolomiteAmmLibraryJson from '../../build/testing_contracts/TestDolomiteAmmLibrary.json';
 import testDolomiteMarginJson from '../../build/testing_contracts/TestDolomiteMargin.json';
 import testDoubleExponentInterestSetterJson from '../../build/testing_contracts/TestDoubleExponentInterestSetter.json';
 import testExchangeWrapperJson from '../../build/testing_contracts/TestExchangeWrapper.json';
@@ -47,7 +45,6 @@ import testPriceOracleJson from '../../build/testing_contracts/TestPriceOracle.j
 import testSequencerUptimeFeedAggregatorJson
   from '../../build/testing_contracts/TestSequencerUptimeFeedAggregator.json';
 import testSimpleCalleeJson from '../../build/testing_contracts/TestSimpleCallee.json';
-import testUniswapV3MultiRouterJson from '../../build/testing_contracts/TestUniswapV3MultiRouter.json';
 import testWeth from '../../build/testing_contracts/TestWETH.json';
 
 // JSON - Tokens
@@ -57,16 +54,11 @@ import tokenCJson from '../../build/testing_contracts/TokenC.json';
 import tokenDJson from '../../build/testing_contracts/TokenD.json';
 import tokenEJson from '../../build/testing_contracts/TokenE.json';
 import tokenFJson from '../../build/testing_contracts/TokenF.json';
-import testUniswapV2FactoryJson from '../../build/testing_contracts/UniswapV2Factory.json';
-import testUniswapV2PairJson from '../../build/testing_contracts/UniswapV2Pair.json';
-import testUniswapV2RouterJson from '../../build/testing_contracts/UniswapV2Router02.json';
 import { TestAccountRiskOverrideSetter } from '../../build/testing_wrappers/TestAccountRiskOverrideSetter';
-import { TestAmmRebalancerProxy } from '../../build/testing_wrappers/TestAmmRebalancerProxy';
 import { TestAutoTrader } from '../../build/testing_wrappers/TestAutoTrader';
 import { TestCallee } from '../../build/testing_wrappers/TestCallee';
 import { TestChainlinkAggregator } from '../../build/testing_wrappers/TestChainlinkAggregator';
 import { TestChainlinkPriceOracleV1 } from '../../build/testing_wrappers/TestChainlinkPriceOracleV1';
-import { TestDolomiteAmmLibrary } from '../../build/testing_wrappers/TestDolomiteAmmLibrary';
 import { TestDolomiteMargin } from '../../build/testing_wrappers/TestDolomiteMargin';
 import { TestDoubleExponentInterestSetter } from '../../build/testing_wrappers/TestDoubleExponentInterestSetter';
 import { TestExchangeWrapper } from '../../build/testing_wrappers/TestExchangeWrapper';
@@ -80,11 +72,7 @@ import { TestPriceOracle } from '../../build/testing_wrappers/TestPriceOracle';
 import { TestSequencerUptimeFeedAggregator } from '../../build/testing_wrappers/TestSequencerUptimeFeedAggregator';
 import { TestSimpleCallee } from '../../build/testing_wrappers/TestSimpleCallee';
 import { TestToken } from '../../build/testing_wrappers/TestToken';
-import { TestUniswapV3MultiRouter } from '../../build/testing_wrappers/TestUniswapV3MultiRouter';
 import { TestWETH } from '../../build/testing_wrappers/TestWETH';
-import { UniswapV2Factory } from '../../build/testing_wrappers/UniswapV2Factory';
-import { UniswapV2Pair } from '../../build/testing_wrappers/UniswapV2Pair';
-import { UniswapV2Router02 } from '../../build/testing_wrappers/UniswapV2Router02';
 
 // Contracts
 import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
@@ -113,11 +101,9 @@ export class TestContracts extends Contracts {
   public chainlinkOracleSentinel: IOracleSentinel;
   public chainlinkPriceOracleV1: TestChainlinkPriceOracleV1;
   public testAccountRiskOverrideSetter: TestAccountRiskOverrideSetter;
-  public testAmmRebalancerProxy: TestAmmRebalancerProxy;
   public testAutoTrader: TestAutoTrader;
   public testCallee: TestCallee;
   public testChainlinkPriceAggregator: TestChainlinkAggregator;
-  public testDolomiteAmmLibrary: TestDolomiteAmmLibrary;
   public testDolomiteMargin: TestDolomiteMargin;
   public testInterestSetter: TestInterestSetter;
   public testLib: TestLib;
@@ -129,9 +115,6 @@ export class TestContracts extends Contracts {
   public testPriceOracle: TestPriceOracle;
   public testSequencerUptimeFeedAggregator: TestSequencerUptimeFeedAggregator;
   public testSimpleCallee: TestSimpleCallee;
-  public testUniswapV2Factory: UniswapV2Factory;
-  public testUniswapV3MultiRouter: TestUniswapV3MultiRouter;
-  public testUniswapV2Router: UniswapV2Router02;
 
   constructor(provider: Provider, networkId: number, web3: Web3, options: DolomiteMarginOptions) {
     super(provider, networkId, web3, options);
@@ -157,7 +140,6 @@ export class TestContracts extends Contracts {
     this.testAccountRiskOverrideSetter = new this.web3.eth.Contract(
       testAccountRiskOverrideSetterJson.abi,
     ) as TestAccountRiskOverrideSetter;
-    this.testAmmRebalancerProxy = new this.web3.eth.Contract(testAmmRebalancerProxyJson.abi) as TestAmmRebalancerProxy;
     this.testAutoTrader = new this.web3.eth.Contract(testAutoTraderJson.abi) as TestAutoTrader;
     this.testCallee = new this.web3.eth.Contract(testCalleeJson.abi) as TestCallee;
     this.testChainlinkPriceAggregator = new this.web3.eth.Contract(
@@ -166,7 +148,6 @@ export class TestContracts extends Contracts {
     this.testSequencerUptimeFeedAggregator = new this.web3.eth.Contract(
       testSequencerUptimeFeedAggregatorJson.abi,
     ) as TestSequencerUptimeFeedAggregator;
-    this.testDolomiteAmmLibrary = new this.web3.eth.Contract(testDolomiteAmmLibraryJson.abi) as TestDolomiteAmmLibrary;
     this.testDolomiteMargin = new this.web3.eth.Contract(testDolomiteMarginJson.abi) as TestDolomiteMargin;
     this.dolomiteMargin = this.testDolomiteMargin;
     this.testDoubleExponentInterestSetter = new this.web3.eth.Contract(
@@ -184,21 +165,9 @@ export class TestContracts extends Contracts {
     ) as TestPolynomialInterestSetter;
     this.testPriceOracle = new this.web3.eth.Contract(testPriceOracleJson.abi) as TestPriceOracle;
     this.testSimpleCallee = new this.web3.eth.Contract(testSimpleCalleeJson.abi) as TestSimpleCallee;
-    this.testUniswapV2Factory = new this.web3.eth.Contract(testUniswapV2FactoryJson.abi) as UniswapV2Factory;
-    this.testUniswapV3MultiRouter = new this.web3.eth.Contract(
-      testUniswapV3MultiRouterJson.abi,
-    ) as TestUniswapV3MultiRouter;
-    this.testUniswapV2Router = new this.web3.eth.Contract(testUniswapV2RouterJson.abi) as UniswapV2Router02;
 
     this.setProvider(provider, networkId);
     this.setDefaultAccount(this.web3.eth.defaultAccount);
-  }
-
-  public async getUniswapV2PairByTokens(tokenA: address, tokenB: address): Promise<UniswapV2Pair> {
-    const pairAddress = await this.testUniswapV2Factory.methods.getPair(tokenA, tokenB).call();
-    const pair = new this.web3.eth.Contract(testUniswapV2PairJson.abi, pairAddress) as UniswapV2Pair;
-    pair.options.from = this.testUniswapV2Factory.options.from;
-    return pair;
   }
 
   public setProvider(provider: Provider, networkId: number): void {
@@ -228,13 +197,11 @@ export class TestContracts extends Contracts {
       { contract: this.chainlinkOracleSentinel, json: chainlinkOracleSentinelJson },
       { contract: this.chainlinkPriceOracleV1, json: testChainlinkPriceOracleJson },
       { contract: this.dolomiteMargin, json: testDolomiteMarginJson },
-      { contract: this.testAmmRebalancerProxy, json: testAmmRebalancerProxyJson },
       { contract: this.testAccountRiskOverrideSetter, json: testAccountRiskOverrideSetterJson },
       { contract: this.testAutoTrader, json: testAutoTraderJson },
       { contract: this.testCallee, json: testCalleeJson },
       { contract: this.testChainlinkPriceAggregator, json: testChainlinkPriceAggregatorJson },
       { contract: this.testDolomiteMargin, json: testDolomiteMarginJson },
-      { contract: this.testDolomiteAmmLibrary, json: testDolomiteAmmLibraryJson },
       { contract: this.testDoubleExponentInterestSetter, json: testDoubleExponentInterestSetterJson },
       { contract: this.testExchangeWrapper, json: testExchangeWrapperJson },
       { contract: this.testInterestSetter, json: testInterestSetterJson },
@@ -245,9 +212,6 @@ export class TestContracts extends Contracts {
       { contract: this.testPriceOracle, json: testPriceOracleJson },
       { contract: this.testSequencerUptimeFeedAggregator, json: testSequencerUptimeFeedAggregatorJson },
       { contract: this.testSimpleCallee, json: testSimpleCalleeJson },
-      { contract: this.testUniswapV2Factory, json: testUniswapV2FactoryJson },
-      { contract: this.testUniswapV2Router, json: testUniswapV2RouterJson },
-      { contract: this.testUniswapV3MultiRouter, json: testUniswapV3MultiRouterJson },
     ];
 
     contracts.forEach(contract =>
@@ -279,11 +243,9 @@ export class TestContracts extends Contracts {
     this.alwaysOnlineOracleSentinel.options.from = account;
     this.chainlinkOracleSentinel.options.from = account;
     this.testAccountRiskOverrideSetter.options.from = account;
-    this.testAmmRebalancerProxy.options.from = account;
     this.testAutoTrader.options.from = account;
     this.testCallee.options.from = account;
     this.testChainlinkPriceAggregator.options.from = account;
-    this.testDolomiteAmmLibrary.options.from = account;
     this.testDolomiteMargin.options.from = account;
     this.testDoubleExponentInterestSetter.options.from = account;
     this.testExchangeWrapper.options.from = account;
@@ -295,9 +257,6 @@ export class TestContracts extends Contracts {
     this.testPriceOracle.options.from = account;
     this.testSequencerUptimeFeedAggregator.options.from = account;
     this.testSimpleCallee.options.from = account;
-    this.testUniswapV2Factory.options.from = account;
-    this.testUniswapV2Router.options.from = account;
-    this.testUniswapV3MultiRouter.options.from = account;
   }
 
   public getTestAccountRiskOverrideSetter(contractAddress: address): TestAccountRiskOverrideSetter {

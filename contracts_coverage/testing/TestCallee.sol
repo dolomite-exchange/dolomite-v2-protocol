@@ -34,7 +34,7 @@ import { Require } from "../protocol/lib/Require.sol";
  */
 contract TestCallee is
     ICallee,
-OnlyDolomiteMargin
+    OnlyDolomiteMargin
 {
     // ============ Constants ============
 

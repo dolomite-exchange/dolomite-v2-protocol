@@ -21,6 +21,7 @@ pragma experimental ABIEncoderV2;
 
 import { IAccountRiskOverrideSetter } from "../protocol/interfaces/IAccountRiskOverrideSetter.sol";
 
+import { Account } from "../protocol/lib/Account.sol";
 import { Decimal } from "../protocol/lib/Decimal.sol";
 
 
@@ -32,22 +33,22 @@ import { Decimal } from "../protocol/lib/Decimal.sol";
  */
 contract TestAccountRiskOverrideSetter is IAccountRiskOverrideSetter {
 
-    mapping (address => Decimal.D256) public g_marginRatioOverrides;
-    mapping (address => Decimal.D256) public g_liquidationSpreadOverrides;
+    mapping (address => mapping(uint256 => Decimal.D256)) public g_marginRatioOverrides;
+    mapping (address => mapping(uint256 => Decimal.D256)) public g_liquidationSpreadOverrides;
 
     function setAccountRiskOverride(
-        address _accountOwner,
+        Account.Info memory _account,
         Decimal.D256 memory _marginRatioOverride,
         Decimal.D256 memory _liquidationSpreadOverride
     )
         public
     {
-        g_marginRatioOverrides[_accountOwner] = _marginRatioOverride;
-        g_liquidationSpreadOverrides[_accountOwner] = _liquidationSpreadOverride;
+        g_marginRatioOverrides[_account.owner][_account.number] = _marginRatioOverride;
+        g_liquidationSpreadOverrides[_account.owner][_account.number] = _liquidationSpreadOverride;
     }
 
     function getAccountRiskOverride(
-        address _accountOwner
+        Account.Info memory _account
     )
         public
         view
@@ -58,8 +59,8 @@ contract TestAccountRiskOverrideSetter is IAccountRiskOverrideSetter {
         )
     {
         return (
-            g_marginRatioOverrides[_accountOwner],
-            g_liquidationSpreadOverrides[_accountOwner]
+            g_marginRatioOverrides[_account.owner][_account.number],
+            g_liquidationSpreadOverrides[_account.owner][_account.number]
         );
     }
 }

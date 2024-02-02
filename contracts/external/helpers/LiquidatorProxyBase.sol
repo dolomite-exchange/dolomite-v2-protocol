@@ -116,7 +116,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256 owedPriceAdj;
         if (_constants.expiry != 0) {
             (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
-                _constants.liquidAccount.owner,
+                _constants.liquidAccount,
                 _constants.heldMarket,
                 _constants.owedMarket,
                 _constants.expiry
@@ -124,7 +124,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             owedPriceAdj = owedPricePrice.value;
         } else {
             Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
-                _constants.liquidAccount.owner,
+                _constants.liquidAccount,
                 _constants.heldMarket,
                 _constants.owedMarket
             );
@@ -474,10 +474,13 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256 marketId
     ) private pure returns (MarketInfo memory) {
         uint256 len = endExclusive - beginInclusive;
-        if (len == 0 || (len == 1 && markets[beginInclusive].marketId != marketId)) {
-            revert("LiquidatorProxyBase: Market not found");
-        }
+        /* ignore-coverage */ Require.that(
+            len != 0 && (len != 1 || markets[beginInclusive].marketId == marketId),
+            FILE,
+            "Market not found"
+        );
 
+        // Calculate the mid
         uint256 mid = beginInclusive + (len >> 1);
         uint256 midMarketId = markets[mid].marketId;
         if (marketId < midMarketId) {

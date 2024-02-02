@@ -10,7 +10,7 @@ let admin: string;
 let user: string;
 
 let liquidatorProxyV1: string;
-let liquidatorProxyV2: string;
+let liquidatorProxyV4: string;
 
 const market1 = INTEGERS.ZERO;
 const market2 = INTEGERS.ONE;
@@ -24,7 +24,7 @@ describe('LiquidatorAssetRegistry', () => {
     await resetEVM();
 
     liquidatorProxyV1 = dolomiteMargin.liquidatorProxyV1.address;
-    liquidatorProxyV2 = dolomiteMargin.liquidatorProxyV2WithExternalLiquidity.address;
+    liquidatorProxyV4 = dolomiteMargin.liquidatorProxyV4WithGenericTrader.address;
 
     snapshotId = await snapshot();
   });
@@ -40,11 +40,11 @@ describe('LiquidatorAssetRegistry', () => {
       });
 
       expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV1)).to.equal(true);
-      expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV2)).to.equal(false);
+      expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV4)).to.equal(false);
 
       // the length of the set is 0 for market2, so everything should return true.
       expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV1)).to.equal(true);
-      expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV2)).to.equal(true);
+      expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV4)).to.equal(true);
     });
 
     it('should fail when not called by DolomiteMargin owner', async () => {
@@ -71,38 +71,38 @@ describe('LiquidatorAssetRegistry', () => {
       await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(market1, liquidatorProxyV1, {
         from: admin,
       });
-      await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(market1, liquidatorProxyV2, {
+      await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(market1, liquidatorProxyV4, {
         from: admin,
       });
-      await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(market2, liquidatorProxyV2, {
+      await dolomiteMargin.liquidatorAssetRegistry.addLiquidatorToAssetWhitelist(market2, liquidatorProxyV4, {
         from: admin,
       });
       expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV1)).to.equal(true);
-      expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV2)).to.equal(true);
+      expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV4)).to.equal(true);
       expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV1)).to.equal(false);
-      expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV2)).to.equal(true);
+      expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV4)).to.equal(true);
 
       expect(await dolomiteMargin.liquidatorAssetRegistry.getLiquidatorsForAsset(market1)).to.eql([
         liquidatorProxyV1,
-        liquidatorProxyV2,
+        liquidatorProxyV4,
       ]);
       expect(await dolomiteMargin.liquidatorAssetRegistry.getLiquidatorsForAsset(market2)).to.eql([
-        liquidatorProxyV2,
+        liquidatorProxyV4,
       ]);
 
       await dolomiteMargin.liquidatorAssetRegistry.removeLiquidatorFromAssetWhitelist(market1, liquidatorProxyV1, {
         from: admin,
       });
-      await dolomiteMargin.liquidatorAssetRegistry.removeLiquidatorFromAssetWhitelist(market2, liquidatorProxyV2, {
+      await dolomiteMargin.liquidatorAssetRegistry.removeLiquidatorFromAssetWhitelist(market2, liquidatorProxyV4, {
         from: admin,
       });
       // the length of the set is 0 for market1 and market2, so everything should return true.
       expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV1)).to.equal(false);
-      expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV2)).to.equal(true);
+      expect(await isAssetWhitelistedForLiquidation(market1, liquidatorProxyV4)).to.equal(true);
       expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV1)).to.equal(true);
-      expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV2)).to.equal(true);
+      expect(await isAssetWhitelistedForLiquidation(market2, liquidatorProxyV4)).to.equal(true);
       expect(await dolomiteMargin.liquidatorAssetRegistry.getLiquidatorsForAsset(market1)).to.eql([
-        liquidatorProxyV2,
+        liquidatorProxyV4,
       ]);
       expect(await dolomiteMargin.liquidatorAssetRegistry.getLiquidatorsForAsset(market2)).to.eql([]);
     });

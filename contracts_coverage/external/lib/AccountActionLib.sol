@@ -228,19 +228,13 @@ library AccountActionLib {
         uint256 _accountId,
         uint256 _owedMarketId,
         address _expiry,
-        uint256 _expiryTimeDelta
+        uint32 _expiryTimeDelta
     ) internal pure returns (Actions.ActionArgs memory) {
-        if (_expiryTimeDelta == uint32(_expiryTimeDelta)) { /* FOR COVERAGE TESTING */ }
-        Require.that(_expiryTimeDelta == uint32(_expiryTimeDelta),
-            FILE,
-            "invalid expiry time"
-        );
-
         IExpiry.SetExpiryArg[] memory expiryArgs = new IExpiry.SetExpiryArg[](1);
         expiryArgs[0] = IExpiry.SetExpiryArg({
             account : _account,
             marketId : _owedMarketId,
-            timeDelta : uint32(_expiryTimeDelta),
+            timeDelta : _expiryTimeDelta,
             forceUpdate : true
         });
 
@@ -290,28 +284,11 @@ library AccountActionLib {
             secondaryMarketId: !_flipMarkets ? _heldMarketId : _owedMarketId,
             otherAddress: _expiryProxy,
             otherAccountId: _liquidAccountId,
-            data: abi.encode(/* calculateAmountWithMakerAccount = */ true, abi.encode(_owedMarketId, _expiry))
+            data: abi.encode(
+                /* calculateAmountWithMakerAccount = */ true,
+                abi.encode(_owedMarketId, _expiry)
+            )
         });
-    }
-
-    function encodeInternalTradeAction(
-        uint256 _fromAccountId,
-        uint256 _toAccountId,
-        uint256 _primaryMarketId,
-        uint256 _secondaryMarketId,
-        address _traderAddress,
-        uint256 _amountInWei,
-        uint256 _amountOutMinWei
-    ) internal pure returns (Actions.ActionArgs memory) {
-        return encodeInternalTradeActionWithCustomData(
-            _fromAccountId,
-            _toAccountId,
-            _primaryMarketId,
-            _secondaryMarketId,
-            _traderAddress,
-            _amountInWei,
-            abi.encode(_amountOutMinWei)
-        );
     }
 
     function encodeInternalTradeActionWithCustomData(
@@ -338,7 +315,10 @@ library AccountActionLib {
             secondaryMarketId: _secondaryMarketId,
             otherAddress: _traderAddress,
             otherAccountId: _toAccountId,
-            data: abi.encode(/* calculateAmountWithMakerAccount = */ false, _orderData)
+            data: abi.encode(
+                /* calculateAmountWithMakerAccount = */ false,
+                _orderData
+            )
         });
     }
 

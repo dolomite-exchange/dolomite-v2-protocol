@@ -119,7 +119,7 @@ describe('Getters', () => {
     owner2 = accounts[8];
 
     defaultParams = {
-      earningsRate: new BigNumber('0.9'),
+      earningsRate: new BigNumber('0.85'),
       marginRatio: new BigNumber('0.15'),
       liquidationSpread: new BigNumber('0.05'),
       minBorrowedValue: new BigNumber('5e16'),
@@ -170,9 +170,29 @@ describe('Getters', () => {
       });
     });
 
+    describe('#getLiquidationSpreadForPair', () => {
+      it('Succeeds', async () => {
+        const value1 = await dolomiteMargin.getters.getLiquidationSpreadForPair(market1, market2);
+        expect(value1).to.eql(defaultParams.liquidationSpread);
+
+        const fullAccount1 = { owner: ADDRESSES.ZERO, number: '0' };
+        const value2 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(
+          fullAccount1,
+          market1,
+          market2,
+        );
+        expect(value1).to.eql(value2);
+      });
+    });
+
     describe('#getLiquidationSpreadForAccountAndPair', () => {
       it('Succeeds', async () => {
-        const value1 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(owner1, market1, market2);
+        const fullAccount1 = { owner: owner1, number: account1.toFixed() };
+        const value1 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(
+          fullAccount1,
+          market1,
+          market2,
+        );
         expect(value1).to.eql(defaultParams.liquidationSpread);
 
         await dolomiteMargin.admin.setAccountRiskOverride(
@@ -183,12 +203,16 @@ describe('Getters', () => {
         const marginRatio = new BigNumber('0.09');
         const liquidationSpread = new BigNumber('0.0333');
         await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
-          owner1,
+          fullAccount1,
           marginRatio,
           liquidationSpread,
         );
 
-        const value2 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(owner1, market1, market2);
+        const value2 = await dolomiteMargin.getters.getLiquidationSpreadForAccountAndPair(
+          fullAccount1,
+          market1,
+          market2,
+        );
         expect(value2).to.eql(liquidationSpread);
       });
     });
@@ -257,6 +281,21 @@ describe('Getters', () => {
       });
     });
 
+    describe('#getDefaultAccountRiskOverrideSetter', () => {
+      it('Succeeds', async () => {
+        expect((await dolomiteMargin.getters.getDefaultAccountRiskOverrideSetter()).address).to.eql(ADDRESSES.ZERO);
+
+        await dolomiteMargin.admin.setDefaultAccountRiskOverride(
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+
+        expect((await dolomiteMargin.getters.getDefaultAccountRiskOverrideSetter()).address).to.eql(
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+        );
+      });
+    });
+
     describe('#getAccountRiskOverrideSetterByAccountOwner', () => {
       it('Succeeds', async () => {
         expect((await dolomiteMargin.getters.getAccountRiskOverrideSetterByAccountOwner(owner1)).address).to.eql(
@@ -281,13 +320,16 @@ describe('Getters', () => {
       });
     });
 
-    describe('#getAccountRiskOverrideByAccountOwner', () => {
+    describe('#getAccountRiskOverrideByAccount', () => {
       it('Succeeds', async () => {
-        let overrideForOwner1 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner1);
+        const fullAccount1 = { owner: owner1, number: account1.toFixed() };
+        const fullAccount2 = { owner: owner2, number: account1.toFixed() };
+
+        let overrideForOwner1 = await dolomiteMargin.getters.getAccountRiskOverrideByAccount(fullAccount1);
         expect(overrideForOwner1.marginRatioOverride).to.eql(INTEGERS.ZERO);
         expect(overrideForOwner1.liquidationSpreadOverride).to.eql(INTEGERS.ZERO);
 
-        let overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner2);
+        let overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccount(fullAccount2);
         expect(overrideForOwner2.marginRatioOverride).to.eql(INTEGERS.ZERO);
         expect(overrideForOwner2.liquidationSpreadOverride).to.eql(INTEGERS.ZERO);
 
@@ -299,16 +341,21 @@ describe('Getters', () => {
         const marginRatio = new BigNumber('0.1');
         const liquidationSpread = new BigNumber('0.03');
         await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
-          owner1,
+          fullAccount1,
+          marginRatio,
+          liquidationSpread,
+        );
+        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+          fullAccount2,
           marginRatio,
           liquidationSpread,
         );
 
-        overrideForOwner1 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner1);
+        overrideForOwner1 = await dolomiteMargin.getters.getAccountRiskOverrideByAccount(fullAccount1);
         expect(overrideForOwner1.marginRatioOverride).to.eql(marginRatio);
         expect(overrideForOwner1.liquidationSpreadOverride).to.eql(liquidationSpread);
 
-        overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccountOwner(owner2);
+        overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccount(fullAccount2);
         expect(overrideForOwner2.marginRatioOverride).to.eql(INTEGERS.ZERO);
         expect(overrideForOwner2.liquidationSpreadOverride).to.eql(INTEGERS.ZERO);
 
@@ -326,13 +373,23 @@ describe('Getters', () => {
 
         await dolomiteMargin.admin.setAccountRiskOverride(owner1, ADDRESSES.ZERO, { from: admin });
         expect(await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1)).to.eql(true);
+
+        await dolomiteMargin.admin.setDefaultAccountRiskOverride(
+          dolomiteMargin.testing.accountRiskOverrideSetter.address,
+          { from: admin },
+        );
+        overrideForOwner2 = await dolomiteMargin.getters.getAccountRiskOverrideByAccount(fullAccount2);
+        expect(overrideForOwner2.marginRatioOverride).to.eql(marginRatio);
+        expect(overrideForOwner2.liquidationSpreadOverride).to.eql(liquidationSpread);
       });
     });
 
-    describe('#getMarginRatioOverrideByAccountOwner', () => {
+    describe('#getMarginRatioOverrideByAccount', () => {
       it('Succeeds', async () => {
-        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner1)).to.eql(INTEGERS.ZERO);
-        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+        const fullAccount1 = { owner: owner1, number: account1.toFixed() };
+        const fullAccount2 = { owner: owner2, number: account1.toFixed() };
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccount(fullAccount1)).to.eql(INTEGERS.ZERO);
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccount(fullAccount2)).to.eql(INTEGERS.ZERO);
 
         await dolomiteMargin.admin.setAccountRiskOverride(
           owner1,
@@ -341,20 +398,22 @@ describe('Getters', () => {
         );
         const marginRatio = new BigNumber('0.1');
         await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
-          owner1,
+          fullAccount1,
           marginRatio,
           new BigNumber('0.03'),
         );
 
-        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner1)).to.eql(marginRatio);
-        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccount(fullAccount1)).to.eql(marginRatio);
+        expect(await dolomiteMargin.getters.getMarginRatioOverrideByAccount(fullAccount2)).to.eql(INTEGERS.ZERO);
       });
     });
 
-    describe('#getLiquidationSpreadOverrideByAccountOwner', () => {
+    describe('#getLiquidationSpreadOverrideByAccount', () => {
       it('Succeeds', async () => {
-        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner1)).to.eql(INTEGERS.ZERO);
-        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+        const fullAccount1 = { owner: owner1, number: account1.toFixed() };
+        const fullAccount2 = { owner: owner2, number: account1.toFixed() };
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccount(fullAccount1)).to.eql(INTEGERS.ZERO);
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccount(fullAccount2)).to.eql(INTEGERS.ZERO);
 
         await dolomiteMargin.admin.setAccountRiskOverride(
           owner1,
@@ -363,15 +422,15 @@ describe('Getters', () => {
         );
         const liquidationSpread = new BigNumber('0.03');
         await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
-          owner1,
+          fullAccount1,
           new BigNumber('0.1'),
           liquidationSpread,
         );
 
-        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner1)).to.eql(
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccount(fullAccount1)).to.eql(
           liquidationSpread,
         );
-        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccountOwner(owner2)).to.eql(INTEGERS.ZERO);
+        expect(await dolomiteMargin.getters.getLiquidationSpreadOverrideByAccount(fullAccount2)).to.eql(INTEGERS.ZERO);
       });
     });
 
@@ -674,10 +733,16 @@ describe('Getters', () => {
           dolomiteMargin.getters.getMarketLiquidationSpreadPremium(market1),
           dolomiteMargin.getters.getMarketLiquidationSpreadPremium(market2),
           dolomiteMargin.getters.getMarketLiquidationSpreadPremium(market3),
+          dolomiteMargin.getters.getMarketSpreadPremium(market1),
+          dolomiteMargin.getters.getMarketSpreadPremium(market2),
+          dolomiteMargin.getters.getMarketSpreadPremium(market3),
         ]);
         expect(result[0]).to.eql(defaultPremium);
         expect(result[1]).to.eql(highPremium);
         expect(result[2]).to.eql(defaultPremium);
+        expect(result[0]).to.eql(result[3]);
+        expect(result[1]).to.eql(result[4]);
+        expect(result[2]).to.eql(result[5]);
       });
 
       it('Fails for Invalid market', async () => {
@@ -697,10 +762,16 @@ describe('Getters', () => {
           dolomiteMargin.getters.getMarketMaxSupplyWei(market1),
           dolomiteMargin.getters.getMarketMaxSupplyWei(market2),
           dolomiteMargin.getters.getMarketMaxSupplyWei(market3),
+          dolomiteMargin.getters.getMarketMaxWei(market1),
+          dolomiteMargin.getters.getMarketMaxWei(market2),
+          dolomiteMargin.getters.getMarketMaxWei(market3),
         ]);
         expect(result[0]).to.eql(zero);
         expect(result[1]).to.eql(par);
         expect(result[2]).to.eql(zero);
+        expect(result[0]).to.eql(result[3]);
+        expect(result[1]).to.eql(result[4]);
+        expect(result[2]).to.eql(result[5]);
       });
 
       it('Fails for Invalid market', async () => {
@@ -755,10 +826,16 @@ describe('Getters', () => {
           dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market1),
           dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market2),
           dolomiteMargin.getters.getMarketBorrowInterestRatePerSecond(market3),
+          dolomiteMargin.getters.getMarketInterestRate(market1),
+          dolomiteMargin.getters.getMarketInterestRate(market2),
+          dolomiteMargin.getters.getMarketInterestRate(market3),
         ]);
         expect(actualRates[0]).to.eql(rates[0]);
         expect(actualRates[1]).to.eql(rates[1]);
         expect(actualRates[2]).to.eql(rates[2]);
+        expect(actualRates[0]).to.eql(actualRates[3]);
+        expect(actualRates[1]).to.eql(actualRates[4]);
+        expect(actualRates[2]).to.eql(actualRates[5]);
       });
 
       it('Succeeds when borrow rate is > max borrow rate', async () => {
@@ -1244,7 +1321,7 @@ describe('Getters', () => {
           ),
         ]);
         await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
-          owner1,
+          { owner: owner1, number: account1.toFixed() },
           new BigNumber('0.12'),
           new BigNumber('0.04'),
         );
@@ -1292,14 +1369,21 @@ describe('Getters', () => {
             dolomiteMargin.testing.accountRiskOverrideSetter.address,
             { from: admin },
           ),
+          dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
+            { owner: owner1, number: account1.toFixed() },
+            new BigNumber('0.05'),
+            new BigNumber('0.018'),
+          ),
         ]);
-        await dolomiteMargin.testing.accountRiskOverrideSetter.setAccountRiskOverride(
-          owner1,
-          new BigNumber('0.05'),
-          new BigNumber('0.018'),
-        );
 
-        const marginRatio = await dolomiteMargin.getters.getMarginRatioForAccount(owner1);
+        expect(
+          await dolomiteMargin.getters.getMarginRatioForAccount({ owner: owner1, number: account2.toFixed() }),
+        ).to.eql(new BigNumber('0.15'));
+
+        const marginRatio = await dolomiteMargin.getters.getMarginRatioForAccount({
+          owner: owner1,
+          number: account1.toFixed(),
+        });
         expect(marginRatio).to.eql(new BigNumber('0.05'));
         const liquidatable = await dolomiteMargin.getters.isAccountLiquidatable(owner1, account1);
         expect(liquidatable).to.eql(false);

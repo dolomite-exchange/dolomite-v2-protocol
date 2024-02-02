@@ -21,23 +21,15 @@ import { Provider } from 'web3/providers';
 import { Contracts } from './lib/Contracts';
 import { Interest } from './lib/Interest';
 import { Admin } from './modules/Admin';
-import { AmmRebalancerProxyV1 } from './modules/AmmRebalancerProxyV1';
-import { AmmRebalancerProxyV2 } from './modules/AmmRebalancerProxyV2';
 import { ArbitrumGasInfo } from './modules/ArbitrumGasInfo';
 import { BorrowPositionProxyV1 } from './modules/BorrowPositionProxyV1';
 import { BorrowPositionProxyV2 } from './modules/BorrowPositionProxyV2';
 import { DepositProxy } from './modules/DepositProxy';
-import { DolomiteAmmFactory } from './modules/DolomiteAmmFactory';
-import { DolomiteAmmPair } from './modules/DolomiteAmmPair';
-import { DolomiteAmmRouterProxy } from './modules/DolomiteAmmRouterProxy';
 import { Expiry } from './modules/Expiry';
 import { GenericTraderProxyV1 } from './modules/GenericTraderProxyV1';
 import { Getters } from './modules/Getters';
 import { LiquidatorAssetRegistry } from './modules/LiquidatorAssetRegistry';
 import { LiquidatorProxyV1 } from './modules/LiquidatorProxyV1';
-import { LiquidatorProxyV1WithAmm } from './modules/LiquidatorProxyV1WithAmm';
-import { LiquidatorProxyV2WithExternalLiquidity } from './modules/LiquidatorProxyV2WithExternalLiquidity';
-import { LiquidatorProxyV3WithLiquidityToken } from './modules/LiquidatorProxyV3WithLiquidityToken';
 import { LiquidatorProxyV4WithGenericTrader } from './modules/LiquidatorProxyV4WithGenericTrader';
 import { IsolationModeUnwrapper } from './modules/IsolationModeUnwrapper';
 import { Logs } from './modules/Logs';
@@ -65,14 +57,10 @@ export class DolomiteMargin {
   public admin: Admin;
   public borrowPositionProxyV1: BorrowPositionProxyV1;
   public borrowPositionProxyV2: BorrowPositionProxyV2;
-  public ammRebalancerProxyV1: AmmRebalancerProxyV1;
-  public ammRebalancerProxyV2: AmmRebalancerProxyV2;
   public api: SubgraphAPI;
   public chainlinkPriceOracle: ChainlinkPriceOracleV1;
   public contracts: Contracts;
   public depositWithdrawalProxy: DepositProxy;
-  public dolomiteAmmFactory: DolomiteAmmFactory;
-  public dolomiteAmmRouterProxy: DolomiteAmmRouterProxy;
   public expiry: Expiry;
   public expiryProxy: ExpiryProxy;
   public genericTraderProxyV1: GenericTraderProxyV1;
@@ -80,9 +68,6 @@ export class DolomiteMargin {
   public interest: Interest;
   public liquidatorAssetRegistry: LiquidatorAssetRegistry;
   public liquidatorProxyV1: LiquidatorProxyV1;
-  public liquidatorProxyV1WithAmm: LiquidatorProxyV1WithAmm;
-  public liquidatorProxyV2WithExternalLiquidity: LiquidatorProxyV2WithExternalLiquidity;
-  public liquidatorProxyV3WithLiquidityToken: LiquidatorProxyV3WithLiquidityToken;
   public liquidatorProxyV4WithGenericTrader: LiquidatorProxyV4WithGenericTrader;
   public logs: Logs;
   public multiCall: MultiCall;
@@ -110,15 +95,11 @@ export class DolomiteMargin {
     this.contracts = this.createContractsModule(realProvider, networkId, this.web3, options);
 
     this.admin = new Admin(this.contracts);
-    this.ammRebalancerProxyV1 = new AmmRebalancerProxyV1(this.contracts);
-    this.ammRebalancerProxyV2 = new AmmRebalancerProxyV2(this.contracts);
     this.arbitrumGasInfo = new ArbitrumGasInfo(this.contracts);
     this.borrowPositionProxyV1 = new BorrowPositionProxyV1(this.contracts);
     this.borrowPositionProxyV2 = new BorrowPositionProxyV2(this.contracts);
     this.chainlinkPriceOracle = new ChainlinkPriceOracleV1(this.contracts);
     this.depositWithdrawalProxy = new DepositProxy(this.contracts);
-    this.dolomiteAmmFactory = new DolomiteAmmFactory(this.contracts);
-    this.dolomiteAmmRouterProxy = new DolomiteAmmRouterProxy(this.contracts);
     this.expiry = new Expiry(this.contracts);
     this.expiryProxy = new ExpiryProxy(this.contracts);
     this.genericTraderProxyV1 = new GenericTraderProxyV1(this.contracts);
@@ -126,9 +107,6 @@ export class DolomiteMargin {
     this.interest = new Interest(networkId);
     this.liquidatorAssetRegistry = new LiquidatorAssetRegistry(this.contracts);
     this.liquidatorProxyV1 = new LiquidatorProxyV1(this.contracts);
-    this.liquidatorProxyV1WithAmm = new LiquidatorProxyV1WithAmm(this.contracts);
-    this.liquidatorProxyV2WithExternalLiquidity = new LiquidatorProxyV2WithExternalLiquidity(this.contracts);
-    this.liquidatorProxyV3WithLiquidityToken = new LiquidatorProxyV3WithLiquidityToken(this.contracts);
     this.liquidatorProxyV4WithGenericTrader = new LiquidatorProxyV4WithGenericTrader(this.contracts);
     this.logs = new Logs(this.contracts, this.web3);
     this.multiCall = new MultiCall(this.contracts);
@@ -178,10 +156,6 @@ export class DolomiteMargin {
       throw new Error(`Loaded account address mismatch.
         Expected ${account.address}, got ${newAccount ? newAccount.address : null}`);
     }
-  }
-
-  public getDolomiteAmmPair(pairAddress: address): DolomiteAmmPair {
-    return new DolomiteAmmPair(this.contracts, this.contracts.getDolomiteAmmPair(pairAddress));
   }
 
   public getIsolationModeUnwrapper(unwrapperAddress: address): IsolationModeUnwrapper {

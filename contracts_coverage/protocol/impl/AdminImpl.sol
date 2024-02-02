@@ -27,6 +27,7 @@ import { IInterestSetter } from "../interfaces/IInterestSetter.sol";
 import { IOracleSentinel } from "../interfaces/IOracleSentinel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
+import { Account } from "../lib/Account.sol";
 import { Decimal } from "../lib/Decimal.sol";
 import { Interest } from "../lib/Interest.sol";
 import { DolomiteMarginMath } from "../lib/DolomiteMarginMath.sol";
@@ -137,6 +138,10 @@ library AdminImpl {
 
     event LogSetCallbackGasLimit(
         uint256 callbackGasLimit
+    );
+
+    event LogSetDefaultAccountRiskOverrideSetter(
+        IAccountRiskOverrideSetter defaultAccountRiskOverrideSetter
     );
 
     event LogSetAccountRiskOverrideSetter(
@@ -450,6 +455,22 @@ library AdminImpl {
         emit LogSetCallbackGasLimit(callbackGasLimit);
     }
 
+    function ownerSetDefaultAccountRiskOverride(
+        Storage.State storage state,
+        IAccountRiskOverrideSetter defaultAccountRiskOverrideSetter
+    ) public {
+        if (address(defaultAccountRiskOverrideSetter) != address(0)) {
+            (
+                Decimal.D256 memory marginRatio,
+                Decimal.D256 memory liquidationSpread
+            ) = defaultAccountRiskOverrideSetter.getAccountRiskOverride(_getDefaultAccount(msg.sender));
+            state.validateAccountRiskOverrideValues(marginRatio, liquidationSpread);
+        }
+
+        state.riskParams.defaultAccountRiskOverrideSetter = defaultAccountRiskOverrideSetter;
+        emit LogSetDefaultAccountRiskOverrideSetter(defaultAccountRiskOverrideSetter);
+    }
+
     function ownerSetAccountRiskOverride(
         Storage.State storage state,
         address accountOwner,
@@ -459,7 +480,7 @@ library AdminImpl {
             (
                 Decimal.D256 memory marginRatio,
                 Decimal.D256 memory liquidationSpread
-            ) = accountRiskOverrideSetter.getAccountRiskOverride(accountOwner);
+            ) = accountRiskOverrideSetter.getAccountRiskOverride(_getDefaultAccount(accountOwner));
             state.validateAccountRiskOverrideValues(marginRatio, liquidationSpread);
         }
 
@@ -641,5 +662,18 @@ library AdminImpl {
             "Invalid market",
             marketId
         );
+    }
+
+    function _getDefaultAccount(
+        address _accountOwner
+    )
+    private
+    pure
+    returns (Account.Info memory)
+    {
+        return Account.Info({
+            owner: _accountOwner,
+            number: 0
+        });
     }
 }

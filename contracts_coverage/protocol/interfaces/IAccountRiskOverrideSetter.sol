@@ -19,6 +19,7 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
+import { Account } from "../lib/Account.sol";
 import { Decimal } from "../lib/Decimal.sol";
 
 
@@ -33,12 +34,12 @@ interface IAccountRiskOverrideSetter {
     /**
      * @notice  Gets the risk overrides for a given account owner.
      *
-     * @param   _accountOwner               The owner of the account whose risk override should be retrieved.
+     * @param   _account                    The account whose risk override should be retrieved.
      * @return  marginRatioOverride         The margin ratio override for this account.
      * @return  liquidationSpreadOverride   The liquidation spread override for this account.
      */
     function getAccountRiskOverride(
-        address _accountOwner
+        Account.Info calldata _account
     )
         external
         view

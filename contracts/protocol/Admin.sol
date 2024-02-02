@@ -322,6 +322,16 @@ contract Admin is
         AdminImpl.ownerSetCallbackGasLimit(g_state, callbackGasLimit);
     }
 
+    function ownerSetDefaultAccountRiskOverride(
+        IAccountRiskOverrideSetter accountRiskOverrideSetter
+    )
+    public
+    onlyOwner
+    nonReentrant
+    {
+        AdminImpl.ownerSetDefaultAccountRiskOverride(g_state, accountRiskOverrideSetter);
+    }
+
     function ownerSetAccountRiskOverride(
         address accountOwner,
         IAccountRiskOverrideSetter accountRiskOverrideSetter

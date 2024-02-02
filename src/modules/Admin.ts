@@ -219,6 +219,16 @@ export class Admin {
     );
   }
 
+  public async setDefaultAccountRiskOverride(
+    accountRiskOverrideSetter: address,
+    options?: ContractCallOptions,
+  ): Promise<TxResult> {
+    return this.contracts.callContractFunction(
+      this.contracts.dolomiteMargin.methods.ownerSetDefaultAccountRiskOverride(accountRiskOverrideSetter),
+      options,
+    );
+  }
+
   public async setAccountRiskOverride(
     accountOwner: address,
     accountRiskOverrideSetter: address,

@@ -1,6 +1,15 @@
 import BigNumber from 'bignumber.js';
 import { TestExternalCallback } from '../../build/testing_wrappers/TestExternalCallback';
-import { address, AmountDenomination, AmountReference, Integer, INTEGERS, Trade, TxResult } from '../../src';
+import {
+  AccountInfo,
+  address,
+  AmountDenomination,
+  AmountReference,
+  Integer,
+  INTEGERS,
+  Trade,
+  TxResult
+} from '../../src';
 import { toBytes } from '../../src/lib/BytesHelper';
 import { expectThrow } from '../helpers/Expect';
 import { getDolomiteMargin } from '../helpers/DolomiteMargin';
@@ -14,6 +23,7 @@ let snapshotId: string;
 let admin: address;
 let owner1: address;
 let owner2: address;
+let account2: AccountInfo;
 let rando: address;
 let globalOperator: address;
 let startingExpiry: BigNumber;
@@ -40,6 +50,7 @@ describe('Expiry', () => {
     admin = accounts[0];
     owner1 = accounts[2];
     owner2 = accounts[3];
+    account2 = { owner: owner2, number: accountNumber2.toFixed() };
     rando = accounts[4];
     globalOperator = accounts[5];
     defaultGlob = {
@@ -993,14 +1004,14 @@ describe('Expiry', () => {
     it('Succeeds for recently expired positions', async () => {
       const { timestamp } = await dolomiteMargin.web3.eth.getBlock(await dolomiteMargin.web3.eth.getBlockNumber());
       await mineAvgBlock();
-      const prices = await dolomiteMargin.expiry.getPrices(owner2, heldMarket, owedMarket, new BigNumber(timestamp));
+      const prices = await dolomiteMargin.expiry.getPrices(account2, heldMarket, owedMarket, new BigNumber(timestamp));
       expect(prices.owedPrice.lt(defaultPrice.times(premium))).to.eql(true);
       expect(prices.owedPrice.gt(defaultPrice)).to.eql(true);
       expect(prices.heldPrice).to.eql(defaultPrice);
     });
 
     it('Succeeds for very expired positions', async () => {
-      const prices = await dolomiteMargin.expiry.getPrices(owner2, heldMarket, owedMarket, INTEGERS.ONE);
+      const prices = await dolomiteMargin.expiry.getPrices(account2, heldMarket, owedMarket, INTEGERS.ONE);
       expect(prices.owedPrice).to.eql(defaultPrice.times(premium));
       expect(prices.heldPrice).to.eql(defaultPrice);
     });
@@ -1009,7 +1020,7 @@ describe('Expiry', () => {
   describe('#ownerSetExpiryRampTime', () => {
     it('Succeeds for owner', async () => {
       const oldValue = await dolomiteMargin.expiry.getRampTime();
-      expect(oldValue).to.eql(INTEGERS.ONE_HOUR_IN_SECONDS);
+      expect(oldValue).to.eql(INTEGERS.FIVE_MINUTES_IN_SECONDS);
       await dolomiteMargin.expiry.setExpiryRampTime(INTEGERS.ONE_DAY_IN_SECONDS, { from: admin });
       const newValue = await dolomiteMargin.expiry.getRampTime();
       expect(newValue).to.eql(INTEGERS.ONE_DAY_IN_SECONDS);

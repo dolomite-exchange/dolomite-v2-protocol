@@ -118,9 +118,9 @@ library DolomiteMarginMath {
     )
         internal
         pure
-        returns (uint96)
+        returns (uint112)
     {
-        uint96 result = uint96(number);
+        uint112 result = uint112(number);
         if (result == number) { /* FOR COVERAGE TESTING */ }
         Require.that(result == number,
             FILE,

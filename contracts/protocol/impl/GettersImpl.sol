@@ -69,13 +69,13 @@ library GettersImpl {
 
     function getMarginRatioForAccount(
         Storage.State storage state,
-        address accountOwner
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory)
     {
-        (Decimal.D256 memory marginRatio,) = state.getAccountRiskOverride(accountOwner);
+        (Decimal.D256 memory marginRatio,) = state.getAccountRiskOverride(account);
         if (marginRatio.value == 0) {
             marginRatio = state.riskParams.marginRatio;
         }
@@ -162,6 +162,16 @@ library GettersImpl {
         return state.riskParams.callbackGasLimit;
     }
 
+    function getDefaultAccountRiskOverrideSetter(
+        Storage.State storage state
+    )
+        public
+        view
+        returns (IAccountRiskOverrideSetter)
+    {
+        return state.riskParams.defaultAccountRiskOverrideSetter;
+    }
+
     function getAccountRiskOverrideSetterByAccountOwner(
         Storage.State storage state,
         address accountOwner
@@ -173,37 +183,37 @@ library GettersImpl {
         return state.riskParams.accountRiskOverrideSetterMap[accountOwner];
     }
 
-    function getAccountRiskOverrideByAccountOwner(
+    function getAccountRiskOverrideByAccount(
         Storage.State storage state,
-        address accountOwner
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
     {
-        (marginRatioOverride, liquidationSpreadOverride) = state.getAccountRiskOverride(accountOwner);
+        (marginRatioOverride, liquidationSpreadOverride) = state.getAccountRiskOverride(account);
     }
 
-    function getMarginRatioOverrideByAccountOwner(
+    function getMarginRatioOverrideByAccount(
         Storage.State storage state,
-        address accountOwner
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory marginRatioOverride)
     {
-        (marginRatioOverride,) = state.getAccountRiskOverride(accountOwner);
+        (marginRatioOverride,) = state.getAccountRiskOverride(account);
     }
 
-    function getLiquidationSpreadOverrideByAccountOwner(
+    function getLiquidationSpreadOverrideByAccount(
         Storage.State storage state,
-        address accountOwner
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory liquidationSpreadOverride)
     {
-        (, liquidationSpreadOverride) = state.getAccountRiskOverride(accountOwner);
+        (, liquidationSpreadOverride) = state.getAccountRiskOverride(account);
     }
 
     function getRiskLimits(
@@ -477,7 +487,7 @@ library GettersImpl {
 
     function getLiquidationSpreadForAccountAndPair(
         Storage.State storage state,
-        address accountOwner,
+        Account.Info memory account,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -487,7 +497,7 @@ library GettersImpl {
     {
         _requireValidMarket(state, heldMarketId);
         _requireValidMarket(state, owedMarketId);
-        return state.getLiquidationSpreadForAccountAndPair(accountOwner, heldMarketId, owedMarketId);
+        return state.getLiquidationSpreadForAccountAndPair(account, heldMarketId, owedMarketId);
     }
 
     function getMarket(
@@ -765,6 +775,7 @@ library GettersImpl {
         }
         state.initializeCache(cache, /* fetchFreshIndex = */ true);
 
-        return state.getAccountValues(account, cache, adjustForLiquidity);
+        (Decimal.D256 memory marginRatioOverride,) = state.getAccountRiskOverride(account);
+        return state.getAccountValues(account, cache, adjustForLiquidity, marginRatioOverride);
     }
 }

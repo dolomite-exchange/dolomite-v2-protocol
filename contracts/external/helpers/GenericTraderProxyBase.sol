@@ -36,9 +36,7 @@ import { IExpiry } from "../interfaces/IExpiry.sol";
 import { IGenericTraderProxyBase } from "../interfaces/IGenericTraderProxyBase.sol";
 import { IIsolationModeToken } from "../interfaces/IIsolationModeToken.sol";
 import { IIsolationModeUnwrapperTrader } from "../interfaces/IIsolationModeUnwrapperTrader.sol";
-import { IIsolationModeUnwrapperTraderV2 } from "../interfaces/IIsolationModeUnwrapperTraderV2.sol";
 import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapperTrader.sol";
-import { IIsolationModeWrapperTraderV2 } from "../interfaces/IIsolationModeWrapperTraderV2.sol";
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
@@ -457,9 +455,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 // an unwrapper can never appear at the non-zero index because there is an invariant that checks the
                 // `IsolationModeWrapper` is the last index
                 assert(i == 0);
-                Actions.ActionArgs[] memory unwrapActions = IIsolationModeUnwrapperTraderV2(_tradersPath[i].trader)
+                Actions.ActionArgs[] memory unwrapActions = IIsolationModeUnwrapperTrader(_tradersPath[i].trader)
                     .createActionsForUnwrapping(
-                        IIsolationModeUnwrapperTraderV2.CreateActionsForUnwrappingParams({
+                        IIsolationModeUnwrapperTrader.CreateActionsForUnwrappingParams({
                             primaryAccountId: ZAP_ACCOUNT_ID,
                             otherAccountId: _otherAccountId(),
                             primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
@@ -486,9 +484,9 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     "Wrapper must be the last trader"
                 );
 
-                Actions.ActionArgs[] memory wrapActions = IIsolationModeWrapperTraderV2(_tradersPath[i].trader)
+                Actions.ActionArgs[] memory wrapActions = IIsolationModeWrapperTrader(_tradersPath[i].trader)
                     .createActionsForWrapping(
-                        IIsolationModeWrapperTraderV2.CreateActionsForWrappingParams({
+                        IIsolationModeWrapperTrader.CreateActionsForWrappingParams({
                         primaryAccountId: ZAP_ACCOUNT_ID,
                         otherAccountId: _otherAccountId(),
                         primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,

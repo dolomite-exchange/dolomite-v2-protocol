@@ -232,14 +232,6 @@ function getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggrega
   throw new Error(`Cannot find Sequencer Uptime Feed for ${network}`);
 }
 
-function getUniswapV3MultiRouter(network, TestUniswapV3MultiRouter) {
-  if (isDevNetwork(network)) {
-    return TestUniswapV3MultiRouter.address;
-  }
-
-  return '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45';
-}
-
 const shouldOverwrite = (contract, network) => {
   const basicCondition = process.env.OVERWRITE_EXISTING_CONTRACTS === 'true' || isDevNetwork(network);
   if (basicCondition) {
@@ -281,7 +273,6 @@ module.exports = {
   getGnosisSafeAddress,
   getChainlinkSequencerUptimeFeed,
   getChainlinkOracleSentinelGracePeriod,
-  getUniswapV3MultiRouter,
   shouldOverwrite,
   getNoOverwriteParams,
 };

@@ -7,23 +7,11 @@ const port = 8555;
 module.exports = {
   skipFiles: [
     'Migrations.sol',
-    'external/amm/',
     'external/interestsetters/',
     'external/interfaces/',
-    'external/lib/AdvancedMath.sol',
-    'external/lib/DolomiteAmmLibrary.sol',
     'external/lib/TypedSignature.sol',
-    'external/lib/UQ112x112.sol',
     'external/multisig/',
-    'external/proxies/DolomiteAmmRouterProxy.sol',
-    'external/proxies/LiquidatorProxyV1WithAmm.sol',
-    'external/proxies/LiquidatorProxyV2WithExternalLiquidity.sol',
-    'external/proxies/LiquidatorProxyV3WithLiquidityToken.sol',
-    'external/proxies/PayableProxy.sol',
-    'external/proxies/SignedOperationProxy.sol',
-    'external/proxies/TransferProxy.sol',
     'external/rebalancers/',
-    'external/uniswap-v2/',
     'external/utils/',
     'protocol/interfaces/',
     'testing/',
@@ -50,6 +38,7 @@ module.exports = {
     execSync('python util/fix_contracts_for_coverage.py', { stdio: 'inherit' });
   },
   onCompileComplete: async () => {
+    execSync('echo \"Deploying coverage instance\"', { stdio: 'inherit' });
     execSync('npm run deploy_coverage', { stdio: 'inherit' });
   },
 };

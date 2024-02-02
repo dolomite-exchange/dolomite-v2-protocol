@@ -39,8 +39,6 @@ import { IIsolationModeWrapperTrader } from "../interfaces/IIsolationModeWrapper
 
 import { AccountActionLib } from "../lib/AccountActionLib.sol";
 
-import { LiquidatorProxyV2WithExternalLiquidity } from "./LiquidatorProxyV2WithExternalLiquidity.sol";
-
 
 /**
  * @title LiquidatorProxyV4WithGenericTrader

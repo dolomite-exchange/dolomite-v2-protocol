@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Contracts } from '../lib/Contracts';
 import {
+  AccountInfo,
   address,
   ContractCallOptions,
   ContractConstantCallOptions,
@@ -55,7 +56,7 @@ export class Expiry {
   }
 
   public async getPrices(
-    liquidAccountOwner: address,
+    liquidAccount: AccountInfo,
     heldMarketId: Integer,
     owedMarketId: Integer,
     expiryTimestamp: Integer,
@@ -63,7 +64,7 @@ export class Expiry {
   ): Promise<{ heldPrice: Integer; owedPrice: Integer }> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.expiry.methods.getLiquidationSpreadAdjustedPrices(
-        liquidAccountOwner,
+        liquidAccount,
         heldMarketId.toFixed(0),
         owedMarketId.toFixed(0),
         expiryTimestamp.toFixed(0),

@@ -1,7 +1,7 @@
 import { IAccountRiskOverrideSetter } from '../../build/wrappers/IAccountRiskOverrideSetter';
 import { Contracts } from '../lib/Contracts';
 import { stringToDecimal } from '../lib/Helpers';
-import { address, ContractConstantCallOptions } from '../types';
+import { AccountInfo, address, ContractConstantCallOptions } from '../types';
 
 export class AccountRiskOverrideSetter {
   private contracts: Contracts;
@@ -19,11 +19,11 @@ export class AccountRiskOverrideSetter {
   // ============ Getter Functions ============
 
   public async getAccountRiskOverride(
-    accountOwner: address,
+    account: AccountInfo,
     options?: ContractConstantCallOptions,
   ) {
     const { marginRatioOverride, liquidationSpreadOverride } = await this.contracts.callConstantContractFunction(
-      this.accountRiskOverrideSetter.methods.getAccountRiskOverride(accountOwner),
+      this.accountRiskOverrideSetter.methods.getAccountRiskOverride(account),
       options,
     );
     return {

@@ -64,40 +64,6 @@ contract TestIsolationModeWrapperTrader is IIsolationModeWrapperTrader {
         return ACTIONS_LENGTH;
     }
 
-    function createActionsForWrapping(
-        uint256 _primaryAccountId,
-        uint256,
-        address,
-        address,
-        uint256 _outputMarket,
-        uint256 _inputMarket,
-        uint256 _minAmountOut,
-        uint256 _inputAmount,
-        bytes calldata _orderData
-    )
-    external
-    view
-    returns (Actions.ActionArgs[] memory) {
-        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _outputMarket) { /* FOR COVERAGE TESTING */ }
-        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _outputMarket,
-            FILE,
-            "Invalid output market",
-            _outputMarket
-        );
-
-        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](ACTIONS_LENGTH);
-        actions[0] = AccountActionLib.encodeExternalSellAction(
-            _primaryAccountId,
-            _inputMarket,
-            _outputMarket,
-            address(this),
-            _inputAmount,
-            _minAmountOut,
-            _orderData
-        );
-        return actions;
-    }
-
     function exchange(
         address,
         address _receiver,
@@ -161,5 +127,31 @@ contract TestIsolationModeWrapperTrader is IIsolationModeWrapperTrader {
         uint256 takerPrice = DOLOMITE_MARGIN.getMarketPrice(takerMarketId).value;
 
         return DolomiteMarginMath.getPartial(_desiredMakerToken, makerPrice, takerPrice);
+    }
+
+    function createActionsForWrapping(
+        CreateActionsForWrappingParams memory _params
+    )
+    public
+    view
+    returns (Actions.ActionArgs[] memory) {
+        if (DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket) { /* FOR COVERAGE TESTING */ }
+        Require.that(DOLOMITE_MARGIN.getMarketIdByTokenAddress(OUTPUT_TOKEN) == _params.outputMarket,
+            FILE,
+            "Invalid output market",
+            _params.outputMarket
+        );
+
+        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](ACTIONS_LENGTH);
+        actions[0] = AccountActionLib.encodeExternalSellAction(
+            _params.primaryAccountId,
+            _params.inputMarket,
+            _params.outputMarket,
+            address(this),
+            _params.inputAmount,
+            _params.minOutputAmount,
+            _params.orderData
+        );
+        return actions;
     }
 }

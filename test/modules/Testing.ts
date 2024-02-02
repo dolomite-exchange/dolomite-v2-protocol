@@ -17,8 +17,6 @@ import { TestPriceOracle } from './TestPriceOracle';
 import { TestSequencerUptimeFeedAggregator } from './TestSequencerUptimeFeedAggregator';
 import { TestSimpleCallee } from './TestSimpleCallee';
 import { TestToken } from './TestToken';
-import { UniswapV2Factory } from './UniswapV2Factory';
-import { UniswapV2Router } from './UniswapV2Router';
 
 export class Testing {
   public evm: EVM;
@@ -41,8 +39,6 @@ export class Testing {
   public priceOracle: TestPriceOracle;
   public sequencerUptimeFeedAggregator: TestSequencerUptimeFeedAggregator;
   public simpleCallee: TestSimpleCallee;
-  public uniswapV2Factory: UniswapV2Factory;
-  public uniswapV2Router: UniswapV2Router;
   // Private Fields
   private contracts: TestContracts;
 
@@ -71,8 +67,6 @@ export class Testing {
     this.priceOracle = new TestPriceOracle(contracts);
     this.sequencerUptimeFeedAggregator = new TestSequencerUptimeFeedAggregator(contracts);
     this.simpleCallee = new TestSimpleCallee(contracts);
-    this.uniswapV2Factory = new UniswapV2Factory(contracts);
-    this.uniswapV2Router = new UniswapV2Router(contracts);
   }
 
   public setProvider(provider: Provider): void {

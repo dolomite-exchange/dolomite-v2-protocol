@@ -135,18 +135,6 @@ describe('Library', () => {
     });
   });
 
-  describe('MathSqrt', () => {
-    it('should work when < 4', async () => {
-      expect(await dolomiteMargin.contracts.callConstantContractFunction(
-        dolomiteMargin.contracts.testLib.methods.MathSqrt(3)
-      )).to.eql('1');
-
-      expect(await dolomiteMargin.contracts.callConstantContractFunction(
-        dolomiteMargin.contracts.testLib.methods.MathSqrt(0)
-      )).to.eql('0');
-    });
-  });
-
   describe('TypedSignature', () => {
     const hash = '0x1234567812345678123456781234567812345678123456781234567812345678';
     const r = '0x30755ed65396facf86c53e6217c52b4daebe72aa4941d89635409de4c9c7f946';

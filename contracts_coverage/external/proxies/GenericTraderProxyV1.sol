@@ -325,12 +325,6 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
         );
 
         cache.dolomiteMargin.operate(accounts, actions);
-        emit ZapExecuted(
-            msg.sender,
-            _tradeAccountNumber,
-            _marketIdsPath,
-            _tradersPath
-        );
 
         // solium-disable indentation
         {
@@ -575,6 +569,6 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
     }
 
     function _otherAccountId() internal pure returns (uint256) {
-        return ZAP_ACCOUNT_ID;
+        return TRADE_ACCOUNT_ID;
     }
 }

@@ -58,13 +58,13 @@ contract Getters is
     }
 
     function getMarginRatioForAccount(
-        address accountOwner
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory)
     {
-        return GettersImpl.getMarginRatioForAccount(g_state, accountOwner);
+        return GettersImpl.getMarginRatioForAccount(g_state, account);
     }
 
     function getLiquidationSpread()
@@ -75,8 +75,28 @@ contract Getters is
         return GettersImpl.getLiquidationSpread(g_state);
     }
 
+    function getLiquidationSpreadForPair(
+        uint256 heldMarketId,
+        uint256 owedMarketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        Account.Info memory account = Account.Info({
+            owner: address(0),
+            number: 0
+        });
+        return GettersImpl.getLiquidationSpreadForAccountAndPair(
+            g_state,
+            account,
+            heldMarketId,
+            owedMarketId
+        );
+    }
+
     function getLiquidationSpreadForAccountAndPair(
-        address accountOwner,
+        Account.Info memory account,
         uint256 heldMarketId,
         uint256 owedMarketId
     )
@@ -86,7 +106,7 @@ contract Getters is
     {
         return GettersImpl.getLiquidationSpreadForAccountAndPair(
             g_state,
-            accountOwner,
+            account,
             heldMarketId,
             owedMarketId
         );
@@ -148,6 +168,14 @@ contract Getters is
         return GettersImpl.getCallbackGasLimit(g_state);
     }
 
+    function getDefaultAccountRiskOverrideSetter()
+        public
+        view
+        returns (IAccountRiskOverrideSetter)
+    {
+        return GettersImpl.getDefaultAccountRiskOverrideSetter(g_state);
+    }
+
     function getAccountRiskOverrideSetterByAccountOwner(
         address accountOwner
     )
@@ -158,35 +186,35 @@ contract Getters is
         return GettersImpl.getAccountRiskOverrideSetterByAccountOwner(g_state, accountOwner);
     }
 
-    function getAccountRiskOverrideByAccountOwner(
-        address accountOwner
+    function getAccountRiskOverrideByAccount(
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory marginRatioOverride, Decimal.D256 memory liquidationSpreadOverride)
     {
         (marginRatioOverride, liquidationSpreadOverride) =
-            GettersImpl.getAccountRiskOverrideByAccountOwner(g_state, accountOwner);
+            GettersImpl.getAccountRiskOverrideByAccount(g_state, account);
     }
 
-    function getMarginRatioOverrideByAccountOwner(
-        address accountOwner
+    function getMarginRatioOverrideByAccount(
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory)
     {
-        return GettersImpl.getMarginRatioOverrideByAccountOwner(g_state, accountOwner);
+        return GettersImpl.getMarginRatioOverrideByAccount(g_state, account);
     }
 
-    function getLiquidationSpreadOverrideByAccountOwner(
-        address accountOwner
+    function getLiquidationSpreadOverrideByAccount(
+        Account.Info memory account
     )
         public
         view
         returns (Decimal.D256 memory)
     {
-        return GettersImpl.getLiquidationSpreadOverrideByAccountOwner(g_state, accountOwner);
+        return GettersImpl.getLiquidationSpreadOverrideByAccount(g_state, account);
     }
 
     function getRiskLimits()
@@ -327,6 +355,26 @@ contract Getters is
         return GettersImpl.getMarketLiquidationSpreadPremium(g_state, marketId);
     }
 
+    function getMarketSpreadPremium(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Decimal.D256 memory)
+    {
+        return GettersImpl.getMarketLiquidationSpreadPremium(g_state, marketId);
+    }
+
+    function getMarketMaxWei(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Types.Wei memory)
+    {
+        return GettersImpl.getMarketMaxSupplyWei(g_state, marketId);
+    }
+
     function getMarketMaxSupplyWei(
         uint256 marketId
     )
@@ -355,6 +403,16 @@ contract Getters is
         returns (Decimal.D256 memory)
     {
         return GettersImpl.getMarketEarningsRateOverride(g_state, marketId);
+    }
+
+    function getMarketInterestRate(
+        uint256 marketId
+    )
+        public
+        view
+        returns (Interest.Rate memory)
+    {
+        return GettersImpl.getMarketBorrowInterestRatePerSecond(g_state, marketId);
     }
 
     function getMarketBorrowInterestRatePerSecond(

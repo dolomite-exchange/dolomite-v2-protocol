@@ -32,6 +32,34 @@ import { IExchangeWrapper } from "../../protocol/interfaces/IExchangeWrapper.sol
  */
 contract IIsolationModeWrapperTrader is IExchangeWrapper {
 
+    struct CreateActionsForWrappingParams {
+        /// @dev    The index of the account (according the Accounts[] array) that is performing the sell.
+        uint256 primaryAccountId;
+        /// @dev    The index of the account (according the Accounts[] array) that is being liquidated. This is set to
+        ///         `_primaryAccountId` if a liquidation is not occurring.
+        uint256 otherAccountId;
+        /// @dev    The address of the owner of the account that is performing the sell.
+        address primaryAccountOwner;
+        /// @dev    The account number of the owner of the account that is performing the sell.
+        uint256 primaryAccountNumber;
+        /// @dev    The address of the owner of the account that is being liquidated. This is set to
+        ///         `_primaryAccountOwner` if a liquidation is not occurring.
+        address otherAccountOwner;
+        /// @dev    The account number of the owner of the account that is being liquidated. This is set to
+        ///         `_primaryAccountNumber` if a liquidation is not occurring.
+        uint256 otherAccountNumber;
+        /// @dev    The market that is being outputted by the wrapping, should be equal to `token().
+        uint256 outputMarket;
+        /// @dev    The market that is being used to wrap into `token()`.
+        uint256 inputMarket;
+        /// @dev    The min amount of `_outputMarket` that must be outputted by the wrapping.
+        uint256 minOutputAmount;
+        /// @dev    The amount of the `_inputMarket` that the _primaryAccountId must sell.
+        uint256 inputAmount;
+        /// @dev    The calldata to pass through to any external sales that occur.
+        bytes orderData;
+    }
+
     /**
      * @return The isolation mode token that this contract can wrap (the output token)
      */
@@ -52,32 +80,13 @@ contract IIsolationModeWrapperTrader is IExchangeWrapper {
      *          `_outputMarket` should be equal to `token()` and `_inputMarket` should be validated to be a correct
      *           market that can be transformed into `token()`.
      *
-     * @param _primaryAccountId     The index of the account (according the Accounts[] array) that is performing the
-     *                              sell.
-     * @param _otherAccountId       The index of the account (according the Accounts[] array) that is being liquidated.
-     *                              This is set to `_primaryAccountId` if a liquidation is not occurring.
-     * @param _primaryAccountOwner  The address of the owner of the account that is performing the sell.
-     * @param _otherAccountOwner    The address of the owner of the account that is being liquidated. This is set to
-     *                              `_primaryAccountOwner` if a liquidation is not occurring.
-     * @param _outputMarket         The market that is being outputted by the wrapping, should be equal to `token().
-     * @param _inputMarket          The market that is being used to wrap into `token()`.
-     * @param _minOutputAmount      The min amount of `_outputMarket` that must be outputted by the wrapping.
-     * @param _inputAmount          The amount of the `_inputMarket` that the _primaryAccountId must sell.
-     * @param _orderData            The calldata to pass through to any external sales that occur.
-     * @return                      The actions that will be executed to wrap the `_inputMarket` into `_outputMarket`.
+     * @param _params   The parameters for creating the actions for wrapping.
+     * @return          The actions that will be executed to unwrap the `_inputMarket` into `_outputMarket`.
      */
     function createActionsForWrapping(
-        uint256 _primaryAccountId,
-        uint256 _otherAccountId,
-        address _primaryAccountOwner,
-        address _otherAccountOwner,
-        uint256 _outputMarket,
-        uint256 _inputMarket,
-        uint256 _minOutputAmount,
-        uint256 _inputAmount,
-        bytes calldata _orderData
+        CreateActionsForWrappingParams calldata _params
     )
-        external
-        view
-        returns (Actions.ActionArgs[] memory);
+    external
+    view
+    returns (Actions.ActionArgs[] memory);
 }

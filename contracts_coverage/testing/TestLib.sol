@@ -20,7 +20,6 @@ pragma solidity ^0.5.7;
 pragma experimental ABIEncoderV2;
 
 import { AccountMarginLib } from "../external/lib/AccountMarginLib.sol";
-import { AdvancedMath } from "../external/lib/AdvancedMath.sol";
 import { TypedSignature } from "../external/lib/TypedSignature.sol";
 
 import { IERC20Detailed } from "../protocol/interfaces/IERC20Detailed.sol";
@@ -139,16 +138,6 @@ contract TestLib {
 
     // ============ Math Functions ============
 
-    function MathSqrt(
-        uint256 value
-    )
-        external
-        pure
-        returns (uint256)
-    {
-        return AdvancedMath.sqrt(value);
-    }
-
     function MathGetPartial(
         uint256 target,
         uint256 numerator,
@@ -200,7 +189,7 @@ contract TestLib {
     )
         external
         pure
-        returns (uint96)
+        returns (uint112)
     {
         return DolomiteMarginMath.to112(x);
     }

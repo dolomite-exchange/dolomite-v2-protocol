@@ -7,8 +7,6 @@ export enum GenericTraderType {
   InternalLiquidity = 1,
   IsolationModeUnwrapper = 2,
   IsolationModeWrapper = 3,
-  IsolationModeUnwrapperV2 = 4,
-  IsolationModeWrapperV2 = 5,
 }
 
 export interface GenericTraderParam {

@@ -48,8 +48,8 @@ library Interest {
     }
 
     struct Index {
-        uint96 borrow;
-        uint96 supply;
+        uint112 borrow;
+        uint112 supply;
         uint32 lastUpdate;
     }
 
