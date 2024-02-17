@@ -19,13 +19,13 @@ async function verifyAll(): Promise<void> {
         execSync(`truffle run verify --network ${process.env.NETWORK} ${contractName}@${contract.address}`, {
           stdio: 'inherit',
         });
-        console.log('Successfully verified', keys[i]);
       } catch (e) {
         console.error(`Could not verify ${keys[i]} due to error:`, e.message);
       }
     } else {
       console.warn('No contract found for key:', keys[i]);
     }
+    console.log('');
   }
 }
 
