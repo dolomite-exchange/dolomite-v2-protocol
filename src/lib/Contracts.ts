@@ -132,6 +132,7 @@ export class Contracts {
 
   // protected field variables
   protected provider: Provider;
+  protected networkId: number;
   protected web3: Web3;
   protected blockGasLimit: number;
   protected readonly autoGasMultiplier: number;
@@ -194,6 +195,10 @@ export class Contracts {
     this.setDefaultAccount(this.web3.eth.defaultAccount);
   }
 
+  public getNetworkId(): number {
+    return this.networkId
+  }
+
   public getIsolationModeUnwrapper(contractAddress: address): IIsolationModeUnwrapperTrader {
     const unwrapper = new this.web3.eth.Contract(
       isolationModeUnwrapperJson.abi,
@@ -234,6 +239,7 @@ export class Contracts {
   public setProvider(provider: Provider, networkId: number): void {
     this.dolomiteMargin.setProvider(provider);
     this.provider = provider;
+    this.networkId = networkId;
 
     const contracts = [
       // contracts

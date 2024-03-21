@@ -14,6 +14,7 @@ import {
   Integer,
   Market,
   MarketWithInfo,
+  Networks,
   RiskLimits,
   RiskParams,
   TotalPar,
@@ -62,10 +63,10 @@ export class Getters {
     return stringToDecimal(result.value);
   }
 
-  public async getMarginRatioForAccount(
-    account: AccountInfo,
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getMarginRatioForAccount(account: AccountInfo, options?: ContractConstantCallOptions): Promise<Decimal> {
+    if (this.contracts.getNetworkId() === Networks.ARBITRUM_ONE) {
+      return this.getMarginRatio(options);
+    }
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarginRatioForAccount(account),
       options,
@@ -364,10 +365,7 @@ export class Getters {
   /**
    * @deprecated
    */
-  public async getMarketSpreadPremium(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getMarketSpreadPremium(marketId: Integer, options?: ContractConstantCallOptions): Promise<Decimal> {
     const spreadPremium = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketSpreadPremium(marketId.toFixed(0)),
       options,
@@ -434,10 +432,7 @@ export class Getters {
   /**
    * @deprecated
    */
-  public async getMarketInterestRate(
-    marketId: Integer,
-    options?: ContractConstantCallOptions,
-  ): Promise<Decimal> {
+  public async getMarketInterestRate(marketId: Integer, options?: ContractConstantCallOptions): Promise<Decimal> {
     const result = await this.contracts.callConstantContractFunction(
       this.contracts.dolomiteMargin.methods.getMarketInterestRate(marketId.toFixed(0)),
       options,
@@ -730,7 +725,7 @@ export class Getters {
   ): Promise<boolean> {
     const [accountStatus, marginRatio, accountValues] = await Promise.all([
       this.getAccountStatus(liquidOwner, liquidNumber),
-      this.getMarginRatioForAccount({  owner: liquidOwner, number: liquidNumber.toFixed() }, options),
+      this.getMarginRatioForAccount({ owner: liquidOwner, number: liquidNumber.toFixed() }, options),
       this.getAdjustedAccountValues(liquidOwner, liquidNumber, options),
     ]);
 

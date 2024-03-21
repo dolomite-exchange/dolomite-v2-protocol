@@ -52,12 +52,11 @@ export const MarketId = {
   ETH: new BigNumber(-1),
 };
 
-export const Networks = {
-  POLYGON_MATIC: 137,
-  POLYGON_MUMBAI: 80001,
-  ARBITRUM_ONE: 42161,
-  ARBITRUM_GOERLI: 421613,
-};
+export enum Networks {
+  POLYGON_ZK_EVM = 1101,
+  BASE = 8453,
+  ARBITRUM_ONE = 42161,
+}
 
 export enum ProxyType {
   None = 'None',
