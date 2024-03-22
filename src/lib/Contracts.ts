@@ -143,6 +143,7 @@ export class Contracts {
 
   constructor(provider: Provider, networkId: number, web3: Web3, options: DolomiteMarginOptions) {
     this.provider = provider;
+    this.networkId = networkId;
     this.web3 = web3;
     this.defaultConfirmations = options.defaultConfirmations;
     this.autoGasMultiplier = options.autoGasMultiplier || 1.5;
@@ -196,7 +197,7 @@ export class Contracts {
   }
 
   public getNetworkId(): number {
-    return this.networkId
+    return this.networkId;
   }
 
   public getIsolationModeUnwrapper(contractAddress: address): IIsolationModeUnwrapperTrader {
