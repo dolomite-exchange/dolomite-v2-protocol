@@ -405,7 +405,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         view
     {
         // Before the trades are started, transfer inputAmountWei of the inputMarket from the TRADE account to the ZAP account
-        if (_inputAmountWei == uint256(-1)) {
+        if (_inputAmountWei == AccountActionLib.all()) {
             // Transfer such that we TARGET w/e the trader has right now, before the trades occur
             _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferToTargetAmountAction(
                 TRADE_ACCOUNT_ID,
@@ -432,7 +432,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _marketIdsPath[i],
                     _marketIdsPath[i + 1],
                     _tradersPath[i].trader,
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
+                    AccountActionLib.all(),
                     _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
                     _tradersPath[i].tradeData
                 );
@@ -502,7 +502,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                         outputMarket: _marketIdsPath[i + 1],
                         inputMarket: _marketIdsPath[i],
                         minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                        inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
+                        inputAmount: AccountActionLib.all(),
                         orderData: _tradersPath[i].tradeData
                         })
                     );
