@@ -407,7 +407,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         view
     {
         // Before the trades are started, transfer inputAmountWei of the inputMarket from the TRADE account to the ZAP account
-        if (_inputAmountWei == uint256(-1)) {
+        if (_inputAmountWei == AccountActionLib.all()) {
             // Transfer such that we TARGET w/e the trader has right now, before the trades occur
             _actions[_cache.actionsCursor++] = AccountActionLib.encodeTransferToTargetAmountAction(
                 TRADE_ACCOUNT_ID,
@@ -435,7 +435,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _marketIdsPath[i],
                     _marketIdsPath[i + 1],
                     _tradersPath[i].trader,
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
+                    AccountActionLib.all(),
                     _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, tradersPathLength),
                     _tradersPath[i].tradeData
                 );
@@ -446,7 +446,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _marketIdsPath[i],
                     _marketIdsPath[i + 1],
                     _tradersPath[i].trader,
-                    _getInputAmountWeiForIndex(_inputAmountWei, i),
+                    AccountActionLib.all(),
                     _tradersPath[i].tradeData
                 );
             } else if (_isUnwrapperTraderType(_tradersPath[i].traderType)) {
@@ -467,7 +467,7 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                             outputMarket: _marketIdsPath[i + 1],
                             inputMarket: _marketIdsPath[i],
                             minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                            inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
+                            inputAmount: _inputAmountWei, // cannot use ALL since it messes up the actions
                             orderData: _tradersPath[i].tradeData
                         })
                     );
@@ -487,17 +487,17 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                 Actions.ActionArgs[] memory wrapActions = IIsolationModeWrapperTrader(_tradersPath[i].trader)
                     .createActionsForWrapping(
                         IIsolationModeWrapperTrader.CreateActionsForWrappingParams({
-                        primaryAccountId: ZAP_ACCOUNT_ID,
-                        otherAccountId: _otherAccountId(),
-                        primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
-                        primaryAccountNumber: _accounts[ZAP_ACCOUNT_ID].number,
-                        otherAccountOwner: _accounts[_otherAccountId()].owner,
-                        otherAccountNumber: _accounts[_otherAccountId()].number,
-                        outputMarket: _marketIdsPath[i + 1],
-                        inputMarket: _marketIdsPath[i],
-                        minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                        inputAmount: _getInputAmountWeiForIndex(_inputAmountWei, i),
-                        orderData: _tradersPath[i].tradeData
+                            primaryAccountId: ZAP_ACCOUNT_ID,
+                            otherAccountId: _otherAccountId(),
+                            primaryAccountOwner: _accounts[ZAP_ACCOUNT_ID].owner,
+                            primaryAccountNumber: _accounts[ZAP_ACCOUNT_ID].number,
+                            otherAccountOwner: _accounts[_otherAccountId()].owner,
+                            otherAccountNumber: _accounts[_otherAccountId()].number,
+                            outputMarket: _marketIdsPath[i + 1],
+                            inputMarket: _marketIdsPath[i],
+                            minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                            inputAmount: AccountActionLib.all(),
+                            orderData: _tradersPath[i].tradeData
                         })
                     );
 
@@ -553,17 +553,6 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
         returns (uint256)
     {
         return uint256(keccak256(abi.encodePacked(_tradeAccountOwner, _tradeAccountNumber, block.timestamp)));
-    }
-
-    function _getInputAmountWeiForIndex(
-        uint256 _inputAmountWei,
-        uint256 _index
-    )
-        private
-        pure
-        returns (uint256)
-    {
-        return _index == 0 ? _inputAmountWei : AccountActionLib.all();
     }
 
     function _getMinOutputAmountWeiForIndex(
