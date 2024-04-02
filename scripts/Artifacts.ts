@@ -4,6 +4,7 @@
 
 import AAVECopyCatAltCoinInterestSetter from '../build/contracts/AAVECopyCatAltCoinInterestSetter.json';
 import AAVECopyCatStableCoinInterestSetter from '../build/contracts/AAVECopyCatStableCoinInterestSetter.json';
+import AccountValuesReader from '../build/contracts/AccountValuesReader.json';
 import AdminImpl from '../build/contracts/AdminImpl.json';
 import AlwaysOnlineOracleSentinel from '../build/contracts/AlwaysOnlineOracleSentinel.json';
 import AlwaysZeroInterestSetter from '../build/contracts/AlwaysZeroInterestSetter.json';
@@ -53,6 +54,7 @@ import WithdrawalImpl from '../build/contracts/WithdrawalImpl.json';
 export default {
   AAVECopyCatAltCoinInterestSetter,
   AAVECopyCatStableCoinInterestSetter,
+  AccountValuesReader,
   AdminImpl,
   AlwaysOnlineOracleSentinel,
   AlwaysZeroInterestSetter,

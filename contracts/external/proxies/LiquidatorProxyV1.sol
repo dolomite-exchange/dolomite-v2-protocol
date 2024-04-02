@@ -335,7 +335,8 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
             _constants.dolomiteMargin,
             _constants.markets,
             _constants.liquidAccount,
-            _constants.liquidMarkets
+            _constants.liquidMarkets,
+            _constants.dolomiteMargin.getMarginRatioOverrideByAccount(_constants.liquidAccount)
         );
         Require.that(
             liquidSupplyValue.value != 0,
@@ -427,7 +428,8 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
             _constants.dolomiteMargin,
             _constants.markets,
             _constants.solidAccount,
-            _constants.dolomiteMargin.getAccountMarketsWithBalances(_constants.solidAccount)
+            _constants.dolomiteMargin.getAccountMarketsWithBalances(_constants.solidAccount),
+            _constants.dolomiteMargin.getMarginRatioOverrideByAccount(_constants.solidAccount)
         );
 
         MarketInfo memory heldMarketInfo = _binarySearch(_constants.markets, _heldMarket);

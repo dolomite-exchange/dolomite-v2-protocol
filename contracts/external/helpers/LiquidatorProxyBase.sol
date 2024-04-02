@@ -323,7 +323,8 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         IDolomiteMargin dolomiteMargin,
         MarketInfo[] memory marketInfos,
         Account.Info memory account,
-        uint256[] memory marketIds
+        uint256[] memory marketIds,
+        Decimal.D256 memory marginRatioOverride
     )
     internal
     view
@@ -337,7 +338,8 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             marketInfos,
             account,
             marketIds,
-            /* adjustForMarginPremiums = */ false // solium-disable-line indentation
+            /* adjustForMarginPremiums = */ false, // solium-disable-line indentation
+            marginRatioOverride
         );
     }
 
@@ -349,7 +351,8 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         IDolomiteMargin dolomiteMargin,
         MarketInfo[] memory marketInfos,
         Account.Info memory account,
-        uint256[] memory marketIds
+        uint256[] memory marketIds,
+        Decimal.D256 memory marginRatioOverride
     )
     internal
     view
@@ -363,7 +366,8 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             marketInfos,
             account,
             marketIds,
-            /* adjustForMarginPremiums = */ true // solium-disable-line indentation
+            /* adjustForMarginPremiums = */ true, // solium-disable-line indentation
+            marginRatioOverride
         );
     }
 
@@ -421,17 +425,19 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         MarketInfo[] memory marketInfos,
         Account.Info memory account,
         uint256[] memory marketIds,
-        bool adjustForMarginPremiums
+        bool adjustForMarginPremiums,
+        Decimal.D256 memory marginRatioOverride
     )
     private
     view
     returns (
-        Monetary.Value memory,
-        Monetary.Value memory
+        Monetary.Value memory supplyValue,
+        Monetary.Value memory borrowValue
     )
     {
-        Monetary.Value memory supplyValue;
-        Monetary.Value memory borrowValue;
+
+        // Only adjust for liquidity if prompted AND if there is no override
+        adjustForMarginPremiums = adjustForMarginPremiums && marginRatioOverride.value == 0;
 
         for (uint256 i; i < marketIds.length; ++i) {
             Types.Par memory par = dolomiteMargin.getAccountPar(account, marketIds[i]);

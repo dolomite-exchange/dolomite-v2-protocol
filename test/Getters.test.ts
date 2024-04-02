@@ -1212,6 +1212,22 @@ describe('Getters', () => {
         expect(values2.borrow).to.eql(zero);
         expect(values2.supply).to.eql(zero);
       });
+
+      it('Succeeds for reader', async () => {
+        process.env.USE_READER = 'true';
+        await Promise.all([
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par),
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market2, par.div(-2)),
+        ]);
+        const [values1, values2] = await Promise.all([
+          dolomiteMargin.getters.getAccountValues(owner1, account1),
+          dolomiteMargin.getters.getAccountValues(owner2, account2),
+        ]);
+        expect(values1.borrow).to.eql(prices[1].times(wei.div(2)));
+        expect(values1.supply).to.eql(prices[0].times(wei));
+        expect(values2.borrow).to.eql(zero);
+        expect(values2.supply).to.eql(zero);
+      });
     });
 
     describe('#getAccountMarketsWithBalances', () => {
@@ -1246,6 +1262,30 @@ describe('Getters', () => {
 
     describe('#getAdjustedAccountValues', () => {
       it('Succeeds', async () => {
+        const rating1 = new BigNumber('1.2');
+        const rating2 = new BigNumber('1.5');
+        await Promise.all([
+          dolomiteMargin.admin.setMarginPremium(market1, rating1.minus(1), {
+            from: admin,
+          }),
+          dolomiteMargin.admin.setMarginPremium(market2, rating2.minus(1), {
+            from: admin,
+          }),
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market1, par),
+          dolomiteMargin.testing.setAccountBalance(owner1, account1, market2, par.div(-2)),
+        ]);
+        const [values1, values2] = await Promise.all([
+          dolomiteMargin.getters.getAdjustedAccountValues(owner1, account1),
+          dolomiteMargin.getters.getAdjustedAccountValues(owner2, account2),
+        ]);
+        expect(values1.borrow).to.eql(prices[1].times(wei.div(2)).times(rating2));
+        expect(values1.supply).to.eql(prices[0].times(wei).div(rating1));
+        expect(values2.borrow).to.eql(zero);
+        expect(values2.supply).to.eql(zero);
+      });
+
+      it('Succeeds for reader', async () => {
+        process.env.USE_READER = 'true';
         const rating1 = new BigNumber('1.2');
         const rating2 = new BigNumber('1.5');
         await Promise.all([

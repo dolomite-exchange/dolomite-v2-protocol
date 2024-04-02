@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import { contractName } from '../build/contracts/PartiallyDelayedMultiSig.json';
+import { contractName } from '../build/contracts/AccountValuesReader.json';
 import { DolomiteMargin } from '../src';
 import deployed from '../migrations/deployed.json';
 
@@ -30,14 +30,16 @@ export async function writeDeployedJsonToFile(
   console.log(`Wrote ${filename}`);
 }
 
+const EXPECTED_NODE_VERSION = 'v16.15.1';
+
 async function verifySingleContract(): Promise<void> {
   if (!process.env.NETWORK) {
     return Promise.reject(new Error('No NETWORK specified!'));
   }
 
   const nodeVersion = execSync('node --version', { stdio: 'pipe' });
-  if (nodeVersion.toString().trim() !== 'v14.17.0') {
-    return Promise.reject(new Error('Incorrect node version! Expected v14.17.0'));
+  if (nodeVersion.toString().trim() !== EXPECTED_NODE_VERSION) {
+    return Promise.reject(new Error(`Incorrect node version! Expected ${EXPECTED_NODE_VERSION}`));
   }
 
   const networkId = truffle.networks[process.env.NETWORK]['network_id'];

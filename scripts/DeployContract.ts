@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import PartiallyDelayedMultiSig from '../build/contracts/PartiallyDelayedMultiSig.json';
+import AccountValuesReader from '../build/contracts/AccountValuesReader.json';
 import deployed from '../migrations/deployed.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
 
@@ -24,26 +24,20 @@ async function deploy(): Promise<void> {
     return Promise.reject(new Error('Incorrect node version! Expected v14.17.0'));
   }
 
-  const contractName = PartiallyDelayedMultiSig.contractName;
+  const contractName = AccountValuesReader.contractName;
   const networkId = truffle.networks[network]['network_id'];
   const provider = truffle.networks[network].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const deployer = (await dolomiteMargin.web3.eth.getAccounts())[0];
   console.log('Deploying from: ', deployer);
 
-  const contract = new dolomiteMargin.web3.eth.Contract(PartiallyDelayedMultiSig.abi);
+  const contract = new dolomiteMargin.web3.eth.Contract(AccountValuesReader.abi);
   const txResult = await dolomiteMargin.contracts.callContractFunction(
     contract.deploy({
-      data: PartiallyDelayedMultiSig.bytecode,
-      arguments: [
-        ['0x52256ef863a713Ef349ae6E97A7E8f35785145dE'],
-        1,
-        15,
-        [],
-        []
-      ],
+      data: AccountValuesReader.bytecode,
+      arguments: [dolomiteMargin.address, dolomiteMargin.liquidatorAssetRegistry.address],
     }),
-    { confirmationType: ConfirmationType.Confirmed, gas: 20_000_000, gasPrice: 4_700_000_000, from: deployer },
+    { confirmationType: ConfirmationType.Confirmed, gas: 20_000_000, gasPrice: 100_000_000, from: deployer },
   );
 
   console.log(`Deployed ${contractName} to ${txResult.contractAddress}`);

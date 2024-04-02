@@ -27,6 +27,7 @@ import { TransactionReceipt } from 'web3/types';
 import aaveCopyCatAltCoinInterestSetterJson from '../../build/published_contracts/AAVECopyCatAltCoinInterestSetter.json';
 import aaveCopyCatStableCoinInterestSetterJson from '../../build/published_contracts/AAVECopyCatStableCoinInterestSetter.json';
 import accountOverrideSetterJson from '../../build/published_contracts/IAccountRiskOverrideSetter.json';
+import accountValuesReaderJson from '../../build/published_contracts/AccountValuesReader.json';
 import arbitrumMultiCallJson from '../../build/published_contracts/ArbitrumMultiCall.json';
 import arbitrumGasInfoJson from '../../build/published_contracts/IArbitrumGasInfo.json';
 import chainlinkPriceOracleV1Json from '../../build/published_contracts/ChainlinkPriceOracleV1.json';
@@ -58,6 +59,7 @@ import wethJson from '../../build/published_contracts/WETH.json';
 // Contracts
 import { AAVECopyCatAltCoinInterestSetter } from '../../build/wrappers/AAVECopyCatAltCoinInterestSetter';
 import { AAVECopyCatStableCoinInterestSetter } from '../../build/wrappers/AAVECopyCatStableCoinInterestSetter';
+import { AccountValuesReader } from '../../build/wrappers/AccountValuesReader';
 import { ArbitrumMultiCall } from '../../build/wrappers/ArbitrumMultiCall';
 import { BorrowPositionProxyV1 } from '../../build/wrappers/BorrowPositionProxyV1';
 import { BorrowPositionProxyV2 } from '../../build/wrappers/BorrowPositionProxyV2';
@@ -105,6 +107,7 @@ export class Contracts {
   // Contract instances
   public aaveCopyCatAltCoinInterestSetter: AAVECopyCatAltCoinInterestSetter;
   public aaveCopyCatStableCoinInterestSetter: AAVECopyCatStableCoinInterestSetter;
+  public accountValuesReader: AccountValuesReader;
   public arbitrumGasInfo: IArbitrumGasInfo;
   public arbitrumMultiCall: ArbitrumMultiCall;
   public borrowPositionProxyV1: BorrowPositionProxyV1;
@@ -159,6 +162,9 @@ export class Contracts {
     this.aaveCopyCatStableCoinInterestSetter = new this.web3.eth.Contract(
       aaveCopyCatStableCoinInterestSetterJson.abi,
     ) as AAVECopyCatStableCoinInterestSetter;
+    this.accountValuesReader = new this.web3.eth.Contract(
+      accountValuesReaderJson.abi,
+    ) as AccountValuesReader;
     this.arbitrumGasInfo = new this.web3.eth.Contract(arbitrumGasInfoJson.abi) as IArbitrumGasInfo;
     this.arbitrumMultiCall = new this.web3.eth.Contract(arbitrumMultiCallJson.abi) as ArbitrumMultiCall;
     this.borrowPositionProxyV1 = new this.web3.eth.Contract(borrowPositionProxyV1Json.abi) as BorrowPositionProxyV1;
@@ -246,6 +252,7 @@ export class Contracts {
       // contracts
       { contract: this.aaveCopyCatAltCoinInterestSetter, json: aaveCopyCatAltCoinInterestSetterJson },
       { contract: this.aaveCopyCatStableCoinInterestSetter, json: aaveCopyCatStableCoinInterestSetterJson },
+      { contract: this.accountValuesReader, json: accountValuesReaderJson },
       { contract: this.arbitrumGasInfo, json: arbitrumGasInfoJson },
       { contract: this.arbitrumMultiCall, json: arbitrumMultiCallJson },
       { contract: this.borrowPositionProxyV1, json: borrowPositionProxyV1Json },
@@ -279,6 +286,7 @@ export class Contracts {
     // Contracts
     this.aaveCopyCatAltCoinInterestSetter.options.from = account;
     this.aaveCopyCatStableCoinInterestSetter.options.from = account;
+    this.accountValuesReader.options.from = account;
     this.arbitrumGasInfo.options.from = account;
     this.arbitrumMultiCall.options.from = account;
     this.borrowPositionProxyV1.options.from = account;

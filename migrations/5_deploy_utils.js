@@ -24,13 +24,17 @@ const {
   shouldOverwrite,
   getNoOverwriteParams,
   isArbitrumNetwork,
+  isDevNetwork,
 } = require('./helpers');
 
 // ============ Contracts ============
 
 // MultiCall
+const AccountValuesReader = artifacts.require('AccountValuesReader');
 const ArbitrumMultiCall = artifacts.require('ArbitrumMultiCall');
+const DolomiteMargin = artifacts.require('DolomiteMargin');
 const MultiCall = artifacts.require('MultiCall');
+const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
 
 // ============ Main Migration ============
 
@@ -54,5 +58,13 @@ async function deployMultiCall(deployer, network) {
     await deployer.deploy(multiCall);
   } else {
     await deployer.deploy(multiCall, getNoOverwriteParams());
+  }
+
+  if (shouldOverwrite(AccountValuesReader, network)) {
+    let dolomiteMargin = isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin;
+
+    await deployer.deploy(AccountValuesReader, dolomiteMargin);
+  } else {
+    await deployer.deploy(AccountValuesReader, getNoOverwriteParams());
   }
 }

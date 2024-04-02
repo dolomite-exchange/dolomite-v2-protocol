@@ -658,13 +658,25 @@ export class Getters {
     accountNumber: Integer,
     options?: ContractConstantCallOptions,
   ): Promise<Values> {
-    const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getAccountValues({
-        owner: accountOwner,
-        number: accountNumber.toFixed(),
-      }),
-      options,
-    );
+    let result;
+    if (this.contracts.getNetworkId() === Networks.ARBITRUM_ONE || process.env.USE_READER === 'true') {
+      result = await this.contracts.callConstantContractFunction(
+        this.contracts.accountValuesReader.methods.getAccountValues({
+          owner: accountOwner,
+          number: accountNumber.toFixed(0),
+        }),
+        options,
+      );
+    } else {
+      result = await this.contracts.callConstantContractFunction(
+        this.contracts.dolomiteMargin.methods.getAccountValues({
+          owner: accountOwner,
+          number: accountNumber.toFixed(0),
+        }),
+        options,
+      );
+    }
+
     return {
       supply: new BigNumber(result[0].value),
       borrow: new BigNumber(result[1].value),
@@ -676,13 +688,25 @@ export class Getters {
     accountNumber: Integer,
     options?: ContractConstantCallOptions,
   ): Promise<Values> {
-    const result = await this.contracts.callConstantContractFunction(
-      this.contracts.dolomiteMargin.methods.getAdjustedAccountValues({
-        owner: accountOwner,
-        number: accountNumber.toFixed(0),
-      }),
-      options,
-    );
+    let result;
+    if (this.contracts.getNetworkId() === Networks.ARBITRUM_ONE || process.env.USE_READER === 'true') {
+      result = await this.contracts.callConstantContractFunction(
+        this.contracts.accountValuesReader.methods.getAdjustedAccountValues({
+          owner: accountOwner,
+          number: accountNumber.toFixed(0),
+        }),
+        options,
+      );
+    } else {
+      result = await this.contracts.callConstantContractFunction(
+        this.contracts.dolomiteMargin.methods.getAdjustedAccountValues({
+          owner: accountOwner,
+          number: accountNumber.toFixed(0),
+        }),
+        options,
+      );
+    }
+
     return {
       supply: new BigNumber(result[0].value),
       borrow: new BigNumber(result[1].value),

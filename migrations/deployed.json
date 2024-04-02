@@ -771,5 +771,12 @@
             "address": "0xbF25E1230138A497bdB7bd87F4c81eeee3d503E0",
             "transactionHash": "0x262943387680ba4d1fddefb12e922f42b5ac35b19cd48ff0d25055c878da897b"
         }
+    },
+    "AccountValuesReader": {
+        "42161": {
+            "links": {},
+            "address": "0xA61cB09Be5beC5e8A1Aa1daeD880cC0230cbB68E",
+            "transactionHash": "0x5bbb2a4cbf81d55ae0848f50775b6aed95a83cdcf0c892260a8739c4c515fd18"
+        }
     }
 }
