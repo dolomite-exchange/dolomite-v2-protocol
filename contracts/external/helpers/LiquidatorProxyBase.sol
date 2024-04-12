@@ -212,7 +212,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
     /**
      * Make some basic checks before attempting to liquidate an account.
      *  - Require that the msg.sender has the permission to use the solid account
-     *  - Require that the liquid account is liquidatable if using an expiry
+     *  - Require that the expiration timestamp matches the real expiry, if processing an expiration
      */
     function _checkBasicRequirements(
         LiquidatorProxyConstants memory _constants
