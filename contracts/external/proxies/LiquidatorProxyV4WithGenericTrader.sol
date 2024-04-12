@@ -147,7 +147,7 @@ contract LiquidatorProxyV4WithGenericTrader is
 
         LiquidatorProxyCache memory liquidatorCache = _initializeCache(constants);
 
-        // validate the msg.sender and that the liquidAccount can be liquidated
+        // validate the msg.sender and that the expiration matches (if being used)
         _checkBasicRequirements(constants);
 
         // get the max liquidation amount
