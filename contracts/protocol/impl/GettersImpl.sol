@@ -776,6 +776,11 @@ library GettersImpl {
         state.initializeCache(cache, /* fetchFreshIndex = */ true);
 
         (Decimal.D256 memory marginRatioOverride,) = state.getAccountRiskOverride(account);
-        return state.getAccountValues(account, cache, adjustForLiquidity, marginRatioOverride);
+        return state.getAccountValues(
+            account,
+            cache,
+            adjustForLiquidity,
+            marginRatioOverride
+        );
     }
 }

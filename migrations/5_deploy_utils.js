@@ -60,11 +60,13 @@ async function deployMultiCall(deployer, network) {
     await deployer.deploy(multiCall, getNoOverwriteParams());
   }
 
-  if (shouldOverwrite(AccountValuesReader, network)) {
-    let dolomiteMargin = isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin;
+  if (isArbitrumNetwork(network)) {
+    if (shouldOverwrite(AccountValuesReader, network)) {
+      let dolomiteMargin = isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin;
 
-    await deployer.deploy(AccountValuesReader, dolomiteMargin);
-  } else {
-    await deployer.deploy(AccountValuesReader, getNoOverwriteParams());
+      await deployer.deploy(AccountValuesReader, dolomiteMargin);
+    } else {
+      await deployer.deploy(AccountValuesReader, getNoOverwriteParams());
+    }
   }
 }

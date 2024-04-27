@@ -191,22 +191,49 @@ module.exports = {
         explorerUrl: 'https://sepolia.basescan.org/address',
       },
     },
-    x1: {
-      network_id: '195',
+    xLayer: {
+      network_id: '196',
       provider: () => {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: 'https://testrpc.x1.tech',
+          providerOrUrl: 'https://rpc.xlayer.tech',
         });
       },
-      gasPrice: 1000000000, // 1 gwei
-      gas: 25000000,
+      gasPrice: 10000000000, // 10 gwei
+      gas: 25000000, // 25M
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
       confirmations: 0,
       deploymentPollingInterval: pollingInterval,
       disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER',
+        apiKey: process.env.XLAYER_API_KEY,
+        explorerUrl: 'https://www.oklink.com/xlayer/address',
+      },
+    },
+    mantle: {
+      network_id: '196',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: 'https://rpc.mantle.xyz',
+        });
+      },
+      gasPrice: 10000000000, // 10 gwei
+      gas: 25000000, // 25M
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://explorer.mantle.xyz/api',
+        apiKey: process.env.MANTLE_API_KEY,
+        explorerUrl: 'https://explorer.mantle.xyz/address',
+      },
     },
   },
   plugins: ['truffle-plugin-verify', 'solidity-coverage'],

@@ -84,6 +84,7 @@ contract LiquidatorProxyV4WithGenericTrader is
 
     // ============ External Functions ============
 
+    // solium-disable-next-line security/no-assign-params
     function liquidate(
         Account.Info memory _solidAccount,
         Account.Info memory _liquidAccount,

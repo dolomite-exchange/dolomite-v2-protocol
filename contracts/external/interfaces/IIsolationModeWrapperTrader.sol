@@ -85,8 +85,5 @@ contract IIsolationModeWrapperTrader is IExchangeWrapper {
      */
     function createActionsForWrapping(
         CreateActionsForWrappingParams calldata _params
-    )
-    external
-    view
-    returns (Actions.ActionArgs[] memory);
+    ) external view returns (Actions.ActionArgs[] memory); // solium-disable-line indentation
 }

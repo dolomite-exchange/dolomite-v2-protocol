@@ -466,8 +466,13 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                             otherAccountNumber: _accounts[_otherAccountId()].number,
                             outputMarket: _marketIdsPath[i + 1],
                             inputMarket: _marketIdsPath[i],
-                            minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
-                            inputAmount: _inputAmountWei, // cannot use ALL since it messes up the actions
+                            minOutputAmount: _getMinOutputAmountWeiForIndex(
+                                _minOutputAmountWei,
+                                /* _index = */ i, // solium-disable-line indentation
+                                _tradersPath.length
+                            ),
+                            /* Cannot use ALL since it messes up the actions */
+                            inputAmount: _inputAmountWei,
                             orderData: _tradersPath[i].tradeData
                         })
                     );
@@ -495,7 +500,11 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                             otherAccountNumber: _accounts[_otherAccountId()].number,
                             outputMarket: _marketIdsPath[i + 1],
                             inputMarket: _marketIdsPath[i],
-                            minOutputAmount: _getMinOutputAmountWeiForIndex(_minOutputAmountWei, i, _tradersPath.length),
+                            minOutputAmount: _getMinOutputAmountWeiForIndex(
+                                _minOutputAmountWei,
+                                /* _index = */ i, // solium-disable-line indentation
+                                _tradersPath.length
+                            ),
                             inputAmount: AccountActionLib.all(),
                             orderData: _tradersPath[i].tradeData
                         })

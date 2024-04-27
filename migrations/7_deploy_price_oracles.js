@@ -103,14 +103,14 @@ async function deployPriceOracles(deployer, network) {
 
   const oracleContract = getChainlinkPriceOracleContract(network, artifacts);
 
-  if (params && shouldOverwrite(oracleContract, network)) {
+  if (shouldOverwrite(oracleContract, network)) {
     const dolomiteMargin = await getDolomiteMargin(network);
     await deployer.deploy(
       oracleContract,
-      params.tokens,
-      params.aggregators,
-      params.tokenDecimals,
-      params.tokenPairs,
+      params?.tokens ?? [],
+      params?.aggregators ?? [],
+      params?.tokenDecimals ?? [],
+      params?.tokenPairs ?? [],
       dolomiteMargin.address,
     );
   } else {

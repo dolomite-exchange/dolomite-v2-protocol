@@ -32,7 +32,8 @@ const {
   isArbitrumNetwork,
   isPolygonZkEvmNetwork,
   isBaseNetwork,
-  isX1Network,
+  isMantleNetwork,
+  isXLayerNetwork,
 } = require('./helpers');
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
@@ -70,7 +71,8 @@ async function deployBaseProtocol(deployer, network) {
     isPolygonZkEvmNetwork(network) ||
     isBaseNetwork(network) ||
     isArbitrumNetwork(network) ||
-    isX1Network(network)
+    isMantleNetwork(network) ||
+    isXLayerNetwork(network)
   ) {
     dolomiteMargin = DolomiteMargin;
   } else {

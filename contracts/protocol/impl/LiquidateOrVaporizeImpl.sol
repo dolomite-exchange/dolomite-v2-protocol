@@ -252,7 +252,7 @@ library LiquidateOrVaporizeImpl {
         ) = _getLiquidationPrices(
             state,
             cache,
-            /* liquidAccount = */ Account.Info(address(0), 0),
+            /* liquidAccount = */ Account.Info(address(0), 0), // solium-disable-line indentation
             args.heldMarket,
             args.owedMarket
         );

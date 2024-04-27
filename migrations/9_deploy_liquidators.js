@@ -24,7 +24,6 @@ const {
   isDevNetwork,
   shouldOverwrite,
   getNoOverwriteParams,
-  getExpiryRampTime,
 } = require('./helpers');
 
 // ============ Contracts ============

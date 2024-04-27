@@ -420,6 +420,7 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
 
     // ============ Private Functions ============
 
+    // solium-disable-next-line security/no-assign-params
     function _getAccountValues(
         IDolomiteMargin dolomiteMargin,
         MarketInfo[] memory marketInfos,
@@ -480,11 +481,13 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256 marketId
     ) private pure returns (MarketInfo memory) {
         uint256 len = endExclusive - beginInclusive;
+        // solium-disable indentation
         /* ignore-coverage */ Require.that(
             len != 0 && (len != 1 || markets[beginInclusive].marketId == marketId),
             FILE,
             "Market not found"
         );
+        // solium-enable indentation
 
         // Calculate the mid
         uint256 mid = beginInclusive + (len >> 1);

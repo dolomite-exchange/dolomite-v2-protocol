@@ -3,7 +3,6 @@ const {
   isEthereumMainnet,
   isArbitrumOne,
   isArbitrumGoerli,
-  isBase,
   isPolygonZkEvm,
   isBaseNetwork,
 } = require('./helpers');
@@ -51,16 +50,6 @@ function getLrcAddress(network, TokenF) {
     return '0x46d0cE7de6247b0A95f67b43B589b4041BaE7fbE'
   }
   throw new Error('Cannot find LRC');
-}
-
-function getMaticAddress(network, artifact) {
-  if (isDevNetwork(network)) {
-    return artifact.address;
-  }
-  if (isEthereumMainnet(network)) {
-    return '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0';
-  }
-  throw new Error('Cannot find MATIC');
 }
 
 function getUsdcAddress(network, TokenA) {
@@ -135,7 +124,6 @@ module.exports = {
   getDaiAddress,
   getLinkAddress,
   getLrcAddress,
-  getMaticAddress,
   getUsdcAddress,
   getUsdtAddress,
   getWbtcAddress,

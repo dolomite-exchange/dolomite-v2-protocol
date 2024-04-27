@@ -25,10 +25,6 @@ function isCoverageTestNetwork(network) {
 
 // ================== Filtered Networks ==================
 
-function isEthereumNetwork(network) {
-  return isEthereumMainnet(network);
-}
-
 function isArbitrumNetwork(network) {
   return isArbitrumOne(network) || isArbitrumGoerli(network);
 }
@@ -37,12 +33,16 @@ function isPolygonZkEvmNetwork(network) {
   return isPolygonZkEvm(network);
 }
 
-function isBaseNetwork(network) {
-  return isBase(network) || isBaseSepolia(network);
+function isMantleNetwork(network) {
+  return isMantle(network);
 }
 
-function isProductionNetwork(network) {
-  return isEthereumMainnet(network) || isPolygonZkEvm(network) || isArbitrumOne(network) || isBase(network) || isX1(network);
+function isXLayerNetwork(network) {
+  return isXLayer(network);
+}
+
+function isBaseNetwork(network) {
+  return isBase(network) || isBaseSepolia(network);
 }
 
 // ================== Production Networks ==================
@@ -57,6 +57,16 @@ function isPolygonZkEvm(network) {
   return network === 'polygon_zkevm';
 }
 
+function isMantle(network) {
+  verifyNetwork(network);
+  return network === 'mantle';
+}
+
+function isXLayer(network) {
+  verifyNetwork(network);
+  return network === 'xLayer';
+}
+
 function isArbitrumOne(network) {
   verifyNetwork(network);
   return network === 'arbitrum_one';
@@ -65,16 +75,6 @@ function isArbitrumOne(network) {
 function isBase(network) {
   verifyNetwork(network);
   return network === 'base';
-}
-
-function isX1(network) {
-  verifyNetwork(network);
-  return network === 'x1';
-}
-
-function isX1Network(network) {
-  verifyNetwork(network);
-  return isX1(network);
 }
 
 // ================== Test Networks ==================
@@ -177,35 +177,18 @@ function verifyNetwork(network) {
   }
 }
 
-function getSenderAddress(network, accounts) {
-  return accounts[0];
-}
-
 function getDelayedMultisigAddress(network) {
   if (
     isEthereumMainnet(network)
     || isArbitrumNetwork(network)
     || isPolygonZkEvmNetwork(network)
     || isBaseNetwork(network)
-    || isX1(network)
+    || isMantleNetwork(network)
+    || isXLayerNetwork(network)
   ) {
     return '0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9';
   }
   throw new Error('Cannot find DelayedMultisig for network: ' + network);
-}
-
-function getGnosisSafeAddress(network) {
-  if (isEthereumMainnet(network) || isArbitrumOne(network) || isPolygonZkEvm(network)) {
-    return '0xa75c21C5BE284122a87A37a76cc6C4DD3E55a1D4';
-  }
-  if (isBase(network)) {
-    return '0x145637A4Aa6B2001DC9ECBc89CEf75bB960F90B2';
-  }
-  if (isArbitrumGoerli(network) || isBaseSepolia(network)) {
-    return getDelayedMultisigAddress(network); // use the delayed multi sig
-  }
-  // TODO: x1
-  throw new Error('Cannot find GnosisSafe for network: ' + network);
 }
 
 function getChainlinkOracleSentinelGracePeriod() {
@@ -225,7 +208,7 @@ function getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggrega
     return null;
   } else if (isPolygonZkEvm(network)) {
     return null;
-  } else if (isX1(network)) {
+  } else if (isMantle(network) || isXLayer(network)) {
     throw null;
   }
 
@@ -249,15 +232,12 @@ const shouldOverwrite = (contract, network) => {
 const getNoOverwriteParams = () => ({ overwrite: false });
 
 module.exports = {
-  isEthereumNetwork,
   isArbitrumNetwork,
   isBase,
   isBaseNetwork,
   isPolygonZkEvmNetwork,
-  isProductionNetwork,
   isArbitrumOne,
   isArbitrumGoerli,
-  isX1Network,
   getChainId,
   isDevNetwork,
   isEthereumMainnet,
@@ -268,9 +248,7 @@ module.exports = {
   getPolynomialParams,
   getDoubleExponentParams,
   getExpiryRampTime,
-  getSenderAddress,
   getDelayedMultisigAddress,
-  getGnosisSafeAddress,
   getChainlinkSequencerUptimeFeed,
   getChainlinkOracleSentinelGracePeriod,
   shouldOverwrite,

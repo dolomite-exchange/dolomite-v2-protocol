@@ -20,7 +20,15 @@
  * @typedef {Object} artifacts
  */
 
-const { isDevNetwork, getChainId, shouldOverwrite, getNoOverwriteParams, getExpiryRampTime } = require('./helpers');
+const {
+  isDevNetwork,
+  getChainId,
+  shouldOverwrite,
+  getNoOverwriteParams,
+  getExpiryRampTime,
+  isMantleNetwork,
+  isXLayerNetwork,
+} = require('./helpers');
 const { getWrappedCurrencyAddress } = require('./token_helpers');
 
 // ============ Contracts ============
@@ -106,10 +114,12 @@ async function deploySecondLayer(deployer, network) {
     await deployer.deploy(GenericTraderProxyV1, getNoOverwriteParams());
   }
 
-  if (shouldOverwrite(PayableProxy, network)) {
-    await deployer.deploy(PayableProxy, dolomiteMargin.address, getWrappedCurrencyAddress(network, TestWETH));
-  } else {
-    await deployer.deploy(PayableProxy, getNoOverwriteParams());
+  if (!isMantleNetwork(network) && !isXLayerNetwork(network)) {
+    if (shouldOverwrite(PayableProxy, network)) {
+      await deployer.deploy(PayableProxy, dolomiteMargin.address, getWrappedCurrencyAddress(network, TestWETH));
+    } else {
+      await deployer.deploy(PayableProxy, getNoOverwriteParams());
+    }
   }
 
   if (shouldOverwrite(SignedOperationProxy, network)) {

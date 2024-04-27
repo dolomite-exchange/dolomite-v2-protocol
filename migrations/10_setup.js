@@ -26,6 +26,8 @@ const {
   isPolygonZkEvm,
   isArbitrumOne,
   isArbitrumGoerli,
+  isMantleNetwork,
+  isXLayerNetwork,
   isBaseNetwork,
 } = require('./helpers');
 const {
@@ -74,6 +76,9 @@ async function setupProtocol(deployer, network) {
   await dolomiteMargin.ownerSetAutoTraderSpecial(expiry.address, true);
 
   if (isDevNetwork(network) && !isDocker(network)) {
+    return;
+  }
+  if (isMantleNetwork(network) || isXLayerNetwork(network)) {
     return;
   }
 
