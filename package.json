@@ -1,6 +1,6 @@
 {
   "name": "@dolomite-exchange/dolomite-margin",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Ethereum Smart Contracts and TypeScript library used for the DolomiteMargin trading protocol",
   "engines": {
     "npm": "6.14.x"
@@ -25,9 +25,8 @@
   },
   "scripts": {
     "test": "npm run deploy_test && npm run test_only",
-    "build": "npm run clean_contract_json && npm run build:all-wrappers && npm run build:js",
-    "build_bad": "npm run compile -- --all && npm run clean_contract_json && npm run build:all-wrappers && npm run build:js",
-    "compile_bad": "node --max-old-space-size=16384 node_modules/.bin/truffle compile",
+    "build": "npm run compile -- --all && npm run clean_contract_json && npm run build:all-wrappers && npm run build:js",
+    "compile": "node --max-old-space-size=16384 node_modules/.bin/truffle compile",
     "build:all-wrappers": "npm run build:wrappers && npm run build:test_wrappers",
     "build:wrappers": "typechain --target=web3-1.0.0 --outDir=build/wrappers/ './build/published_contracts/*.json'",
     "build:test_wrappers": "typechain --target=web3-1.0.0 --outDir=build/testing_wrappers/ './build/testing_contracts/*.json'",
