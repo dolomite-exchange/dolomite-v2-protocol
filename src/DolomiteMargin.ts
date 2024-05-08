@@ -48,12 +48,13 @@ import { WETH } from './modules/WETH';
 import { address, DolomiteMarginOptions, EthereumAccount, Networks } from './types';
 import { IsolationModeWrapper } from './modules/IsolationModeWrapper';
 import { ExpiryProxy } from './modules/ExpiryProxy';
+import { MantleGasInfo } from './modules/MantleGasInfo';
 
 export class DolomiteMargin {
   public networkId: number;
   public web3: Web3;
   // Contract Wrappers
-  public arbitrumGasInfo: ArbitrumGasInfo;
+  public arbitrumGasInfo?: ArbitrumGasInfo;
   public admin: Admin;
   public borrowPositionProxyV1: BorrowPositionProxyV1;
   public borrowPositionProxyV2: BorrowPositionProxyV2;
@@ -70,6 +71,7 @@ export class DolomiteMargin {
   public liquidatorProxyV1: LiquidatorProxyV1;
   public liquidatorProxyV4WithGenericTrader: LiquidatorProxyV4WithGenericTrader;
   public logs: Logs;
+  public mantleGasInfo?: MantleGasInfo;
   public multiCall: MultiCall;
   public operation: Operation;
   public permissions: Permissions;
@@ -95,7 +97,7 @@ export class DolomiteMargin {
     this.contracts = this.createContractsModule(realProvider, networkId, this.web3, options);
 
     this.admin = new Admin(this.contracts);
-    this.arbitrumGasInfo = new ArbitrumGasInfo(this.contracts);
+    this.arbitrumGasInfo = networkId === Networks.ARBITRUM_ONE ? new ArbitrumGasInfo(this.contracts) : undefined;
     this.borrowPositionProxyV1 = new BorrowPositionProxyV1(this.contracts);
     this.borrowPositionProxyV2 = new BorrowPositionProxyV2(this.contracts);
     this.chainlinkPriceOracle = new ChainlinkPriceOracleV1(this.contracts);
@@ -109,6 +111,7 @@ export class DolomiteMargin {
     this.liquidatorProxyV1 = new LiquidatorProxyV1(this.contracts);
     this.liquidatorProxyV4WithGenericTrader = new LiquidatorProxyV4WithGenericTrader(this.contracts);
     this.logs = new Logs(this.contracts, this.web3);
+    this.mantleGasInfo = networkId === Networks.MANTLE ? new MantleGasInfo(this.contracts) : undefined;
     this.multiCall = new MultiCall(this.contracts);
     this.networkId = networkId;
     this.operation = new Operation(this.contracts, new OrderMapper(this.contracts), networkId);

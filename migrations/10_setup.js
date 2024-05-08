@@ -25,7 +25,7 @@ const {
   isDocker,
   isPolygonZkEvm,
   isArbitrumOne,
-  isArbitrumGoerli,
+  isBeraNetwork,
   isMantleNetwork,
   isXLayerNetwork,
   isBaseNetwork,
@@ -78,7 +78,7 @@ async function setupProtocol(deployer, network) {
   if (isDevNetwork(network) && !isDocker(network)) {
     return;
   }
-  if (isMantleNetwork(network) || isXLayerNetwork(network)) {
+  if (isMantleNetwork(network) || isXLayerNetwork(network) || isBeraNetwork(network)) {
     return;
   }
 
@@ -127,7 +127,7 @@ function getTokens(network) {
     return [
       { address: getWethAddress(network, TestWETH) },
     ];
-  } else if (isArbitrumOne(network) || isArbitrumGoerli(network)) {
+  } else if (isArbitrumOne(network)) {
     const tokens = [
       { address: getWethAddress(network, TestWETH) },
       { address: getDaiAddress(network, TokenB) },

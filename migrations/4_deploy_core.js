@@ -57,7 +57,7 @@ async function deployBaseProtocol(deployer, network) {
   const AlwaysOnlineOracleSentinel = artifacts.require('AlwaysOnlineOracleSentinel');
 
   let operationImpl;
-  if (isDevNetwork(network)) {
+  if (!isDevNetwork(network)) {
     operationImpl = artifacts.require('OperationImpl')
   } else {
     operationImpl = artifacts.require('TestOperationImpl');

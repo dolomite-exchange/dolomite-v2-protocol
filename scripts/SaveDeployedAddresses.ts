@@ -4,8 +4,15 @@ import contracts from './Artifacts';
 import deployed from '../migrations/deployed.json';
 
 const writeFileAsync = promisify(fs.writeFile);
+const truffleConfig = require('../truffle.js');
+const helpers = require('../migrations/helpers.js');
 
-const NETWORK_IDS = ['1', '42161', '421613', '1101', '8453', '84532', '195'];
+const NETWORK_IDS = Object.keys(truffleConfig.networks).reduce<string[]>((acc, networkName) => {
+  if (!helpers.isDevNetwork(networkName)) {
+    acc.push(truffleConfig.networks[networkName].network_id);
+  }
+  return acc;
+}, []);
 
 async function run() {
   Object.keys(contracts).forEach((contractName) => {

@@ -46,7 +46,7 @@ async function deployBaseProtocol(deployer, network) {
   const WithdrawalImpl = artifacts.require('WithdrawalImpl');
 
   let operationImpl;
-  if (isDevNetwork(network)) {
+  if (!isDevNetwork(network)) {
     operationImpl = artifacts.require('OperationImpl')
   } else {
     operationImpl = artifacts.require('TestOperationImpl');

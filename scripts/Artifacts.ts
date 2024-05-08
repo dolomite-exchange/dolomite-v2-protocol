@@ -32,6 +32,7 @@ import IAccountRiskOverrideSetter from '../build/contracts/IAccountRiskOverrideS
 import IInterestSetter from '../build/contracts/IInterestSetter.json';
 import IIsolationModeUnwrapperTrader from '../build/contracts/IIsolationModeUnwrapperTrader.json';
 import IIsolationModeWrapperTrader from '../build/contracts/IIsolationModeWrapperTrader.json';
+import IMantleGasInfo from '../build/contracts/IMantleGasInfo.json';
 import IOracleSentinel from '../build/contracts/IOracleSentinel.json';
 import IPriceOracle from '../build/contracts/IPriceOracle.json';
 import LiquidatorAssetRegistry from '../build/contracts/LiquidatorAssetRegistry.json';
@@ -82,6 +83,7 @@ export default {
   IInterestSetter,
   IIsolationModeUnwrapperTrader,
   IIsolationModeWrapperTrader,
+  IMantleGasInfo,
   IOracleSentinel,
   IPriceOracle,
   LiquidatorAssetRegistry,

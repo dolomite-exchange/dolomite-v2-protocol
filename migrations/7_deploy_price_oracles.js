@@ -107,10 +107,10 @@ async function deployPriceOracles(deployer, network) {
     const dolomiteMargin = await getDolomiteMargin(network);
     await deployer.deploy(
       oracleContract,
-      params?.tokens ?? [],
-      params?.aggregators ?? [],
-      params?.tokenDecimals ?? [],
-      params?.tokenPairs ?? [],
+      params ? params.tokens : [],
+      params ? params.aggregators : [],
+      params ? params.tokenDecimals : [],
+      params ? params.tokenPairs : [],
       dolomiteMargin.address,
     );
   } else {

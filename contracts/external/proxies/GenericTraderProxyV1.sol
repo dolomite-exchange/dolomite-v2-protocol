@@ -108,7 +108,7 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
     // solium-disable-next-line security/no-assign-params
     function swapExactInputForOutput(
         uint256 _tradeAccountNumber,
-        uint256[] memory _marketIdsPath,
+        uint256[] memory _marketIdsPath, // USDC.e --> ETH [2, 0]
         uint256 _inputAmountWei,
         uint256 _minOutputAmountWei,
         TraderParam[] memory _tradersPath,

@@ -5,6 +5,12 @@ const {
 
 // ============ Network Helper Functions ============
 
+async function setGlobalOperatorIfNecessary(dolomiteMargin, contractAddress) {
+  if (!(await dolomiteMargin.getIsGlobalOperator(contractAddress))) {
+    await dolomiteMargin.ownerSetGlobalOperator(contractAddress, true);
+  }
+}
+
 function isDevNetwork(network) {
   verifyNetwork(network);
   return network === 'dev'
@@ -26,11 +32,15 @@ function isCoverageTestNetwork(network) {
 // ================== Filtered Networks ==================
 
 function isArbitrumNetwork(network) {
-  return isArbitrumOne(network) || isArbitrumGoerli(network);
+  return isArbitrumOne(network);
 }
 
 function isPolygonZkEvmNetwork(network) {
   return isPolygonZkEvm(network);
+}
+
+function isBeraNetwork(network) {
+  return isBera(network);
 }
 
 function isMantleNetwork(network) {
@@ -57,6 +67,11 @@ function isPolygonZkEvm(network) {
   return network === 'polygon_zkevm';
 }
 
+function isBera(network) {
+  verifyNetwork(network);
+  return network === 'bera';
+}
+
 function isMantle(network) {
   verifyNetwork(network);
   return network === 'mantle';
@@ -64,7 +79,7 @@ function isMantle(network) {
 
 function isXLayer(network) {
   verifyNetwork(network);
-  return network === 'xLayer';
+  return network === 'x_layer';
 }
 
 function isArbitrumOne(network) {
@@ -78,11 +93,6 @@ function isBase(network) {
 }
 
 // ================== Test Networks ==================
-
-function isArbitrumGoerli(network) {
-  verifyNetwork(network);
-  return network === 'arbitrum_goerli';
-}
 
 function isBaseSepolia(network) {
   verifyNetwork(network);
@@ -101,9 +111,6 @@ function getChainId(network) {
   if (isArbitrumOne(network)) {
     return 42161;
   }
-  if (isArbitrumGoerli(network)) {
-    return 421613;
-  }
   if (isPolygonZkEvm(network)) {
     return 1101;
   }
@@ -121,6 +128,12 @@ function getChainId(network) {
   }
   if (isLocalTestNetwork(network)) {
     return 1001;
+  }
+  if (isXLayer(network)) {
+    return 196;
+  }
+  if (isMantle(network)) {
+    return 5000;
   }
   throw new Error('No chainId for network ' + network);
 }
@@ -184,6 +197,7 @@ function getDelayedMultisigAddress(network) {
     || isPolygonZkEvmNetwork(network)
     || isBaseNetwork(network)
     || isMantleNetwork(network)
+    || isBeraNetwork(network)
     || isXLayerNetwork(network)
   ) {
     return '0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9';
@@ -200,16 +214,12 @@ function getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggrega
     return TestSequencerUptimeFeedAggregator.address;
   } else if (isArbitrumOne(network)) {
     return '0xFdB631F5EE196F0ed6FAa767959853A9F217697D';
-  } else if (isArbitrumGoerli(network)) {
-    return '0x4da69F028a5790fCCAfe81a75C0D24f46ceCDd69';
   } else if (isBase(network)) {
     return '0xBCF85224fc0756B9Fa45aA7892530B47e10b6433';
   } else if (isBaseSepolia(network)) {
     return null;
-  } else if (isPolygonZkEvm(network)) {
+  } else if (isPolygonZkEvm(network) || isMantle(network) || isXLayer(network)) {
     return null;
-  } else if (isMantle(network) || isXLayer(network)) {
-    throw null;
   }
 
   throw new Error(`Cannot find Sequencer Uptime Feed for ${network}`);
@@ -237,11 +247,13 @@ module.exports = {
   isBaseNetwork,
   isPolygonZkEvmNetwork,
   isArbitrumOne,
-  isArbitrumGoerli,
   getChainId,
   isDevNetwork,
   isEthereumMainnet,
   isPolygonZkEvm,
+  isBeraNetwork,
+  isMantleNetwork,
+  isXLayerNetwork,
   isDocker,
   getRiskLimits,
   getRiskParams,
@@ -253,4 +265,5 @@ module.exports = {
   getChainlinkOracleSentinelGracePeriod,
   shouldOverwrite,
   getNoOverwriteParams,
+  setGlobalOperatorIfNecessary,
 };

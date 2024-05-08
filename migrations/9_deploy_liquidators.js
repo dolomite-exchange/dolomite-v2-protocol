@@ -24,6 +24,7 @@ const {
   isDevNetwork,
   shouldOverwrite,
   getNoOverwriteParams,
+  setGlobalOperatorIfNecessary,
 } = require('./helpers');
 
 // ============ Contracts ============
@@ -83,9 +84,9 @@ async function deploySecondLayer(deployer, network) {
     await deployer.deploy(LiquidatorProxyV4WithGenericTrader, getNoOverwriteParams());
   }
 
-  await dolomiteMargin.ownerSetGlobalOperator(ExpiryProxy.address, true);
-  await dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV1.address, true);
-  await dolomiteMargin.ownerSetGlobalOperator(LiquidatorProxyV4WithGenericTrader.address, true);
+  await setGlobalOperatorIfNecessary(dolomiteMargin, ExpiryProxy.address);
+  await setGlobalOperatorIfNecessary(dolomiteMargin, LiquidatorProxyV1.address);
+  await setGlobalOperatorIfNecessary(dolomiteMargin, LiquidatorProxyV4WithGenericTrader.address);
 }
 
 async function getDolomiteMargin(network) {

@@ -53,6 +53,8 @@ export const MarketId = {
 };
 
 export enum Networks {
+  X_LAYER = 196,
+  MANTLE = 5000,
   POLYGON_ZK_EVM = 1101,
   BASE = 8453,
   ARBITRUM_ONE = 42161,

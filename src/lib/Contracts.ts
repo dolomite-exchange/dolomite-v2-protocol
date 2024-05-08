@@ -28,8 +28,8 @@ import aaveCopyCatAltCoinInterestSetterJson from '../../build/published_contract
 import aaveCopyCatStableCoinInterestSetterJson from '../../build/published_contracts/AAVECopyCatStableCoinInterestSetter.json';
 import accountOverrideSetterJson from '../../build/published_contracts/IAccountRiskOverrideSetter.json';
 import accountValuesReaderJson from '../../build/published_contracts/AccountValuesReader.json';
-import arbitrumMultiCallJson from '../../build/published_contracts/ArbitrumMultiCall.json';
 import arbitrumGasInfoJson from '../../build/published_contracts/IArbitrumGasInfo.json';
+import arbitrumMultiCallJson from '../../build/published_contracts/ArbitrumMultiCall.json';
 import chainlinkPriceOracleV1Json from '../../build/published_contracts/ChainlinkPriceOracleV1.json';
 import borrowPositionProxyV1Json from '../../build/published_contracts/BorrowPositionProxyV1.json';
 import borrowPositionProxyV2Json from '../../build/published_contracts/BorrowPositionProxyV2.json';
@@ -47,6 +47,7 @@ import isolationModeWrapperJson from '../../build/published_contracts/IIsolation
 import liquidatorAssetRegistryJson from '../../build/published_contracts/LiquidatorAssetRegistry.json';
 import liquidatorProxyV1Json from '../../build/published_contracts/LiquidatorProxyV1.json';
 import liquidatorProxyV4WithGenericTraderJson from '../../build/published_contracts/LiquidatorProxyV4WithGenericTrader.json';
+import mantleGasInfoJson from '../../build/published_contracts/IMantleGasInfo.json';
 import multiCallJson from '../../build/published_contracts/MultiCall.json';
 import oracleSentinelJson from '../../build/published_contracts/IOracleSentinel.json';
 import payableProxyJson from '../../build/published_contracts/PayableProxy.json';
@@ -77,6 +78,7 @@ import { IERC20Detailed as ERC20 } from '../../build/wrappers/IERC20Detailed';
 import { IInterestSetter as InterestSetter } from '../../build/wrappers/IInterestSetter';
 import { IIsolationModeUnwrapperTrader } from '../../build/wrappers/IIsolationModeUnwrapperTrader';
 import { IIsolationModeWrapperTrader } from '../../build/wrappers/IIsolationModeWrapperTrader';
+import { IMantleGasInfo } from '../../build/wrappers/IMantleGasInfo';
 import { IOracleSentinel } from '../../build/wrappers/IOracleSentinel';
 import { IPriceOracle as PriceOracle } from '../../build/wrappers/IPriceOracle';
 import { LiquidatorAssetRegistry } from '../../build/wrappers/LiquidatorAssetRegistry';
@@ -125,6 +127,7 @@ export class Contracts {
   public liquidatorAssetRegistry: LiquidatorAssetRegistry;
   public liquidatorProxyV1: LiquidatorProxyV1;
   public liquidatorProxyV4WithGenericTrader: LiquidatorProxyV4WithGenericTrader;
+  public mantleGasInfo: IMantleGasInfo;
   public multiCall: MultiCall;
   public payableProxy: PayableProxy;
   public polynomialInterestSetter: PolynomialInterestSetter;
@@ -188,6 +191,7 @@ export class Contracts {
       liquidatorProxyV4WithGenericTraderJson.abi,
     ) as LiquidatorProxyV4WithGenericTrader;
     this.eventEmitterRegistry = new this.web3.eth.Contract(eventEmitterRegistryJson.abi) as EventEmitterRegistry;
+    this.mantleGasInfo = new this.web3.eth.Contract(mantleGasInfoJson.abi) as IMantleGasInfo;
     this.multiCall = new this.web3.eth.Contract(multiCallJson.abi) as MultiCall;
     this.payableProxy = new this.web3.eth.Contract(payableProxyJson.abi) as PayableProxy;
     this.polynomialInterestSetter = new this.web3.eth.Contract(
@@ -270,6 +274,7 @@ export class Contracts {
       { contract: this.liquidatorAssetRegistry, json: liquidatorAssetRegistryJson },
       { contract: this.liquidatorProxyV1, json: liquidatorProxyV1Json },
       { contract: this.liquidatorProxyV4WithGenericTrader, json: liquidatorProxyV4WithGenericTraderJson },
+      { contract: this.mantleGasInfo, json: mantleGasInfoJson },
       { contract: this.multiCall, json: multiCallJson },
       { contract: this.payableProxy, json: payableProxyJson },
       { contract: this.polynomialInterestSetter, json: polynomialInterestSetterJson },
@@ -304,6 +309,7 @@ export class Contracts {
     this.liquidatorAssetRegistry.options.from = account;
     this.liquidatorProxyV1.options.from = account;
     this.liquidatorProxyV4WithGenericTrader.options.from = account;
+    this.mantleGasInfo.options.from = account;
     this.multiCall.options.from = account;
     this.payableProxy.options.from = account;
     this.polynomialInterestSetter.options.from = account;

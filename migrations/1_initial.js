@@ -20,11 +20,12 @@
  * @typedef {Object} artifacts
  */
 
-const { shouldOverwrite, getNoOverwriteParams } = require('./helpers');
+const { shouldOverwrite, getNoOverwriteParams, getChainId } = require('./helpers');
 
 const Migrations = artifacts.require('Migrations');
 
 const migration = async (deployer, network) => {
+  console.log('\tDeploying to chain ID', getChainId(network))
   if (shouldOverwrite(Migrations, network)) {
     await deployer.deploy(Migrations);
   } else {

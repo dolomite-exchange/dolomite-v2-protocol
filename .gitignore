@@ -36,8 +36,12 @@ bfg-1.14.0.jar
 
 .firebase/
 
+out/
+
 .env.production
 
 **/artifacts
 
 scTopics
+
+deployed_build_output

@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import { contractName } from '../build/contracts/AccountValuesReader.json';
+import { contractName } from '../build/contracts/PartiallyDelayedMultiSig.json';
 import { DolomiteMargin } from '../src';
 import deployed from '../migrations/deployed.json';
 
@@ -9,10 +9,10 @@ const truffle = require('../truffle');
 
 const writeFileAsync = promisify(fs.writeFile);
 
-export async function writeDeployedJsonToFile(
+async function writeDeployedJsonToFile(
   contractName: string,
   networkId: number,
-  txResult: { contractAddress: string, transactionHash: string },
+  txResult: { contractAddress: string; transactionHash: string },
 ): Promise<void> {
   deployed[contractName] = deployed[contractName] || {};
 
@@ -45,7 +45,10 @@ async function verifySingleContract(): Promise<void> {
   const networkId = truffle.networks[process.env.NETWORK]['network_id'];
   const provider = truffle.networks[process.env.NETWORK].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
-  const txResult = await dolomiteMargin.web3.eth.getTransactionReceipt(process.env.TRANSACTION_HASH);
+  const txResult = await dolomiteMargin.web3.eth.getTransactionReceipt(
+    process.env.TRANSACTION_HASH ?? deployed[contractName]?.[networkId]?.transactionHash,
+  );
+  console.log('Network', process.env.NETWORK, networkId);
 
   execSync(`truffle run verify --network ${process.env.NETWORK} ${contractName}@${txResult.contractAddress}`, {
     stdio: 'inherit',

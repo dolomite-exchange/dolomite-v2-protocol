@@ -6,6 +6,10 @@ const path = require('path');
 const covReplicaContractsDir = path.join(process.cwd(), '.coverage_contracts');
 const covContractsDir = path.join(process.cwd(), 'contracts_coverage');
 const regContractsDir = path.join(process.cwd(), 'contracts');
+const flatContractsDir = path.join(process.cwd(), 'out');
+
+const regContractsOutDir = path.join(process.cwd(), 'build/contracts');
+const flatContractsOutputDir = path.join(process.cwd(), 'out/build');
 
 const pollingInterval = 40000;
 
@@ -34,8 +38,11 @@ module.exports = {
     process.env.COVERAGE_REPLICA_DEPLOY === 'true'
       ? covReplicaContractsDir
       : process.env.COVERAGE === 'true'
-        ? covContractsDir
-        : regContractsDir,
+      ? covContractsDir
+      : process.env.FLAT === 'true'
+      ? flatContractsDir
+      : regContractsDir,
+  contracts_build_directory: process.env.FLAT === 'true' ? flatContractsOutputDir : regContractsOutDir,
   mocha: {
     parallel: false, // DO NOT CHANGE
     slow: 15000, // 15 seconds
@@ -56,10 +63,11 @@ module.exports = {
     },
     mainnet: {
       network_id: '1',
-      provider: () => new HDWalletProvider({
-        privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-        providerOrUrl: process.env.NODE_URL,
-      }),
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: process.env.NODE_URL,
+        }),
       gasPrice: Number(process.env.GAS_PRICE),
       gas: 6900000,
       timeoutBlocks: 5000,
@@ -101,21 +109,6 @@ module.exports = {
         return new HDWalletProvider({
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
           providerOrUrl: process.env.ARBITRUM_NODE_URL,
-        });
-      },
-      gasPrice: 1000000000, // 1 gwei
-      gas: 25000000,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-      confirmations: 0,
-      disableConfirmationListener: true,
-    },
-    arbitrum_goerli: {
-      network_id: '421613',
-      provider: () => {
-        return new HDWalletProvider({
-          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: process.env.ARBITRUM_GOERLI_NODE_URL,
         });
       },
       gasPrice: 1000000000, // 1 gwei
@@ -191,16 +184,17 @@ module.exports = {
         explorerUrl: 'https://sepolia.basescan.org/address',
       },
     },
-    xLayer: {
+    x_layer: {
       network_id: '196',
       provider: () => {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: 'https://rpc.xlayer.tech',
+          // providerOrUrl: 'https://rpc.xlayer.tech',
+          providerOrUrl: 'https://rpc.ankr.com/xlayer',
         });
       },
-      gasPrice: 10000000000, // 10 gwei
+      gasPrice: 5500000000, // 5.5 gwei
       gas: 25000000, // 25M
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
@@ -208,31 +202,32 @@ module.exports = {
       deploymentPollingInterval: pollingInterval,
       disableConfirmationListener: true,
       verify: {
-        apiUrl: 'https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER',
+        apiUrl: 'https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER@truffle',
         apiKey: process.env.XLAYER_API_KEY,
         explorerUrl: 'https://www.oklink.com/xlayer/address',
       },
     },
     mantle: {
-      network_id: '196',
+      network_id: '5000',
       provider: () => {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: 'https://rpc.mantle.xyz',
+          // providerOrUrl: 'https://rpc.mantle.xyz',
+          providerOrUrl: 'https://rpc.ankr.com/mantle',
         });
       },
-      gasPrice: 10000000000, // 10 gwei
-      gas: 25000000, // 25M
+      gasPrice: 50000000, // 0.05 gwei
+      gas: 25000000000, // 25B
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
       confirmations: 0,
       deploymentPollingInterval: pollingInterval,
       disableConfirmationListener: true,
       verify: {
-        apiUrl: 'https://explorer.mantle.xyz/api',
+        apiUrl: 'https://api.mantlescan.xyz/api',
         apiKey: process.env.MANTLE_API_KEY,
-        explorerUrl: 'https://explorer.mantle.xyz/address',
+        explorerUrl: 'https://mantlescan.xyz/address',
       },
     },
   },

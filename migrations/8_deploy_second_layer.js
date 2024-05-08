@@ -28,6 +28,7 @@ const {
   getExpiryRampTime,
   isMantleNetwork,
   isXLayerNetwork,
+  setGlobalOperatorIfNecessary,
 } = require('./helpers');
 const { getWrappedCurrencyAddress } = require('./token_helpers');
 
@@ -140,12 +141,12 @@ async function deploySecondLayer(deployer, network) {
       dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
     ]);
   } else {
-    await dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV1.address, true);
-    await dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV2.address, true);
-    await dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true);
-    await dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true);
-    await dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true);
-    await dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, BorrowPositionProxyV1.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, BorrowPositionProxyV2.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, DepositWithdrawalProxy.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, Expiry.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, GenericTraderProxyV1.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, TransferProxy.address);
   }
 }
 
