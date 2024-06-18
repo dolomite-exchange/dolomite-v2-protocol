@@ -629,6 +629,24 @@
         }
     },
     "WETH": {
+        "196": {
+            "contractName": "IWETH",
+            "links": {},
+            "address": "0xe538905cf8410324e03A5A23C1c177a474D59b2b",
+            "transactionHash": "0xc9f95245c86db5de2a88eef4bd8bc4d00a09e2a7eb926fdc66a4600d03b8dc49"
+        },
+        "1101": {
+            "contractName": "IWETH",
+            "links": {},
+            "address": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9",
+            "transactionHash": "0xe7be579c571fab4cf4df2a8be5867bd28242420d1e7dc1a0430817608e9b83f4"
+        },
+        "5000": {
+            "contractName": "IWETH",
+            "links": {},
+            "address": "0x1cc57DCE39176C5ab33F9b88B8bBac43B10c76b9",
+            "transactionHash": "0xd49ba38d08e61e156bdad4caa3f42c7df850f0cd2c0a357cc56fffacb0a0944b"
+        },
         "42161": {
             "contractName": "IWETH",
             "links": {},
