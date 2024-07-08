@@ -40,11 +40,11 @@ describe('DepositWithdrawalProxy', () => {
     await Promise.all([
       setupMarkets(dolomiteMargin, accounts),
       dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.testing.tokenA.address, new BigNumber('1e40')),
-      dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.weth.address, new BigNumber('1e40')),
+      dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.payableToken.address, new BigNumber('1e40')),
       dolomiteMargin.admin.setGlobalOperator(admin, true, { from: admin }),
     ]);
     await dolomiteMargin.admin.addMarket(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       dolomiteMargin.testing.priceOracle.address,
       dolomiteMargin.testing.interestSetter.address,
       zero,
@@ -57,7 +57,7 @@ describe('DepositWithdrawalProxy', () => {
     );
 
     market = await dolomiteMargin.getters.getMarketIdByTokenAddress(dolomiteMargin.testing.tokenA.address);
-    ethMarket = await dolomiteMargin.getters.getMarketIdByTokenAddress(dolomiteMargin.weth.address);
+    ethMarket = await dolomiteMargin.getters.getMarketIdByTokenAddress(dolomiteMargin.payableToken.address);
 
     await dolomiteMargin.testing.setAccountBalance(user, defaultAccountNumber, market, par);
     await dolomiteMargin.testing.setAccountBalance(user, otherAccountNumber, market, par);
@@ -67,8 +67,8 @@ describe('DepositWithdrawalProxy', () => {
     await dolomiteMargin.testing.tokenA.issueTo(wei, user);
     await dolomiteMargin.testing.tokenA.issueTo(wei.times(2), dolomiteMargin.address);
 
-    await dolomiteMargin.weth.wrap(user, wei.times(3));
-    await dolomiteMargin.weth.transfer(user, dolomiteMargin.address, wei.times(2));
+    await dolomiteMargin.payableToken.wrap(user, wei.times(3));
+    await dolomiteMargin.payableToken.transfer(user, dolomiteMargin.address, wei.times(2));
 
     await dolomiteMargin.testing.tokenA.approve(dolomiteMargin.address, INTEGERS.MAX_UINT);
 
@@ -121,9 +121,9 @@ describe('DepositWithdrawalProxy', () => {
 
   describe('initializePayableMarket', () => {
     it('should not work when double initialized', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
       await expectThrow(
-        dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address),
+        dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address),
         'DepositWithdrawalProxy: already initialized',
       );
     });
@@ -131,7 +131,7 @@ describe('DepositWithdrawalProxy', () => {
 
   describe('depositPayable', () => {
     it('should work normally', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.depositPayable(otherAccountNumber, wei);
@@ -166,7 +166,7 @@ describe('DepositWithdrawalProxy', () => {
 
   describe('depositPayableIntoDefaultAccount', () => {
     it('should work normally', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.depositPayableIntoDefaultAccount(wei);
@@ -227,7 +227,7 @@ describe('DepositWithdrawalProxy', () => {
 
   describe('withdrawPayable', () => {
     it('should work normally', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayable(otherAccountNumber, wei, defaultBalanceCheckFlag);
@@ -238,7 +238,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should work when withdrawing max uint', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayable(
@@ -253,7 +253,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should work when balanceCheckFlag is set to None and user goes negative', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayable(otherAccountNumber, biggerWei, BalanceCheckFlag.None);
@@ -262,7 +262,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should work when balanceCheckFlag is set to To and user goes negative', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayable(otherAccountNumber, biggerWei, BalanceCheckFlag.To);
@@ -278,7 +278,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should not work when the user goes below zero with flag set', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
       await expectThrowInvalidBalance(
         dolomiteMargin.depositWithdrawalProxy.withdrawPayable(otherAccountNumber, biggerWei, defaultBalanceCheckFlag),
         user,
@@ -341,7 +341,7 @@ describe('DepositWithdrawalProxy', () => {
 
   describe('withdrawPayableFromDefaultAccount', () => {
     it('should work normally', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayableFromDefaultAccount(wei, defaultBalanceCheckFlag);
@@ -352,7 +352,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should work when withdrawing max uint', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayableFromDefaultAccount(
@@ -366,7 +366,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should work when balanceCheckFlag is set to None and user goes negative', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayableFromDefaultAccount(biggerWei, BalanceCheckFlag.None);
@@ -375,7 +375,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should work when balanceCheckFlag is set to To and user goes negative', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       const balanceBefore = new BigNumber(await dolomiteMargin.web3.eth.getBalance(user));
       const txResult = await dolomiteMargin.depositWithdrawalProxy.withdrawPayableFromDefaultAccount(biggerWei, BalanceCheckFlag.To);
@@ -384,7 +384,7 @@ describe('DepositWithdrawalProxy', () => {
     });
 
     it('should not work when the user goes below zero with flag set', async () => {
-      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.weth.address);
+      await dolomiteMargin.depositWithdrawalProxy.initializePayableMarket(dolomiteMargin.payableToken.address);
 
       await expectThrowInvalidBalance(
         dolomiteMargin.depositWithdrawalProxy.withdrawPayableFromDefaultAccount(biggerWei, defaultBalanceCheckFlag),
@@ -552,7 +552,7 @@ describe('DepositWithdrawalProxy', () => {
     owner: address,
     amount: Integer,
   ): Promise<void> {
-    expect(await dolomiteMargin.weth.getBalance(owner)).to.eql(amount);
+    expect(await dolomiteMargin.payableToken.getBalance(owner)).to.eql(amount);
   }
 
   async function expectWalletBalancePar(market: Integer, amount: Integer): Promise<void> {

@@ -101,12 +101,12 @@ describe('PayableProxy', () => {
       setupMarkets(dolomiteMargin, accounts),
       dolomiteMargin.testing.autoTrader.setData(tradeId, amountBlob),
       dolomiteMargin.testing.priceOracle.setPrice(
-        dolomiteMargin.weth.address,
+        dolomiteMargin.payableToken.address,
         new BigNumber('1e40'),
       ),
     ]);
     await dolomiteMargin.admin.addMarket(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       dolomiteMargin.testing.priceOracle.address,
       dolomiteMargin.testing.interestSetter.address,
       zero,
@@ -212,9 +212,9 @@ describe('PayableProxy', () => {
   });
 
   it('Fails for withdrawing to zero', async () => {
-    await dolomiteMargin.weth.wrap(owner1, amount);
+    await dolomiteMargin.payableToken.wrap(owner1, amount);
     await Promise.all([
-      dolomiteMargin.weth.transfer(
+      dolomiteMargin.payableToken.transfer(
         owner1,
         dolomiteMargin.address,
         amount,
@@ -358,9 +358,9 @@ describe('PayableProxy', () => {
   });
 
   it('Succeeds for un-wrapping ETH', async () => {
-    await dolomiteMargin.weth.wrap(owner1, amount);
+    await dolomiteMargin.payableToken.wrap(owner1, amount);
     await Promise.all([
-      dolomiteMargin.weth.transfer(
+      dolomiteMargin.payableToken.transfer(
         owner1,
         dolomiteMargin.address,
         amount,

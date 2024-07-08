@@ -62,7 +62,7 @@ describe('LiquidatorProxyV1', () => {
         dolomiteMargin.testing.tokenC.address,
         prices[2],
       ),
-      dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.weth.address, prices[3]),
+      dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.payableToken.address, prices[3]),
       dolomiteMargin.permissions.approveOperator(operator, { from: owner1 }),
       dolomiteMargin.permissions.approveOperator(
         dolomiteMargin.contracts.liquidatorProxyV1.options.address,
@@ -70,7 +70,7 @@ describe('LiquidatorProxyV1', () => {
       ),
     ]);
     await dolomiteMargin.admin.addMarket(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       dolomiteMargin.testing.priceOracle.address,
       dolomiteMargin.testing.interestSetter.address,
       zero,
