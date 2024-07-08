@@ -24,6 +24,13 @@ import { AccountBalanceLib } from "../lib/AccountBalanceLib.sol";
 interface IDepositWithdrawalProxy {
 
     /**
+     * @param _payableToken The wrapped payable token of the network. For example, WETH on Arbitrum.
+     */
+    function initializePayableMarket(
+        address payable _payableToken
+    ) external;
+
+    /**
      * @param _toAccountNumber  The account number into which `msg.sender` will be depositing
      * @param _marketId         The ID of the market being deposited
      * @param _amountWei        The amount, in Wei, to deposit. Use `uint(-1)` to deposit `msg.sender`'s entire balance
@@ -35,11 +42,11 @@ interface IDepositWithdrawalProxy {
     ) external;
 
     /**
-     * Same as `depositWei` but converts the `msg.sender`'s sent ETH into WETH before depositing into `DolomiteMargin`.
+     * Same as `depositWei` but converts the `msg.sender`'s sent Payable Currency into Wrapped Payable Token before depositing into `DolomiteMargin`.
      *
      * @param _toAccountNumber The account number into which `msg.sender` will be depositing
      */
-    function depositETH(
+    function depositPayable(
         uint256 _toAccountNumber
     ) external payable;
 
@@ -55,10 +62,10 @@ interface IDepositWithdrawalProxy {
     ) external;
 
     /**
-     * Same as `depositWeiIntoDefaultAccount` but converts the `msg.sender`'s sent ETH into WETH before depositing into
+     * Same as `depositWeiIntoDefaultAccount` but converts the `msg.sender`'s sent Payable Currency into wrapped Payable Token before depositing into
      * `DolomiteMargin`.
      */
-    function depositETHIntoDefaultAccount() external payable;
+    function depositPayableIntoDefaultAccount() external payable;
 
     /**
      * @param _fromAccountNumber    The account number from which `msg.sender` will be withdrawing
@@ -76,7 +83,8 @@ interface IDepositWithdrawalProxy {
     ) external;
 
     /**
-     * Same as `withdrawWei` but for withdrawing ETH. The user will receive unwrapped ETH from DolomiteMargin.
+     * Same as `withdrawWei` but for withdrawing the Payable Token of the network. The user will receive unwrapped
+     * Payable Token from DolomiteMargin.
      *
      * @param _fromAccountNumber    The account number from which `msg.sender` will be withdrawing
      * @param _amountWei            The amount, in Wei, to withdraw. Use `uint(-1)` to withdraw `msg.sender`'s entire
@@ -84,7 +92,7 @@ interface IDepositWithdrawalProxy {
      * @param _balanceCheckFlag     Use `BalanceCheckFlag.Both` or `BalanceCheckFlag.From` to check that
      *                              `_fromAccountNumber` balance is non-negative after the withdrawal settles.
      */
-    function withdrawETH(
+    function withdrawPayable(
         uint256 _fromAccountNumber,
         uint256 _amountWei,
         AccountBalanceLib.BalanceCheckFlag _balanceCheckFlag
@@ -106,7 +114,8 @@ interface IDepositWithdrawalProxy {
     ) external;
 
     /**
-     * Same as `withdrawWeiFromDefaultAccount` but for withdrawing ETH. The user will receive unwrapped ETH from
+     * Same as `withdrawWeiFromDefaultAccount` but for withdrawing the Payable Token for the network. The user will
+     * receive unwrapped Payable Token from
      * DolomiteMargin.
      *
      * @param _amountWei        The amount, in Wei, to withdraw. Use `uint(-1)` to withdraw `msg.sender`'s entire
@@ -114,7 +123,7 @@ interface IDepositWithdrawalProxy {
      * @param _balanceCheckFlag Use `BalanceCheckFlag.Both` or `BalanceCheckFlag.From` to check that `_fromAccountNumber`
      *                          balance is non-negative after the withdrawal settles.
      */
-    function withdrawETHFromDefaultAccount(
+    function withdrawPayableFromDefaultAccount(
         uint256 _amountWei,
         AccountBalanceLib.BalanceCheckFlag _balanceCheckFlag
     ) external;

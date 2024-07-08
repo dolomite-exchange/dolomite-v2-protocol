@@ -129,7 +129,7 @@ export class TestContracts extends Contracts {
     this.erroringToken = new this.web3.eth.Contract(erroringTokenJson.abi) as TestToken;
     this.malformedToken = new this.web3.eth.Contract(malformedTokenJson.abi) as TestToken;
     this.omiseToken = new this.web3.eth.Contract(omiseTokenJson.abi) as TestToken;
-    this.weth = new this.web3.eth.Contract(testWeth.abi) as TestWETH;
+    this.payableToken = new this.web3.eth.Contract(testWeth.abi) as TestWETH;
 
     // Testing Contracts
     this.alwaysOnlineOracleSentinel = new this.web3.eth.Contract(alwaysOnlineOracleSentinelJson.abi) as IOracleSentinel;
@@ -191,7 +191,7 @@ export class TestContracts extends Contracts {
       { contract: this.erroringToken, json: erroringTokenJson },
       { contract: this.malformedToken, json: malformedTokenJson },
       { contract: this.omiseToken, json: omiseTokenJson },
-      { contract: this.weth, json: testWeth },
+      { contract: this.payableToken, json: testWeth },
       // test contracts
       { contract: this.alwaysOnlineOracleSentinel, json: alwaysOnlineOracleSentinelJson },
       { contract: this.chainlinkOracleSentinel, json: chainlinkOracleSentinelJson },
