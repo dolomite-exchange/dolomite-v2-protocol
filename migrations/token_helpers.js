@@ -100,11 +100,11 @@ function getWethAddress(network, WETH) {
 function getWrappedCurrencyAddress(network, WETH) {
   // If a network we deploy to uses a different base currency...
   if (isBeraBartio(network)) {
-    return '0x7507c1dc16935B82698e4C63f2746A2fCf994dF8';
+    return '0x7507c1dc16935B82698e4C63f2746A2fCf994dF8'; // wBERA
   } else if (isMantleNetwork(network)) {
-    return '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8';
+    return '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8'; // wMNT
   } else if (isXLayerNetwork(network)) {
-    return '0xe538905cf8410324e03a5a23c1c177a474d59b2b';
+    return '0xe538905cf8410324e03a5a23c1c177a474d59b2b'; // wOKB
   }
 
   // fall through case

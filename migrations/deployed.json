@@ -877,6 +877,11 @@
             "links": {},
             "address": "0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9",
             "transactionHash": "0xd4534bcd27dadbf4a3743dd5f6b325e8a370709f681d7c7e678a5d8745a6e551"
+        },
+        "80084": {
+            "links": {},
+            "address": "0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9",
+            "transactionHash": "0xc2b98fa6a52dbd7da252e7b84dccdd56bef8c4999a91f796ced9e4ba422e73f1"
         }
     },
     "AlwaysZeroInterestSetter": {

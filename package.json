@@ -1,6 +1,6 @@
 {
   "name": "@dolomite-exchange/dolomite-margin",
-  "version": "0.12.7",
+  "version": "0.12.8",
   "description": "Ethereum Smart Contracts and TypeScript library used for the DolomiteMargin trading protocol",
   "engines": {
     "npm": "6.14.x"
@@ -50,6 +50,7 @@
     "fix_deployment_file": "ts-node ./scripts/FixDeploymentFile.ts",
     "deploy": "npm run fix_deployment_file && NODE_ENV=production node --max-old-space-size=16384 node_modules/.bin/truffle migrate --network $NETWORK && npm run save_deployed_addresses",
     "deploy_single": "NODE_ENV=production ts-node scripts/DeployContract.ts",
+    "deploy_partially_delayed_multisig": "NODE_ENV=production ts-node scripts/DeployPartiallyDelayedMultisig.ts",
     "deploy_arbitrum_goerli": "NETWORK=arbitrum_goerli npm run deploy",
     "deploy_arbitrum_one": "NETWORK=arbitrum_one npm run deploy",
     "deploy_base": "NETWORK=base npm run deploy",
