@@ -53,7 +53,7 @@ describe('ExpiryProxy', () => {
       dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.testing.tokenA.address, prices[0]),
       dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.testing.tokenB.address, prices[1]),
       dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.testing.tokenC.address, prices[2]),
-      dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.weth.address, prices[3]),
+      dolomiteMargin.testing.priceOracle.setPrice(dolomiteMargin.payableToken.address, prices[3]),
       dolomiteMargin.permissions.approveOperator(operator, { from: solidOwner }),
       dolomiteMargin.permissions.approveOperator(dolomiteMargin.expiryProxy.address, {
         from: solidOwner,
@@ -64,7 +64,7 @@ describe('ExpiryProxy', () => {
       dolomiteMargin.testing.tokenD.issueTo(par.times('1000'), dolomiteMargin.address),
     ]);
     await dolomiteMargin.admin.addMarket(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       dolomiteMargin.testing.priceOracle.address,
       dolomiteMargin.testing.interestSetter.address,
       zero,

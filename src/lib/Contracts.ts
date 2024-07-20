@@ -130,11 +130,11 @@ export class Contracts {
   public mantleGasInfo: IMantleGasInfo;
   public multiCall: MultiCall;
   public payableProxy: PayableProxy;
+  public payableToken: WETH;
   public polynomialInterestSetter: PolynomialInterestSetter;
   public priceOracle: PriceOracle;
   public signedOperationProxy: SignedOperationProxy;
   public transferProxy: TransferProxy;
-  public weth: WETH;
 
   // protected field variables
   protected provider: Provider;
@@ -200,7 +200,7 @@ export class Contracts {
     this.priceOracle = new this.web3.eth.Contract(priceOracleJson.abi) as PriceOracle;
     this.signedOperationProxy = new this.web3.eth.Contract(signedOperationProxyJson.abi) as SignedOperationProxy;
     this.transferProxy = new this.web3.eth.Contract(transferProxyJson.abi) as TransferProxy;
-    this.weth = new this.web3.eth.Contract(wethJson.abi) as WETH;
+    this.payableToken = new this.web3.eth.Contract(wethJson.abi) as WETH;
 
     this.setProvider(provider, networkId);
     this.setDefaultAccount(this.web3.eth.defaultAccount);
@@ -281,7 +281,7 @@ export class Contracts {
       { contract: this.priceOracle, json: priceOracleJson },
       { contract: this.signedOperationProxy, json: signedOperationProxyJson },
       { contract: this.transferProxy, json: transferProxyJson },
-      { contract: this.weth, json: wethJson },
+      { contract: this.payableToken, json: wethJson },
     ];
 
     contracts.forEach(contract => this.setContractProvider(contract.contract, contract.json, provider, networkId, {}));
@@ -316,7 +316,7 @@ export class Contracts {
     this.priceOracle.options.from = account;
     this.signedOperationProxy.options.from = account;
     this.transferProxy.options.from = account;
-    this.weth.options.from = account;
+    this.payableToken.options.from = account;
   }
 
   public async callContractFunction<T>(

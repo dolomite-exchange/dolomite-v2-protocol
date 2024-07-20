@@ -54,9 +54,9 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
 
     // ============ Field Variables ============
 
-    IWETH WETH;
-    uint256 ETH_MARKET_ID;
-    bool g_initialized;
+    IWETH public WRAPPED_PAYABLE_TOKEN;
+    uint256 public PAYABLE_MARKET_ID;
+    bool public g_initialized;
 
     // ============ Modifiers ============
 
@@ -82,14 +82,14 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
 
     function() external payable {
         Require.that(
-            msg.sender == address(WETH),
+            msg.sender == address(WRAPPED_PAYABLE_TOKEN),
             FILE,
-            "invalid ETH sender"
+            "invalid Payable sender"
         );
     }
 
-    function initializeETHMarket(
-        address payable _weth
+    function initializePayableMarket(
+        address payable _payableToken
     ) external {
         Require.that(
             !g_initialized,
@@ -97,9 +97,9 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
             "already initialized"
         );
         g_initialized = true;
-        WETH = IWETH(_weth);
-        ETH_MARKET_ID = DOLOMITE_MARGIN.getMarketIdByTokenAddress(_weth);
-        WETH.approve(address(DOLOMITE_MARGIN), uint(-1));
+        WRAPPED_PAYABLE_TOKEN = IWETH(_payableToken);
+        PAYABLE_MARKET_ID = DOLOMITE_MARGIN.getMarketIdByTokenAddress(_payableToken);
+        WRAPPED_PAYABLE_TOKEN.approve(address(DOLOMITE_MARGIN), uint(-1));
     }
 
     function depositWei(
@@ -124,7 +124,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
         );
     }
 
-    function depositETH(
+    function depositPayable(
         uint256 _toAccountNumber
     )
     external
@@ -137,7 +137,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
             /* _accountOwner = */ msg.sender, // solium-disable-line indentation
             /* _fromAccount = */ address(this), // solium-disable-line indentation
             _toAccountNumber,
-            ETH_MARKET_ID,
+            PAYABLE_MARKET_ID,
             Types.AssetAmount({
                 sign: true,
                 denomination: Types.AssetDenomination.Wei,
@@ -168,7 +168,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
         );
     }
 
-    function depositETHIntoDefaultAccount()
+    function depositPayableIntoDefaultAccount()
     external
     payable
     requireIsInitialized
@@ -179,7 +179,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
             /* _accountOwner = */ msg.sender, // solium-disable-line indentation
             /* _fromAccount = */ address(this), // solium-disable-line indentation
             /* _toAccountNumber = */ 0, // solium-disable-line indentation
-            ETH_MARKET_ID,
+            PAYABLE_MARKET_ID,
             Types.AssetAmount({
                 sign: true,
                 denomination: Types.AssetDenomination.Wei,
@@ -213,7 +213,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
         );
     }
 
-    function withdrawETH(
+    function withdrawPayable(
         uint256 _fromAccountNumber,
         uint256 _amountWei,
         AccountBalanceLib.BalanceCheckFlag _balanceCheckFlag
@@ -226,7 +226,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
             /* _accountOwner = */ msg.sender, // solium-disable-line indentation
             _fromAccountNumber,
             /* _toAccount = */ address(this), // solium-disable-line indentation
-            ETH_MARKET_ID,
+            PAYABLE_MARKET_ID,
             Types.AssetAmount({
                 sign: false,
                 denomination: Types.AssetDenomination.Wei,
@@ -261,7 +261,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
         );
     }
 
-    function withdrawETHFromDefaultAccount(
+    function withdrawPayableFromDefaultAccount(
         uint256 _amountWei,
         AccountBalanceLib.BalanceCheckFlag _balanceCheckFlag
     )
@@ -273,7 +273,7 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
             /* _accountOwner = */ msg.sender, // solium-disable-line indentation
             /* _fromAccountNumber = */ 0, // solium-disable-line indentation
             /* _toAccount = */ address(this), // solium-disable-line indentation
-            ETH_MARKET_ID,
+            PAYABLE_MARKET_ID,
             Types.AssetAmount({
                 sign: false,
                 denomination: Types.AssetDenomination.Wei,
@@ -380,13 +380,13 @@ contract DepositWithdrawalProxy is IDepositWithdrawalProxy, OnlyDolomiteMargin, 
     // ============ Internal Functions ============
 
     function _wrap() internal {
-        WETH.deposit.value(msg.value)();
+        WRAPPED_PAYABLE_TOKEN.deposit.value(msg.value)();
     }
 
     function _unwrapAndSend() internal {
-        IWETH _WETH = WETH;
-        uint amount = _WETH.balanceOf(address(this));
-        _WETH.withdraw(amount);
+        IWETH wrappedPayableToken = WRAPPED_PAYABLE_TOKEN;
+        uint amount = wrappedPayableToken.balanceOf(address(this));
+        wrappedPayableToken.withdraw(amount);
         msg.sender.sendValue(amount);
     }
 

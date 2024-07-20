@@ -23,11 +23,11 @@ describe('StandardActions', () => {
 
     // setup markets
     await dolomiteMargin.testing.priceOracle.setPrice(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       new BigNumber('1e40'),
     );
     await dolomiteMargin.admin.addMarket(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       dolomiteMargin.testing.priceOracle.address,
       dolomiteMargin.testing.interestSetter.address,
       INTEGERS.ZERO,
@@ -69,17 +69,17 @@ describe('StandardActions', () => {
 
     // give tokens
     await Promise.all([
-      dolomiteMargin.weth.wrap(accountOwner, amount.times(3)),
+      dolomiteMargin.payableToken.wrap(accountOwner, amount.times(3)),
       dolomiteMargin.testing.tokenA.issueTo(amount, accountOwner),
       dolomiteMargin.testing.tokenB.issueTo(amount, accountOwner),
       dolomiteMargin.testing.tokenA.issueTo(amount.times(2), dolomiteMargin.address),
       dolomiteMargin.testing.tokenB.issueTo(amount.times(2), dolomiteMargin.address),
     ]);
-    await dolomiteMargin.weth.transfer(accountOwner, dolomiteMargin.address, amount.times(2));
+    await dolomiteMargin.payableToken.transfer(accountOwner, dolomiteMargin.address, amount.times(2));
 
     // set allowances
     await Promise.all([
-      dolomiteMargin.weth.setMaximumDolomiteMarginAllowance(accountOwner),
+      dolomiteMargin.payableToken.setMaximumDolomiteMarginAllowance(accountOwner),
       dolomiteMargin.testing.tokenA.setMaximumDolomiteMarginAllowance(accountOwner),
       dolomiteMargin.testing.tokenB.setMaximumDolomiteMarginAllowance(accountOwner),
     ]);

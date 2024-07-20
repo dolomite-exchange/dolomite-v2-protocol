@@ -94,7 +94,7 @@ describe('ChainlinkPriceOracleV1', () => {
   describe('#getPrice', () => {
     it('returns the correct value for a token with 18 decimals', async () => {
       const price = await dolomiteMargin.contracts.callConstantContractFunction(
-        chainlinkOracle.methods.getPrice(dolomiteMargin.weth.address),
+        chainlinkOracle.methods.getPrice(dolomiteMargin.payableToken.address),
       );
       expect(new BigNumber(price.value)).to.eql(WETH_PRICE);
     });

@@ -44,7 +44,7 @@ import { SubgraphAPI } from './modules/SubgraphAPI';
 import { Token } from './modules/Token';
 import { TransferProxy } from './modules/TransferProxy';
 import { WalletLogin } from './modules/WalletLogin';
-import { WETH } from './modules/WETH';
+import { PayableToken } from './modules/PayableToken';
 import { address, DolomiteMarginOptions, EthereumAccount, Networks } from './types';
 import { IsolationModeWrapper } from './modules/IsolationModeWrapper';
 import { ExpiryProxy } from './modules/ExpiryProxy';
@@ -74,13 +74,13 @@ export class DolomiteMargin {
   public mantleGasInfo?: MantleGasInfo;
   public multiCall: MultiCall;
   public operation: Operation;
+  public payableToken: PayableToken;
   public permissions: Permissions;
   public signedOperations: SignedOperations;
   public standardActions: StandardActions;
   public token: Token;
   public transferProxy: TransferProxy;
   public walletLogin: WalletLogin;
-  public weth: WETH;
 
   constructor(provider: Provider | string, networkId: number = Networks.ARBITRUM_ONE, options: DolomiteMarginOptions = {}) {
     let realProvider: Provider;
@@ -121,7 +121,7 @@ export class DolomiteMargin {
     this.token = new Token(this.contracts);
     this.transferProxy = new TransferProxy(this.contracts);
     this.walletLogin = new WalletLogin(this.web3, networkId);
-    this.weth = new WETH(this.contracts, this.token);
+    this.payableToken = new PayableToken(this.contracts, this.token);
 
     if (options.accounts) {
       options.accounts.forEach(a => this.loadAccount(a));

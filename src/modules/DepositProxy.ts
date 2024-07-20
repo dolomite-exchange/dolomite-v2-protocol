@@ -20,12 +20,12 @@ export class DepositProxy {
 
   // ============ Write Functions ============
 
-  public async initializeETHMarket(
-    weth: address,
+  public async initializePayableMarket(
+    payableToken: address,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.depositProxy.methods.initializeETHMarket(weth),
+      this.contracts.depositProxy.methods.initializePayableMarket(payableToken),
       options,
     );
   }
@@ -42,12 +42,12 @@ export class DepositProxy {
     );
   }
 
-  public async depositETH(
+  public async depositPayable(
     accountIndex: Integer,
     amountWei: Integer,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
-    return this.contracts.callContractFunction(this.contracts.depositProxy.methods.depositETH(accountIndex.toFixed()), {
+    return this.contracts.callContractFunction(this.contracts.depositProxy.methods.depositPayable(accountIndex.toFixed()), {
       ...options,
       value: amountWei.toFixed(),
     });
@@ -64,8 +64,8 @@ export class DepositProxy {
     );
   }
 
-  public async depositETHIntoDefaultAccount(amountWei: Integer, options: ContractCallOptions = {}): Promise<TxResult> {
-    return this.contracts.callContractFunction(this.contracts.depositProxy.methods.depositETHIntoDefaultAccount(), {
+  public async depositPayableIntoDefaultAccount(amountWei: Integer, options: ContractCallOptions = {}): Promise<TxResult> {
+    return this.contracts.callContractFunction(this.contracts.depositProxy.methods.depositPayableIntoDefaultAccount(), {
       ...options,
       value: amountWei.toFixed(),
     });
@@ -89,14 +89,14 @@ export class DepositProxy {
     );
   }
 
-  public async withdrawETH(
+  public async withdrawPayable(
     accountIndex: Integer,
     amountWei: Integer,
     balanceCheckFlag: BalanceCheckFlag,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.depositProxy.methods.withdrawETH(accountIndex.toFixed(), amountWei.toFixed(), balanceCheckFlag),
+      this.contracts.depositProxy.methods.withdrawPayable(accountIndex.toFixed(), amountWei.toFixed(), balanceCheckFlag),
       options,
     );
   }
@@ -117,13 +117,13 @@ export class DepositProxy {
     );
   }
 
-  public async withdrawETHFromDefaultAccount(
+  public async withdrawPayableFromDefaultAccount(
     amountWei: Integer,
     balanceCheckFlag: BalanceCheckFlag,
     options: ContractCallOptions = {},
   ): Promise<TxResult> {
     return this.contracts.callContractFunction(
-      this.contracts.depositProxy.methods.withdrawETHFromDefaultAccount(amountWei.toFixed(), balanceCheckFlag),
+      this.contracts.depositProxy.methods.withdrawPayableFromDefaultAccount(amountWei.toFixed(), balanceCheckFlag),
       options,
     );
   }

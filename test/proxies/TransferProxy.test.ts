@@ -38,13 +38,13 @@ describe('TransferProxy', () => {
     await Promise.all([
       setupMarkets(dolomiteMargin, accounts),
       dolomiteMargin.testing.priceOracle.setPrice(
-        dolomiteMargin.weth.address,
+        dolomiteMargin.payableToken.address,
         new BigNumber('1e40'),
       ),
       dolomiteMargin.admin.setGlobalOperator(admin, true, { from: admin }),
     ]);
     await dolomiteMargin.admin.addMarket(
-      dolomiteMargin.weth.address,
+      dolomiteMargin.payableToken.address,
       dolomiteMargin.testing.priceOracle.address,
       dolomiteMargin.testing.interestSetter.address,
       zero,
