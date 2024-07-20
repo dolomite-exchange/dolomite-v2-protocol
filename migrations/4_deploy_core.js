@@ -34,6 +34,7 @@ const {
   isBaseNetwork,
   isMantleNetwork,
   isXLayerNetwork,
+  isBeraBartio, isBeraNetwork,
 } = require('./helpers');
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
@@ -68,10 +69,11 @@ async function deployBaseProtocol(deployer, network) {
     dolomiteMargin = artifacts.require('TestDolomiteMargin');
   } else if (
     isEthereumMainnet(network) ||
-    isPolygonZkEvmNetwork(network) ||
-    isBaseNetwork(network) ||
     isArbitrumNetwork(network) ||
+    isBaseNetwork(network) ||
+    isBeraNetwork(network) ||
     isMantleNetwork(network) ||
+    isPolygonZkEvmNetwork(network) ||
     isXLayerNetwork(network)
   ) {
     dolomiteMargin = DolomiteMargin;

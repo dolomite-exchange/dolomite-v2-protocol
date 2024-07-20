@@ -39,7 +39,6 @@ const DolomiteMargin = artifacts.require('DolomiteMargin');
 
 // Test Contracts
 const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
-const TestWETH = artifacts.require('TestWETH');
 
 // Second-Layer Contracts
 const BorrowPositionProxyV1 = artifacts.require('BorrowPositionProxyV1');
@@ -113,14 +112,6 @@ async function deploySecondLayer(deployer, network) {
     await deployer.deploy(GenericTraderProxyV1, Expiry.address, EventEmitterRegistry.address, dolomiteMargin.address);
   } else {
     await deployer.deploy(GenericTraderProxyV1, getNoOverwriteParams());
-  }
-
-  if (!isMantleNetwork(network) && !isXLayerNetwork(network)) {
-    if (shouldOverwrite(PayableProxy, network)) {
-      await deployer.deploy(PayableProxy, dolomiteMargin.address, getWrappedCurrencyAddress(network, TestWETH));
-    } else {
-      await deployer.deploy(PayableProxy, getNoOverwriteParams());
-    }
   }
 
   if (shouldOverwrite(SignedOperationProxy, network)) {

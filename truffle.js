@@ -11,7 +11,7 @@ const flatContractsDir = path.join(process.cwd(), 'out');
 const regContractsOutDir = path.join(process.cwd(), 'build/contracts');
 const flatContractsOutputDir = path.join(process.cwd(), 'out/build');
 
-const pollingInterval = 40000;
+const pollingInterval = 10000;
 
 module.exports = {
   api_keys: {
@@ -228,6 +228,28 @@ module.exports = {
         apiUrl: 'https://api.mantlescan.xyz/api',
         apiKey: process.env.MANTLE_API_KEY,
         explorerUrl: 'https://mantlescan.xyz/address',
+      },
+    },
+    berachain: {
+      network_id: '80084',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: process.env.BERACHAIN_RPC_URL,
+        });
+      },
+      gasPrice: 1000000, // 0.001 gwei
+      gas: 20000000, // 20M
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://api.routescan.io/v2/network/testnet/evm/80084/etherscan/api',
+        apiKey: process.env.BERACHAIN_API_KEY,
+        explorerUrl: 'https://bartio.beratrail.io/address',
       },
     },
   },

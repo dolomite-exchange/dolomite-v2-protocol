@@ -1,6 +1,6 @@
 {
   "name": "@dolomite-exchange/dolomite-margin",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "Ethereum Smart Contracts and TypeScript library used for the DolomiteMargin trading protocol",
   "engines": {
     "npm": "6.14.x"
@@ -54,11 +54,12 @@
     "deploy_arbitrum_one": "NETWORK=arbitrum_one npm run deploy",
     "deploy_base": "NETWORK=base npm run deploy",
     "deploy_base_sepolia": "NETWORK=base_sepolia npm run deploy",
+    "deploy_berachain": "NETWORK=berachain npm run deploy",
     "deploy_mainnet": "NETWORK=mainnet npm run deploy",
     "deploy_polygon_zkevm": "NETWORK=polygon_zkevm npm run deploy",
     "deploy_mantle": "NETWORK=mantle npm run deploy",
     "deploy_x_layer": "NETWORK=x_layer npm run deploy",
-    "deploy_coverage": "RPC_NODE_URI=http://127.0.01:8545 npm run reset_test_evm && COVERAGE_REPLICA_DEPLOY=true node --max-old-space-size=32768 node_modules/.bin/truffle migrate --network coverage_replica && RPC_NODE_URI=http://127.0.0.1:8545 npm run snapshot_test_evm && npm run build:contract-artifacts",
+    "deploy_coverage": "RPC_NODE_URI=http:/w/127.0.01:8545 npm run reset_test_evm && COVERAGE_REPLICA_DEPLOY=true node --max-old-space-size=32768 node_modules/.bin/truffle migrate --network coverage_replica && RPC_NODE_URI=http://127.0.0.1:8545 npm run snapshot_test_evm && npm run build:contract-artifacts",
     "deploy_test": "npm run reset_test_evm && npm run migrate -- --network test --reset && npm run snapshot_test_evm && npm run build:contract-artifacts",
     "deploy_test_ci": "RPC_NODE_URI=http://0.0.0.0:8545 npm run reset_test_evm && npm run migrate -- --network test_ci --reset && RPC_NODE_URI=http://0.0.0.0:8545 npm run snapshot_test_evm && npm run build:contract-artifacts",
     "test_only": "NODE_ENV=test node --max-old-space-size=32768 node_modules/.bin/truffle test --network test",

@@ -69,7 +69,7 @@ function isPolygonZkEvm(network) {
 
 function isBera(network) {
   verifyNetwork(network);
-  return network === 'bera';
+  return network === 'berachain';
 }
 
 function isMantle(network) {
@@ -134,6 +134,9 @@ function getChainId(network) {
   }
   if (isMantle(network)) {
     return 5000;
+  }
+  if (isBera(network)) {
+    return 80084;
   }
   throw new Error('No chainId for network ' + network);
 }
@@ -218,7 +221,7 @@ function getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggrega
     return '0xBCF85224fc0756B9Fa45aA7892530B47e10b6433';
   } else if (isBaseSepolia(network)) {
     return null;
-  } else if (isPolygonZkEvm(network) || isMantle(network) || isXLayer(network)) {
+  } else if (isBeraNetwork(network) || isMantle(network) || isPolygonZkEvm(network) || isXLayer(network)) {
     return null;
   }
 

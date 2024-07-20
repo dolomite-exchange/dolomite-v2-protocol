@@ -9,6 +9,7 @@ const {
   isMantleNetwork,
   isXLayerNetwork,
   isBase,
+  isBeraNetwork,
 } = require('./helpers');
 const {
   getDaiAddress,
@@ -131,13 +132,10 @@ function getChainlinkPriceOracleV1Params(network, tokens, aggregators) {
       pairs.push([getUsdtAddress(network), getUsdtUsdAggregatorAddress(network), 6, ADDRESSES.ZERO]);
     }
     return mapPairsToParams(pairs);
-  } else if (
-    isBaseNetwork(network) ||
-    isPolygonZkEvmNetwork(network)
-  ) {
+  } else if (isBaseNetwork(network) || isPolygonZkEvmNetwork(network)) {
     const pairs = [[getWethAddress(network), getEthUsdAggregatorAddress(network), 18, ADDRESSES.ZERO]];
     return mapPairsToParams(pairs);
-  } else if (isMantleNetwork(network) || isXLayerNetwork(network)) {
+  } else if (isBeraNetwork(network) || isMantleNetwork(network) || isXLayerNetwork(network)) {
     return undefined; // return nothing since Chainlink is not live
   } else if (isDevNetwork(network)) {
     const { TokenA, TokenB, TokenD, TokenE, TokenF, TestWETH } = tokens;
