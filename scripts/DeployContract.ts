@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import MultiCall from '../build/contracts/MultiCall.json';
+import DepositWithdrawalProxy from '../build/contracts/DepositWithdrawalProxy.json';
 import deployed from '../migrations/deployed.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
 
@@ -24,18 +24,18 @@ async function deploy(): Promise<void> {
     return Promise.reject(new Error('Incorrect node version! Expected v14.17.0'));
   }
 
-  const contractName = MultiCall.contractName;
+  const contractName = DepositWithdrawalProxy.contractName;
   const networkId = truffle.networks[network]['network_id'];
   const provider = truffle.networks[network].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const deployer = (await dolomiteMargin.web3.eth.getAccounts())[0];
   console.log('Deploying from: ', deployer);
 
-  const contract = new dolomiteMargin.web3.eth.Contract(MultiCall.abi);
+  const contract = new dolomiteMargin.web3.eth.Contract(DepositWithdrawalProxy.abi);
   const txResult = await dolomiteMargin.contracts.callContractFunction(
     contract.deploy({
-      data: MultiCall.bytecode,
-      arguments: [],
+      data: DepositWithdrawalProxy.bytecode,
+      arguments: ['0x07d163861EB93e6A1f985d0caF0f505F66F11D13'],
     }),
     { confirmationType: ConfirmationType.Confirmed, from: deployer },
   );
