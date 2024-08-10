@@ -55,27 +55,41 @@ library GenericTraderProxyV1Lib {
 
     // ============ Internal Functions ============
 
-    function logEvents(
+    function logBeforeZapEvents(
+        IGenericTraderProxyBase.GenericTraderProxyCache memory _cache,
+        Account.Info memory _tradeAccount,
+        IGenericTraderProxyV1.EventEmissionType _eventType
+    ) public {
+        if (_eventType == IGenericTraderProxyV1.EventEmissionType.BorrowPosition) {
+            _cache.eventEmitterRegistry.emitBorrowPositionOpen(
+                _tradeAccount.owner,
+                _tradeAccount.number
+            );
+        }
+    }
+
+    function logAfterZapEvents(
         IGenericTraderProxyBase.GenericTraderProxyCache memory _cache,
         Account.Info memory _tradeAccount,
         uint256[] memory _marketIdsPath,
-        IGenericTraderProxyV1.TransferCollateralParam memory _param,
+        IGenericTraderProxyBase.TraderParam[] memory _tradersPath,
+        IGenericTraderProxyV1.TransferCollateralParam memory _transferParam,
         IGenericTraderProxyV1.EventEmissionType _eventType
     ) public {
+        _cache.eventEmitterRegistry.emitZapExecuted(
+            _tradeAccount.owner,
+            _tradeAccount.number,
+            _marketIdsPath,
+            _tradersPath
+        );
+
         if (_eventType == IGenericTraderProxyV1.EventEmissionType.MarginPosition) {
             _logMarginPositionEvent(
                 _cache,
                 _tradeAccount,
                 _marketIdsPath,
-                _param
+                _transferParam
             );
-        } else if (_eventType == IGenericTraderProxyV1.EventEmissionType.BorrowPosition) {
-            _cache.eventEmitterRegistry.emitBorrowPositionOpen(
-                _tradeAccount.owner,
-                _tradeAccount.number
-            );
-        } else {
-            assert(_eventType == IGenericTraderProxyV1.EventEmissionType.None);
         }
     }
 

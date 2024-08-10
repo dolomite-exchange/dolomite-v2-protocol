@@ -263,8 +263,8 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             /* _tradeAccountOwner = */ msg.sender, // solium-disable-line indentation
             _tradeAccountNumber
         );
-        // the call to `_getAccounts` leaves accounts[TRANSFER_ACCOUNT_ID] equal to null, because it fills in the
-        // traders starting at the `traderAccountCursor` index
+        // the call to `_getAccounts` leaves accounts[TRANSFER_ACCOUNT_ID] unset, because it only fills in the traders
+        // starting at the `traderAccountCursor` index
         accounts[TRANSFER_ACCOUNT_ID] = Account.Info({
             owner: msg.sender,
             number: cache.otherAccountNumber
@@ -324,23 +324,22 @@ contract GenericTraderProxyV1 is IGenericTraderProxyV1, GenericTraderProxyBase, 
             _transferCollateralParams
         );
 
+        GenericTraderProxyV1Lib.logBeforeZapEvents(
+            cache,
+            accounts[TRADE_ACCOUNT_ID],
+            _userConfig.eventType
+        );
+
         cache.dolomiteMargin.operate(accounts, actions);
 
         // solium-disable indentation
         {
-            uint256 tradeAccountNumberForStackTooDeep = _tradeAccountNumber;
             uint256[] memory marketIdsPathForStackTooDeep = _marketIdsPath;
-            TraderParam[] memory tradersPathForStackTooDeep = _tradersPath;
-            cache.eventEmitterRegistry.emitZapExecuted(
-                msg.sender,
-                tradeAccountNumberForStackTooDeep,
-                marketIdsPathForStackTooDeep,
-                tradersPathForStackTooDeep
-            );
-            GenericTraderProxyV1Lib.logEvents(
+            GenericTraderProxyV1Lib.logAfterZapEvents(
                 cache,
                 accounts[TRADE_ACCOUNT_ID],
                 marketIdsPathForStackTooDeep,
+                _tradersPath,
                 _transferCollateralParams,
                 _userConfig.eventType
             );
