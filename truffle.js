@@ -124,7 +124,7 @@ module.exports = {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: 'https://polygon-zkevm.drpc.org',
+          providerOrUrl: process.env.POLYGON_ZKEVM_NODE_URL,
         });
       },
       gasPrice: 7500000000, // 7.5 gwei
@@ -236,7 +236,7 @@ module.exports = {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: process.env.BERACHAIN_RPC_URL,
+          providerOrUrl: process.env.BERACHAIN_NODE_URL,
         });
       },
       gasPrice: 1000000, // 0.001 gwei

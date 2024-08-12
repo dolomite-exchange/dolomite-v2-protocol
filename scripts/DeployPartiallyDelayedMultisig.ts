@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import PartiallyDelayedMultisig from '../build/contracts/PartiallyDelayedMultisig.json';
+import PartiallyDelayedMultisig from '../build/contracts/PartiallyDelayedMultiSig.json';
 import deployed from '../migrations/deployed.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
 
@@ -20,8 +20,8 @@ async function deploy(): Promise<void> {
   }
 
   const nodeVersion = execSync('node --version', { stdio: 'pipe' });
-  if (nodeVersion.toString().trim() !== 'v14.17.0') {
-    return Promise.reject(new Error('Incorrect node version! Expected v14.17.0'));
+  if (nodeVersion.toString().trim() !== 'v16.15.1') {
+    return Promise.reject(new Error('Incorrect node version! Expected v16.15.1'));
   }
 
   const contractName = PartiallyDelayedMultisig.contractName;

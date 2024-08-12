@@ -51,10 +51,12 @@ contract AccountValuesReader is LiquidatorProxyBase {
     // ============ Constructor ============
 
     constructor (
+        uint256 _chainId,
         address _dolomiteMargin,
         address _liquidatorAssetRegistry
     )
         public
+        LiquidatorProxyBase(_chainId)
         HasLiquidatorRegistry(_liquidatorAssetRegistry)
     {
         DOLOMITE_MARGIN = IDolomiteMargin(_dolomiteMargin);

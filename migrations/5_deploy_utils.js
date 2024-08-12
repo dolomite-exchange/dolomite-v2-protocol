@@ -25,6 +25,7 @@ const {
   getNoOverwriteParams,
   isArbitrumNetwork,
   isDevNetwork,
+  getChainId,
 } = require('./helpers');
 
 // ============ Contracts ============
@@ -64,7 +65,7 @@ async function deployMultiCall(deployer, network) {
     if (shouldOverwrite(AccountValuesReader, network)) {
       let dolomiteMargin = isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin;
 
-      await deployer.deploy(AccountValuesReader, dolomiteMargin);
+      await deployer.deploy(AccountValuesReader, getChainId(network), dolomiteMargin);
     } else {
       await deployer.deploy(AccountValuesReader, getNoOverwriteParams());
     }

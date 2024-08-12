@@ -109,7 +109,13 @@ async function deploySecondLayer(deployer, network) {
 
   if (shouldOverwrite(GenericTraderProxyV1, network)) {
     GenericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);
-    await deployer.deploy(GenericTraderProxyV1, Expiry.address, EventEmitterRegistry.address, dolomiteMargin.address);
+    await deployer.deploy(
+      GenericTraderProxyV1,
+      getChainId(network),
+      Expiry.address,
+      EventEmitterRegistry.address,
+      dolomiteMargin.address
+    );
   } else {
     await deployer.deploy(GenericTraderProxyV1, getNoOverwriteParams());
   }

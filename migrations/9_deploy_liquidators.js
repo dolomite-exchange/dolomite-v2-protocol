@@ -25,6 +25,7 @@ const {
   shouldOverwrite,
   getNoOverwriteParams,
   setGlobalOperatorIfNecessary,
+  getChainId,
 } = require('./helpers');
 
 // ============ Contracts ============
@@ -68,7 +69,12 @@ async function deploySecondLayer(deployer, network) {
   }
 
   if (shouldOverwrite(LiquidatorProxyV1, network)) {
-    await deployer.deploy(LiquidatorProxyV1, LiquidatorAssetRegistry.address, dolomiteMargin.address);
+    await deployer.deploy(
+      LiquidatorProxyV1,
+      getChainId(network),
+      LiquidatorAssetRegistry.address,
+      dolomiteMargin.address,
+    );
   } else {
     await deployer.deploy(LiquidatorProxyV1, getNoOverwriteParams());
   }
@@ -76,6 +82,7 @@ async function deploySecondLayer(deployer, network) {
   if (shouldOverwrite(LiquidatorProxyV4WithGenericTrader, network)) {
     await deployer.deploy(
       LiquidatorProxyV4WithGenericTrader,
+      getChainId(network),
       Expiry.address,
       dolomiteMargin.address,
       LiquidatorAssetRegistry.address,

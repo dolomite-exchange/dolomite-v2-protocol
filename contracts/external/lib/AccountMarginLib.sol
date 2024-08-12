@@ -23,7 +23,7 @@ import { Account } from "../../protocol/lib/Account.sol";
 
 
 /**
- * @title AccountMarginHelper
+ * @title AccountMarginLib
  * @author Dolomite
  *
  * Library contract that has various utility functions for margin positions/accounts
@@ -32,7 +32,7 @@ library AccountMarginLib {
 
     // ============ Constants ============
 
-    bytes32 private constant FILE = "AccountMarginHelper";
+    bytes32 private constant FILE = "AccountMarginLib";
 
     // ============ Functions ============
 

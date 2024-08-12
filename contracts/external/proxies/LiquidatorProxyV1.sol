@@ -84,10 +84,12 @@ contract LiquidatorProxyV1 is OnlyDolomiteMargin, ReentrancyGuard, LiquidatorPro
     // ============ Constructor ============
 
     constructor (
+        uint256 _chainId,
         address _liquidatorAssetRegistry,
         address _dolomiteMargin
     )
         public
+        LiquidatorProxyBase(_chainId)
         HasLiquidatorRegistry(_liquidatorAssetRegistry)
         OnlyDolomiteMargin(_dolomiteMargin)
     {

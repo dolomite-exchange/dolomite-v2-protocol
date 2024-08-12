@@ -64,6 +64,18 @@ interface IExpiry {
         view
         returns (Monetary.Price memory heldPrice, Monetary.Price memory owedPriceAdj);
 
+    /**
+     * @notice Backwards-compatible version of this function for Dolomite Margin V1
+     */
+    function getSpreadAdjustedPrices(
+        uint256 heldMarketId,
+        uint256 owedMarketId,
+        uint32 expiry
+    )
+        external
+        view
+        returns (Monetary.Price memory heldPrice, Monetary.Price memory owedPriceAdj);
+
     function getExpiry(
         Account.Info calldata account,
         uint256 marketId

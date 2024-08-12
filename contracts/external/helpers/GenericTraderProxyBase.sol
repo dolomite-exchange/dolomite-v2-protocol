@@ -53,6 +53,8 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
 
     bytes32 private constant FILE = "GenericTraderProxyBase";
 
+    uint256 internal constant ARBITRUM_ONE = 42161;
+
     /// @dev The index of the trade account in the accounts array (for executing an operation)
     uint256 internal constant TRADE_ACCOUNT_ID = 0;
     uint256 internal constant ZAP_ACCOUNT_ID = 1;
@@ -61,7 +63,15 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
     bytes32 internal constant ISOLATION_MODE_PREFIX_HASH = keccak256(bytes("Dolomite Isolation:"));
     uint256 internal constant DOLOMITE_ISOLATION_LENGTH = 19;
 
+    // ============ Fields ============
+
+    uint256 public chainId;
+
     // ============ Public Functions ============
+
+    constructor(uint256 _chainId) public {
+        chainId = _chainId;
+    }
 
     function isIsolationModeMarket(
         IDolomiteMargin _dolomiteMargin,
@@ -440,14 +450,27 @@ contract GenericTraderProxyBase is IGenericTraderProxyBase {
                     _tradersPath[i].tradeData
                 );
             } else if (_tradersPath[i].traderType == TraderType.InternalLiquidity) {
+                uint256 customInputAmountWei = AccountActionLib.all();
+                bytes memory tradeData = _tradersPath[i].tradeData;
+                if (chainId == ARBITRUM_ONE) {
+                    (
+                        customInputAmountWei,
+                        tradeData
+                    ) = abi.decode(tradeData, (uint256, bytes));
+                    Require.that(
+                        (i == 0 && customInputAmountWei == _inputAmountWei) || i != 0,
+                        FILE,
+                        "Invalid custom input amount"
+                    );
+                }
                 _actions[_cache.actionsCursor++] = AccountActionLib.encodeInternalTradeActionWithCustomData(
                     ZAP_ACCOUNT_ID,
                     /* _makerAccountId = */ _tradersPath[i].makerAccountIndex + _cache.traderAccountStartIndex,
                     _marketIdsPath[i],
                     _marketIdsPath[i + 1],
                     _tradersPath[i].trader,
-                    AccountActionLib.all(),
-                    _tradersPath[i].tradeData
+                    customInputAmountWei,
+                    tradeData
                 );
             } else if (_isUnwrapperTraderType(_tradersPath[i].traderType)) {
                 // We can't use a Require for the following assert, because there's already an invariant that enforces

@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import { contractName } from '../build/contracts/PartiallyDelayedMultiSig.json';
+import { contractName } from '../build/contracts/LiquidatorProxyV4WithGenericTrader.json';
 import { DolomiteMargin } from '../src';
 import deployed from '../migrations/deployed.json';
 
@@ -17,7 +17,7 @@ async function writeDeployedJsonToFile(
   deployed[contractName] = deployed[contractName] || {};
 
   deployed[contractName][networkId] = {
-    links: {},
+    links: deployed[contractName][networkId].links ?? {},
     address: txResult.contractAddress,
     transactionHash: txResult.transactionHash,
   };

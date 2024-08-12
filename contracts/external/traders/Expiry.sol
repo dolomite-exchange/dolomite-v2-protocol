@@ -240,6 +240,27 @@ contract Expiry is
         );
     }
 
+    function getSpreadAdjustedPrices(
+        uint256 heldMarketId,
+        uint256 owedMarketId,
+        uint32 expiry
+    )
+        public
+        view
+        returns (
+            Monetary.Price memory,
+            Monetary.Price memory
+        )
+    {
+        return _getLiquidationSpreadAdjustedPrices(
+            DOLOMITE_MARGIN,
+            /* liquidAccount = */ Account.Info(address(0), 0),
+            heldMarketId,
+            owedMarketId,
+            expiry
+        );
+    }
+
     // ============ Private Functions ============
 
     function _getLiquidationSpreadAdjustedPrices(

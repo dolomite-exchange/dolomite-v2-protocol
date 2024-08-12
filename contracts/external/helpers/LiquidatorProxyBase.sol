@@ -25,6 +25,8 @@ import { IDolomiteMargin } from "../../protocol/interfaces/IDolomiteMargin.sol";
 import { IExpiry } from "../interfaces/IExpiry.sol";
 import { ILiquidatorAssetRegistry } from "../interfaces/ILiquidatorAssetRegistry.sol";
 
+import { DolomiteVersionLib } from "../lib/DolomiteVersionLib.sol";
+
 import { Account } from "../../protocol/lib/Account.sol";
 import { Bits } from "../../protocol/lib/Bits.sol";
 import { Decimal } from "../../protocol/lib/Decimal.sol";
@@ -45,6 +47,7 @@ import { HasLiquidatorRegistry } from "./HasLiquidatorRegistry.sol";
  * Inheritable contract that allows sharing code across different liquidator proxy contracts
  */
 contract LiquidatorProxyBase is HasLiquidatorRegistry {
+    using DolomiteVersionLib for *;
     using SafeMath for uint;
     using Types for Types.Par;
 
@@ -61,8 +64,6 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         Monetary.Price price;
         Interest.Index index;
     }
-
-    // ============ Structs ============
 
     struct LiquidatorProxyConstants {
         IDolomiteMargin dolomiteMargin;
@@ -98,7 +99,15 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
         uint256 owedPriceAdj;
     }
 
+    // ============ Fields ============
+
+    uint256 public chainId;
+
     // ============ Internal Functions ============
+
+    constructor(uint256 _chainId) internal {
+        chainId = _chainId;
+    }
 
     /**
      * Pre-populates cache values for some pair of markets.
@@ -115,7 +124,8 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
 
         uint256 owedPriceAdj;
         if (_constants.expiry != 0) {
-            (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getLiquidationSpreadAdjustedPrices(
+            (, Monetary.Price memory owedPricePrice) = _constants.expiryProxy.getExpirySpreadAdjustedPricesForChain(
+                chainId,
                 _constants.liquidAccount,
                 _constants.heldMarket,
                 _constants.owedMarket,
@@ -123,7 +133,8 @@ contract LiquidatorProxyBase is HasLiquidatorRegistry {
             );
             owedPriceAdj = owedPricePrice.value;
         } else {
-            Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForAccountAndPair(
+            Decimal.D256 memory spread = _constants.dolomiteMargin.getLiquidationSpreadForChainAndPair(
+                chainId,
                 _constants.liquidAccount,
                 _constants.heldMarket,
                 _constants.owedMarket

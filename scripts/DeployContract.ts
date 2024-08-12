@@ -1,11 +1,12 @@
 import { execSync } from 'child_process';
 import { promisify } from 'es6-promisify';
 import fs from 'fs';
-import DepositWithdrawalProxy from '../build/contracts/DepositWithdrawalProxy.json';
+import LiquidatorProxyV4WithGenericTrader from '../build/contracts/LiquidatorProxyV4WithGenericTrader.json';
 import deployed from '../migrations/deployed.json';
 import { ConfirmationType, DolomiteMargin } from '../src';
 
 const truffle = require('../truffle.js');
+const { getChainId } = require('../migrations/helpers.js');
 
 const writeFileAsync = promisify(fs.writeFile);
 
@@ -20,22 +21,28 @@ async function deploy(): Promise<void> {
   }
 
   const nodeVersion = execSync('node --version', { stdio: 'pipe' });
-  if (nodeVersion.toString().trim() !== 'v14.17.0') {
-    return Promise.reject(new Error('Incorrect node version! Expected v14.17.0'));
+  if (nodeVersion.toString().trim() !== 'v16.15.1') {
+    return Promise.reject(new Error('Incorrect node version! Expected v16.15.1'));
   }
 
-  const contractName = DepositWithdrawalProxy.contractName;
+  const contractName = LiquidatorProxyV4WithGenericTrader.contractName;
   const networkId = truffle.networks[network]['network_id'];
   const provider = truffle.networks[network].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const deployer = (await dolomiteMargin.web3.eth.getAccounts())[0];
   console.log('Deploying from: ', deployer);
 
-  const contract = new dolomiteMargin.web3.eth.Contract(DepositWithdrawalProxy.abi);
+  const contract = new dolomiteMargin.web3.eth.Contract(LiquidatorProxyV4WithGenericTrader.abi);
+  const chainId = getChainId(network);
   const txResult = await dolomiteMargin.contracts.callContractFunction(
     contract.deploy({
-      data: DepositWithdrawalProxy.bytecode,
-      arguments: ['0x07d163861EB93e6A1f985d0caF0f505F66F11D13'],
+      data: LiquidatorProxyV4WithGenericTrader.bytecode,
+      arguments: [
+        chainId,
+        deployed.Expiry[chainId].address,
+        deployed.DolomiteMargin[chainId].address,
+        deployed.LiquidatorAssetRegistry[chainId].address,
+      ],
     }),
     { confirmationType: ConfirmationType.Confirmed, from: deployer },
   );
@@ -63,6 +70,12 @@ async function deploy(): Promise<void> {
   const filename = 'deployed.json';
   await writeFileAsync(directory + filename, json);
   console.log(`Wrote ${filename}`);
+}
+
+// @ts-ignore
+function setupLibrary(bytecode: string, libraryName: string, libraryAddress: string): string {
+  const regex = new RegExp(`__${libraryName}_______________`, 'g');
+  return bytecode.replace(regex, libraryAddress.substring(2));
 }
 
 deploy()

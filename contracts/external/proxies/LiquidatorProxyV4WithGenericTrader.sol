@@ -69,11 +69,18 @@ contract LiquidatorProxyV4WithGenericTrader is
     // ============ Constructor ============
 
     constructor (
+        uint256 _chainId,
         address _expiryProxy,
         address _dolomiteMargin,
         address _liquidatorAssetRegistry
     )
     public
+    LiquidatorProxyBase(
+        _chainId
+    )
+    GenericTraderProxyBase(
+        _chainId
+    )
     HasLiquidatorRegistry(
         _liquidatorAssetRegistry
     )
