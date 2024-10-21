@@ -350,10 +350,11 @@ library OperationImpl {
                 );
             } else if (maxBorrowWei.value != 0) {
                 // require total borrow is less than the max OR it scaled down
-                Types.Wei memory cachedBorrowWei = Interest.parToWei(
-                    Types.Par(true, cache.getAtIndex(i).borrowPar),
-                    cache.getAtIndex(i).index
-                );
+                Types.Par memory cachedBorrowPar = Types.Par({
+                    sign: false,
+                    value: cache.getAtIndex(i).borrowPar
+                });
+                Types.Wei memory cachedBorrowWei = Interest.parToWei(cachedBorrowPar, cache.getAtIndex(i).index);
                 Require.that(
                     totalBorrowWei.value <= maxBorrowWei.value || totalBorrowWei.value <= cachedBorrowWei.value,
                     FILE,
@@ -365,10 +366,11 @@ library OperationImpl {
             // check if too much is being supplied
             if (maxSupplyWei.value != 0) {
                 // require total supply is less than the max OR it scaled down
-                Types.Wei memory cachedSupplyWei = Interest.parToWei(
-                    Types.Par(true, cache.getAtIndex(i).supplyPar),
-                    cache.getAtIndex(i).index
-                );
+                Types.Par memory cachedSupplyPar = Types.Par({
+                    sign: true,
+                    value: cache.getAtIndex(i).supplyPar
+                });
+                Types.Wei memory cachedSupplyWei = Interest.parToWei(cachedSupplyPar, cache.getAtIndex(i).index);
                 Require.that(
                     totalSupplyWei.value <= maxSupplyWei.value || totalSupplyWei.value <= cachedSupplyWei.value,
                     FILE,
