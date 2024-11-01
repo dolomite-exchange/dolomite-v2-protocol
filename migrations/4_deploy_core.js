@@ -34,7 +34,7 @@ const {
   isBaseNetwork,
   isMantleNetwork,
   isXLayerNetwork,
-  isBeraBartio, isBeraNetwork,
+  isBeraNetwork,
 } = require('./helpers');
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
@@ -57,16 +57,18 @@ async function deployBaseProtocol(deployer, network) {
   const GettersImpl = artifacts.require('GettersImpl');
   const AlwaysOnlineOracleSentinel = artifacts.require('AlwaysOnlineOracleSentinel');
 
-  let operationImpl;
+  let operationImplName;
   if (!isDevNetwork(network)) {
-    operationImpl = artifacts.require('OperationImpl')
+    operationImplName = 'OperationImpl'
   } else {
-    operationImpl = artifacts.require('TestOperationImpl');
+    operationImplName = 'TestOperationImpl';
   }
+  const operationImpl = artifacts.require(operationImplName);
 
   let dolomiteMargin;
   if (isDevNetwork(network)) {
     dolomiteMargin = artifacts.require('TestDolomiteMargin');
+    await dolomiteMargin.link('TestOperationImpl', operationImpl.address)
   } else if (
     isEthereumMainnet(network) ||
     isArbitrumNetwork(network) ||

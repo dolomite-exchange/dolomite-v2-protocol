@@ -26,11 +26,8 @@ const {
   shouldOverwrite,
   getNoOverwriteParams,
   getExpiryRampTime,
-  isMantleNetwork,
-  isXLayerNetwork,
   setGlobalOperatorIfNecessary,
 } = require('./helpers');
-const { getWrappedCurrencyAddress } = require('./token_helpers');
 
 // ============ Contracts ============
 
@@ -48,7 +45,6 @@ const Expiry = artifacts.require('Expiry');
 const GenericTraderProxyV1 = artifacts.require('GenericTraderProxyV1');
 const GenericTraderProxyV1Lib = artifacts.require('GenericTraderProxyV1Lib');
 const EventEmitterRegistry = artifacts.require('EventEmitterRegistry');
-const PayableProxy = artifacts.require('PayableProxy');
 const SignedOperationProxy = artifacts.require('SignedOperationProxy');
 const TransferProxy = artifacts.require('TransferProxy');
 
@@ -121,6 +117,7 @@ async function deploySecondLayer(deployer, network) {
   }
 
   if (shouldOverwrite(SignedOperationProxy, network)) {
+  if (shouldOverwrite(SignedOperationProxy, network)) {
     await deployer.deploy(SignedOperationProxy, dolomiteMargin.address, getChainId(network));
   } else {
     await deployer.deploy(SignedOperationProxy, getNoOverwriteParams());
@@ -133,7 +130,6 @@ async function deploySecondLayer(deployer, network) {
       dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true),
       dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
       dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(PayableProxy.address, true),
       dolomiteMargin.ownerSetGlobalOperator(SignedOperationProxy.address, true),
       dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
     ]);
