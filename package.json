@@ -1,6 +1,6 @@
 {
   "name": "@dolomite-exchange/dolomite-margin",
-  "version": "0.12.12",
+  "version": "0.12.13",
   "description": "Ethereum Smart Contracts and TypeScript library used for the DolomiteMargin trading protocol",
   "engines": {
     "npm": "6.14.x"
@@ -96,7 +96,6 @@
   "homepage": "https://github.com/dolomite-exchange/dolomite-margin#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.1",
-    "@poanet/solidity-flattener": "^3.0.9",
     "@types/web3": "1.0.18",
     "@uniswap/lib": "^4.0.1-alpha",
     "axios": "^0.21.1",
@@ -109,6 +108,7 @@
     "web3": "1.2.1"
   },
   "devDependencies": {
+    "@poanet/solidity-flattener": "^3.0.9",
     "@truffle/config": "^1.2.14",
     "@truffle/hdwallet-provider": "2.0.6",
     "@types/axios": "^0.14.0",
