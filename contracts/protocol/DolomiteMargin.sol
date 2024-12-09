@@ -69,5 +69,6 @@ contract DolomiteMargin is
         AdminImpl.ownerSetAccountMaxNumberOfMarketsWithBalances(g_state, accountMaxNumberOfMarketsWithBalances);
         AdminImpl.ownerSetOracleSentinel(g_state, oracleSentinel);
         AdminImpl.ownerSetCallbackGasLimit(g_state, callbackGasLimit);
+        _transferOwnership(tx.origin);
     }
 }

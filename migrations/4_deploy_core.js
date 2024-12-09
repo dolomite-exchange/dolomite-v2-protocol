@@ -27,14 +27,14 @@ const {
   getRiskParams,
   getChainlinkOracleSentinelGracePeriod,
   getChainlinkSequencerUptimeFeed,
-  shouldOverwrite,
-  getNoOverwriteParams,
   isArbitrumNetwork,
   isPolygonZkEvmNetwork,
   isBaseNetwork,
   isMantleNetwork,
   isXLayerNetwork,
   isBeraNetwork,
+  getContract,
+  deployContractIfNecessary,
 } = require('./helpers');
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
@@ -53,9 +53,9 @@ module.exports = migration;
 
 async function deployBaseProtocol(deployer, network) {
   // Base Protocol
-  const AdminImpl = artifacts.require('AdminImpl');
-  const GettersImpl = artifacts.require('GettersImpl');
-  const AlwaysOnlineOracleSentinel = artifacts.require('AlwaysOnlineOracleSentinel');
+  const AdminImpl = await getContract(network, artifacts.require('AdminImpl'));
+  const GettersImpl = await getContract(network, artifacts.require('GettersImpl'));
+  const AlwaysOnlineOracleSentinel = await getContract(network, artifacts.require('AlwaysOnlineOracleSentinel'));
 
   let operationImplName;
   if (!isDevNetwork(network)) {
@@ -63,12 +63,12 @@ async function deployBaseProtocol(deployer, network) {
   } else {
     operationImplName = 'TestOperationImpl';
   }
-  const operationImpl = artifacts.require(operationImplName);
+  const OperationImpl = await getContract(network, artifacts.require(operationImplName));
 
   let dolomiteMargin;
   if (isDevNetwork(network)) {
     dolomiteMargin = artifacts.require('TestDolomiteMargin');
-    await dolomiteMargin.link('TestOperationImpl', operationImpl.address)
+    await dolomiteMargin.link('TestOperationImpl', OperationImpl.address)
   } else if (
     isEthereumMainnet(network) ||
     isArbitrumNetwork(network) ||
@@ -86,14 +86,17 @@ async function deployBaseProtocol(deployer, network) {
   await Promise.all([
     dolomiteMargin.link('AdminImpl', AdminImpl.address),
     dolomiteMargin.link('GettersImpl', GettersImpl.address),
-    dolomiteMargin.link('OperationImpl', operationImpl.address),
+    dolomiteMargin.link('OperationImpl', OperationImpl.address),
   ]);
 
-  if (shouldOverwrite(dolomiteMargin, network)) {
-    const riskParams = await getRiskParams(network);
-    await deployer.deploy(
-      dolomiteMargin,
-      getRiskLimits(),
+  const riskParams = await getRiskParams(network);
+  dolomiteMargin = await deployContractIfNecessary(
+    artifacts,
+    deployer,
+    network,
+    dolomiteMargin,
+    [
+      await getRiskLimits(),
       riskParams.marginRatio,
       riskParams.liquidationSpread,
       riskParams.earningsRate,
@@ -101,29 +104,27 @@ async function deployBaseProtocol(deployer, network) {
       riskParams.accountMaxNumberOfMarketsWithBalances,
       AlwaysOnlineOracleSentinel.address,
       riskParams.callbackGasLimit,
-    );
-  } else {
-    await deployer.deploy(dolomiteMargin, getNoOverwriteParams());
-  }
+    ],
+  );
 
   const TestSequencerUptimeFeedAggregator = artifacts.require('TestSequencerUptimeFeedAggregator');
   const ChainlinkOracleSentinel = artifacts.require('ChainlinkOracleSentinel');
   let uptimeFeed = getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggregator);
   if (uptimeFeed) {
-    if (shouldOverwrite(ChainlinkOracleSentinel, network)) {
-      await deployer.deploy(
-        ChainlinkOracleSentinel,
+    const chainlinkOracleSentinel = await deployContractIfNecessary(
+      artifacts,
+      deployer,
+      network,
+      ChainlinkOracleSentinel,
+      [
         getChainlinkOracleSentinelGracePeriod(),
         uptimeFeed,
         dolomiteMargin.address,
-      );
-    } else {
-      await deployer.deploy(ChainlinkOracleSentinel, getNoOverwriteParams());
-    }
+      ],
+    )
 
-    dolomiteMargin = await getDolomiteMargin(network);
-    if ((await dolomiteMargin.getOracleSentinel()).toLowerCase() !== ChainlinkOracleSentinel.address.toLowerCase()) {
-      await dolomiteMargin.ownerSetOracleSentinel(ChainlinkOracleSentinel.address);
+    if ((await dolomiteMargin.getOracleSentinel()).toLowerCase() !== chainlinkOracleSentinel.address.toLowerCase()) {
+      await dolomiteMargin.ownerSetOracleSentinel(chainlinkOracleSentinel.address);
     }
   }
 }
@@ -149,11 +150,4 @@ async function deployTestContractsForDolomiteMarginDep(deployer, network) {
       deployer.deploy(TestSimpleCallee, TestDolomiteMargin.address),
     ]);
   }
-}
-
-async function getDolomiteMargin(network) {
-  if (isDevNetwork(network)) {
-    return TestDolomiteMargin.deployed();
-  }
-  return DolomiteMargin.deployed();
 }

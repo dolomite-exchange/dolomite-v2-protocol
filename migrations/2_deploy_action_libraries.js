@@ -25,7 +25,7 @@ const {
   getPolynomialParams,
   getDoubleExponentParams,
   shouldOverwrite,
-  getNoOverwriteParams,
+  getNoOverwriteParams, deployContractIfNecessary,
 } = require('./helpers');
 
 // ============ Main Migration ============
@@ -98,51 +98,12 @@ async function deployBaseProtocol(deployer, network) {
   const TransferImpl = artifacts.require('TransferImpl');
   const WithdrawalImpl = artifacts.require('WithdrawalImpl');
 
-  if (shouldOverwrite(CallImpl, network)) {
-    await deployer.deploy(CallImpl);
-  } else {
-    await deployer.deploy(CallImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(DepositImpl, network)) {
-    await deployer.deploy(DepositImpl);
-  } else {
-    await deployer.deploy(DepositImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(LiquidateOrVaporizeImpl, network)) {
-    await deployer.deploy(LiquidateOrVaporizeImpl);
-  } else {
-    await deployer.deploy(LiquidateOrVaporizeImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(TradeImpl, network)) {
-    await deployer.deploy(TradeImpl);
-  } else {
-    await deployer.deploy(TradeImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(TransferImpl, network)) {
-    await deployer.deploy(TransferImpl);
-  } else {
-    await deployer.deploy(TransferImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(WithdrawalImpl, network)) {
-    await deployer.deploy(WithdrawalImpl);
-  } else {
-    await deployer.deploy(WithdrawalImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(AdminImpl, network)) {
-    await deployer.deploy(AdminImpl);
-  } else {
-    await deployer.deploy(AdminImpl, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(GettersImpl, network)) {
-    await deployer.deploy(GettersImpl);
-  } else {
-    await deployer.deploy(GettersImpl, getNoOverwriteParams());
-  }
+  await deployContractIfNecessary(artifacts, deployer, network, CallImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, DepositImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, LiquidateOrVaporizeImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, TradeImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, TransferImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, WithdrawalImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, AdminImpl);
+  await deployContractIfNecessary(artifacts, deployer, network, GettersImpl);
 }

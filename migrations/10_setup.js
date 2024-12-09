@@ -28,7 +28,7 @@ const {
   isBeraNetwork,
   isMantleNetwork,
   isXLayerNetwork,
-  isBaseNetwork,
+  isBaseNetwork, getContract,
 } = require('./helpers');
 const {
   getDaiAddress,
@@ -71,7 +71,7 @@ module.exports = migration;
 // ============ Setup Functions ============
 
 async function setupProtocol(deployer, network) {
-  const expiry = await Expiry.deployed();
+  const expiry = await getContract(network, Expiry);
   const dolomiteMargin = await getDolomiteMargin(network);
   await dolomiteMargin.ownerSetAutoTraderSpecial(expiry.address, true);
 
@@ -87,7 +87,7 @@ async function setupProtocol(deployer, network) {
   await addMarkets(dolomiteMargin, tokens, oracles, setters);
 
   const depositWithdrawalProxy = await DepositWithdrawalProxy.deployed();
-  depositWithdrawalProxy.initializeETHMarket(getWrappedCurrencyAddress(network, TestWETH));
+  depositWithdrawalProxy.initializePayableMarket(getWrappedCurrencyAddress(network, TestWETH));
 }
 
 async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters) {
@@ -117,9 +117,9 @@ async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters)
 
 async function getDolomiteMargin(network) {
   if (isDevNetwork(network)) {
-    return TestDolomiteMargin.deployed();
+    return getContract(network, TestDolomiteMargin);
   }
-  return DolomiteMargin.deployed();
+  return getContract(network, DolomiteMargin);
 }
 
 function getTokens(network) {

@@ -22,13 +22,10 @@
 
 const {
   isDevNetwork,
-  shouldOverwrite,
-  getNoOverwriteParams,
+  deployContractIfNecessary,
+  getContract,
 } = require('./helpers');
-const {
-  getChainlinkPriceOracleContract,
-  getChainlinkPriceOracleV1Params
-} = require('./oracle_helpers');
+const { getChainlinkPriceOracleContract, getChainlinkPriceOracleV1Params } = require('./oracle_helpers');
 
 // ============ Contracts ============
 
@@ -70,13 +67,13 @@ async function deployPriceOracles(deployer, network) {
     await deployer.deploy(TestPriceOracle);
 
     await Promise.all([
-      deployer.deploy(TestBtcUsdChainlinkAggregator),
-      deployer.deploy(TestDaiUsdChainlinkAggregator),
-      deployer.deploy(TestEthUsdChainlinkAggregator),
-      deployer.deploy(TestLinkUsdChainlinkAggregator),
-      deployer.deploy(TestLrcEthChainlinkAggregator),
-      deployer.deploy(TestMaticUsdChainlinkAggregator),
-      deployer.deploy(TestUsdcUsdChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestBtcUsdChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestDaiUsdChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestEthUsdChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestLinkUsdChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestLrcEthChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestMaticUsdChainlinkAggregator),
+      deployContractIfNecessary(artifacts, deployer, network, TestUsdcUsdChainlinkAggregator),
     ]);
 
     const tokens = {
@@ -103,24 +100,22 @@ async function deployPriceOracles(deployer, network) {
 
   const oracleContract = getChainlinkPriceOracleContract(network, artifacts);
 
-  if (shouldOverwrite(oracleContract, network)) {
-    const dolomiteMargin = await getDolomiteMargin(network);
-    await deployer.deploy(
-      oracleContract,
-      params ? params.tokens : [],
-      params ? params.aggregators : [],
-      params ? params.tokenDecimals : [],
-      params ? params.tokenPairs : [],
-      dolomiteMargin.address,
-    );
-  } else {
-    await deployer.deploy(oracleContract, getNoOverwriteParams());
-  }
+  const dolomiteMargin = await getDolomiteMargin(network);
+  await deployContractIfNecessary(artifacts, deployer, network, oracleContract, [
+    params ? params.tokens : [],
+    params ? params.aggregators : [],
+    params ? params.tokenDecimals : [],
+    params ? params.tokenPairs : [],
+    dolomiteMargin.address,
+  ]);
 }
 
 async function getDolomiteMargin(network) {
+  let artifact;
   if (isDevNetwork(network)) {
-    return TestDolomiteMargin.deployed();
+    artifact = TestDolomiteMargin;
+  } else {
+    artifact = DolomiteMargin;
   }
-  return DolomiteMargin.deployed();
+  return getContract(network, artifact);
 }

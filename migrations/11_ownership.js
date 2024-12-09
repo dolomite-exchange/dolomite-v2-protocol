@@ -20,36 +20,20 @@
  * @typedef {Object} artifacts
  */
 
-const {
-  isDevNetwork,
-  getDelayedMultisigAddress,
-} = require('./helpers');
+const { isDevNetwork, getDelayedMultisigAddress, getContract, isBeraCartio } = require('./helpers');
 
 // ============ Contracts ============
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
-const SignedOperationProxy = artifacts.require('SignedOperationProxy');
 
 // ============ Main Migration ============
 
 const migration = async (deployer, network) => {
-  if (!isDevNetwork(network)) {
+  if (!isDevNetwork(network) && !isBeraCartio(network)) {
     const delayedMultisig = getDelayedMultisigAddress(network);
 
-    const deployedDolomiteMargin = await DolomiteMargin.deployed();
-    await deployedDolomiteMargin.transferOwnership(delayedMultisig);
-
-    if (isDevNetwork(network)) {
-      const [
-        deployedSignedOperationProxy,
-      ] = await Promise.all([
-        SignedOperationProxy.deployed(),
-      ]);
-
-      await Promise.all([
-        deployedSignedOperationProxy.transferOwnership(delayedMultisig),
-      ]);
-    }
+    const dolomiteMargin = await getContract(network, DolomiteMargin);
+    await dolomiteMargin.transferOwnership(delayedMultisig);
   }
 };
 

@@ -1,7 +1,6 @@
-const {
-  coefficientsToString,
-  decimalToString
-} = require('../dist/src/lib/Helpers');
+const { readFileSync, writeFileSync } = require('fs');
+const Web3 = require('web3');
+const { coefficientsToString, decimalToString } = require('../dist/src/lib/Helpers');
 
 // ============ Network Helper Functions ============
 
@@ -13,10 +12,7 @@ async function setGlobalOperatorIfNecessary(dolomiteMargin, contractAddress) {
 
 function isDevNetwork(network) {
   verifyNetwork(network);
-  return network === 'dev'
-    || network === 'docker'
-    || isCoverageTestNetwork(network)
-    || isLocalTestNetwork(network);
+  return network === 'dev' || network === 'docker' || isCoverageTestNetwork(network) || isLocalTestNetwork(network);
 }
 
 function isLocalTestNetwork(network) {
@@ -40,7 +36,7 @@ function isPolygonZkEvmNetwork(network) {
 }
 
 function isBeraNetwork(network) {
-  return isBera(network);
+  return isBeraBartio(network) || isBeraCartio(network);
 }
 
 function isMantleNetwork(network) {
@@ -67,9 +63,14 @@ function isPolygonZkEvm(network) {
   return network === 'polygon_zkevm';
 }
 
-function isBera(network) {
+function isBeraBartio(network) {
   verifyNetwork(network);
-  return network === 'berachain';
+  return network === 'berachain_bartio';
+}
+
+function isBeraCartio(network) {
+  verifyNetwork(network);
+  return network === 'berachain_cartio';
 }
 
 function isMantle(network) {
@@ -135,8 +136,11 @@ function getChainId(network) {
   if (isMantle(network)) {
     return 5000;
   }
-  if (isBera(network)) {
+  if (isBeraBartio(network)) {
     return 80084;
+  }
+  if (isBeraCartio(network)) {
+    return 80000;
   }
   throw new Error('No chainId for network ' + network);
 }
@@ -195,13 +199,13 @@ function verifyNetwork(network) {
 
 function getDelayedMultisigAddress(network) {
   if (
-    isEthereumMainnet(network)
-    || isArbitrumNetwork(network)
-    || isPolygonZkEvmNetwork(network)
-    || isBaseNetwork(network)
-    || isMantleNetwork(network)
-    || isBeraNetwork(network)
-    || isXLayerNetwork(network)
+    isEthereumMainnet(network) ||
+    isArbitrumNetwork(network) ||
+    isPolygonZkEvmNetwork(network) ||
+    isBaseNetwork(network) ||
+    isMantleNetwork(network) ||
+    isBeraNetwork(network) ||
+    isXLayerNetwork(network)
   ) {
     return '0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9';
   }
@@ -244,6 +248,73 @@ const shouldOverwrite = (contract, network) => {
 
 const getNoOverwriteParams = () => ({ overwrite: false });
 
+async function deployContractIfNecessary(artifacts, deployer, network, artifact, parameters) {
+  const contractName = artifact.toJSON().contractName;
+
+  if (shouldOverwrite(artifact, network)) {
+    if (!isDevNetwork(network)) {
+      const json = JSON.parse(readFileSync('migrations/deployed.json').toString());
+      if (
+        json[contractName] &&
+        json[contractName][getChainId(network)] &&
+        json[contractName][getChainId(network)].address !== '0x0000000000000000000000000000000000000000'
+      ) {
+        return await artifact.at(json[contractName][getChainId(network)].address);
+      }
+
+      const web3 = new Web3(deployer.provider);
+      let bytecode = artifact.bytecode;
+      Object.keys(artifact.links).forEach(key => {
+        bytecode = bytecode.split(`__${key}${'_'.repeat(38 - key.length)}`).join(artifact.links[key].substring(2));
+      });
+      const code = new web3.eth.Contract(artifact.toJSON().abi)
+        .deploy({
+          data: bytecode,
+          arguments: parameters ? parameters : [],
+        })
+        .encodeABI();
+      const salt = Web3.utils.keccak256(web3.eth.abi.encodeParameters(['string'], [contractName]));
+
+      const CREATE3Factory = await artifacts
+        .require('ICREATE3Factory')
+        .at('0xa8F7e7A361De6A2172fcb2accE68bd21597599F7');
+
+      const deployerAddress = web3.eth.accounts.privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY);
+      const contractAddress = await CREATE3Factory.getDeployed(deployerAddress.address, salt);
+      if ((await web3.eth.getCode(contractAddress)) === '0x') {
+        const result = await CREATE3Factory.deploy(salt, code);
+        if (!json[contractName]) {
+          json[contractName] = {};
+        }
+        json[contractName][getChainId(network)] = {
+          links: artifact.links,
+          address: contractAddress,
+          transactionHash: result.receipt.transactionHash,
+        };
+        writeFileSync('migrations/deployed.json', JSON.stringify(json, null, 2));
+      }
+
+      return await artifact.at(contractAddress);
+    } else {
+      await deployer.deploy(artifact, ...(parameters ? parameters : []));
+      return await artifact.deployed();
+    }
+  } else {
+    const json = JSON.parse(readFileSync('migrations/deployed.json').toString());
+    return artifact.at(json[contractName][getChainId(network)].address);
+  }
+}
+
+async function getContract(network, artifact) {
+  if (isDevNetwork(network)) {
+    return artifact.at(artifact.address);
+  } else {
+    const contractName = artifact.toJSON().contractName;
+    const json = JSON.parse(readFileSync('migrations/deployed.json').toString());
+    return await artifact.at(json[contractName][getChainId(network)].address);
+  }
+}
+
 module.exports = {
   isArbitrumNetwork,
   isBase,
@@ -255,6 +326,7 @@ module.exports = {
   isEthereumMainnet,
   isPolygonZkEvm,
   isBeraNetwork,
+  isBeraCartio,
   isMantleNetwork,
   isXLayerNetwork,
   isDocker,
@@ -269,4 +341,6 @@ module.exports = {
   shouldOverwrite,
   getNoOverwriteParams,
   setGlobalOperatorIfNecessary,
+  deployContractIfNecessary,
+  getContract,
 };

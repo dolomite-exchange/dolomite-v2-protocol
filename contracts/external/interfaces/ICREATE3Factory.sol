@@ -1,0 +1,47 @@
+/*
+
+    Copyright 2024 Dolomite.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+*/
+
+pragma solidity ^0.5.7;
+pragma experimental ABIEncoderV2;
+
+
+/// @title Factory for deploying contracts to deterministic addresses via CREATE3
+/// @author zefram.eth
+/// @notice Enables deploying contracts using CREATE3. Each deployer (msg.sender) has
+/// its own namespace for deployed addresses.
+interface ICREATE3Factory {
+    /// @notice Deploys a contract using CREATE3
+    /// @dev The provided salt is hashed together with msg.sender to generate the final salt
+    /// @param salt The deployer-specific salt for determining the deployed contract's address
+    /// @param creationCode The creation code of the contract to deploy
+    /// @return deployed The address of the deployed contract
+    function deploy(bytes32 salt, bytes calldata creationCode)
+    external
+    payable
+    returns (address deployed);
+
+    /// @notice Predicts the address of a deployed contract
+    /// @dev The provided salt is hashed together with the deployer address to generate the final salt
+    /// @param deployer The deployer account that will call deploy()
+    /// @param salt The deployer-specific salt for determining the deployed contract's address
+    /// @return deployed The address of the contract that will be deployed
+    function getDeployed(address deployer, bytes32 salt)
+    external
+    view
+    returns (address deployed);
+}

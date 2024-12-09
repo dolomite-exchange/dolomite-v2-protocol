@@ -21,11 +21,11 @@
  */
 
 const {
-  shouldOverwrite,
-  getNoOverwriteParams,
   isArbitrumNetwork,
   isDevNetwork,
   getChainId,
+  deployContractIfNecessary,
+  getContract,
 } = require('./helpers');
 
 // ============ Contracts ============
@@ -34,6 +34,7 @@ const {
 const AccountValuesReader = artifacts.require('AccountValuesReader');
 const ArbitrumMultiCall = artifacts.require('ArbitrumMultiCall');
 const DolomiteMargin = artifacts.require('DolomiteMargin');
+const LiquidatorAssetRegistry = artifacts.require('LiquidatorAssetRegistry');
 const MultiCall = artifacts.require('MultiCall');
 const TestDolomiteMargin = artifacts.require('TestDolomiteMargin');
 
@@ -48,6 +49,7 @@ module.exports = migration;
 // ============ Deploy Functions ============
 
 async function deployMultiCall(deployer, network) {
+  const dolomiteMargin = await getContract(network, isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin);
   let multiCall;
   if (isArbitrumNetwork(network)) {
     multiCall = ArbitrumMultiCall;
@@ -55,19 +57,20 @@ async function deployMultiCall(deployer, network) {
     multiCall = MultiCall;
   }
 
-  if (shouldOverwrite(multiCall, network)) {
-    await deployer.deploy(multiCall);
-  } else {
-    await deployer.deploy(multiCall, getNoOverwriteParams());
-  }
+  await deployContractIfNecessary(artifacts, deployer, network, multiCall);
+  const liquidatorAssetRegistry = await deployContractIfNecessary(
+    artifacts,
+    deployer,
+    network,
+    LiquidatorAssetRegistry,
+    [dolomiteMargin.address],
+  );
 
   if (isArbitrumNetwork(network)) {
-    if (shouldOverwrite(AccountValuesReader, network)) {
-      let dolomiteMargin = isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin;
-
-      await deployer.deploy(AccountValuesReader, getChainId(network), dolomiteMargin);
-    } else {
-      await deployer.deploy(AccountValuesReader, getNoOverwriteParams());
-    }
+    await deployContractIfNecessary(artifacts, deployer, network, AccountValuesReader, [
+      getChainId(network),
+      dolomiteMargin.address,
+      liquidatorAssetRegistry.address,
+    ]);
   }
 }

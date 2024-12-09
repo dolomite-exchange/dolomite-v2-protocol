@@ -23,10 +23,10 @@
 const {
   isDevNetwork,
   getChainId,
-  shouldOverwrite,
-  getNoOverwriteParams,
   getExpiryRampTime,
   setGlobalOperatorIfNecessary,
+  deployContractIfNecessary,
+  getContract,
 } = require('./helpers');
 
 // ============ Contracts ============
@@ -61,91 +61,66 @@ module.exports = migration;
 async function deploySecondLayer(deployer, network) {
   const dolomiteMargin = await getDolomiteMargin(network);
 
-  if (shouldOverwrite(TransferProxy, network)) {
-    await deployer.deploy(TransferProxy, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(TransferProxy, getNoOverwriteParams());
-  }
+  const transferProxy = await deployContractIfNecessary(artifacts, deployer, network, TransferProxy, [
+    dolomiteMargin.address,
+  ]);
+  const borrowPositionProxyV1 = await deployContractIfNecessary(artifacts, deployer, network, BorrowPositionProxyV1, [
+    dolomiteMargin.address,
+  ]);
+  const borrowPositionProxyV2 = await deployContractIfNecessary(artifacts, deployer, network, BorrowPositionProxyV2, [
+    dolomiteMargin.address,
+  ]);
+  const depositWithdrawalProxy = await deployContractIfNecessary(artifacts, deployer, network, DepositWithdrawalProxy, [
+    dolomiteMargin.address,
+  ]);
+  const eventEmitter = await deployContractIfNecessary(artifacts, deployer, network, EventEmitterRegistry, [
+    dolomiteMargin.address,
+  ]);
+  const expiry = await deployContractIfNecessary(artifacts, deployer, network, Expiry, [
+    dolomiteMargin.address,
+    getExpiryRampTime(network),
+  ]);
+  const genericTraderProxyV1Lib = await deployContractIfNecessary(
+    artifacts,
+    deployer,
+    network,
+    GenericTraderProxyV1Lib,
+    [],
+  );
 
-  if (shouldOverwrite(BorrowPositionProxyV1, network)) {
-    await deployer.deploy(BorrowPositionProxyV1, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(BorrowPositionProxyV1, getNoOverwriteParams());
-  }
+  GenericTraderProxyV1.link('GenericTraderProxyV1Lib', genericTraderProxyV1Lib.address);
+  const genericTraderProxyV1 = await deployContractIfNecessary(artifacts, deployer, network, GenericTraderProxyV1, [
+    getChainId(network),
+    eventEmitter.address,
+    expiry.address,
+    dolomiteMargin.address,
+  ]);
 
-  if (shouldOverwrite(BorrowPositionProxyV2, network)) {
-    await deployer.deploy(BorrowPositionProxyV2, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(BorrowPositionProxyV2, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(DepositWithdrawalProxy, network)) {
-    await deployer.deploy(DepositWithdrawalProxy, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(DepositWithdrawalProxy, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(EventEmitterRegistry, network)) {
-    await deployer.deploy(EventEmitterRegistry, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(EventEmitterRegistry, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(Expiry, network)) {
-    await deployer.deploy(Expiry, dolomiteMargin.address, getExpiryRampTime(network));
-  } else {
-    await deployer.deploy(Expiry, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(GenericTraderProxyV1Lib, network)) {
-    await deployer.deploy(GenericTraderProxyV1Lib);
-  } else {
-    await deployer.deploy(GenericTraderProxyV1, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(GenericTraderProxyV1, network)) {
-    GenericTraderProxyV1.link('GenericTraderProxyV1Lib', GenericTraderProxyV1Lib.address);
-    await deployer.deploy(
-      GenericTraderProxyV1,
-      getChainId(network),
-      Expiry.address,
-      EventEmitterRegistry.address,
-      dolomiteMargin.address
-    );
-  } else {
-    await deployer.deploy(GenericTraderProxyV1, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(SignedOperationProxy, network)) {
-  if (shouldOverwrite(SignedOperationProxy, network)) {
-    await deployer.deploy(SignedOperationProxy, dolomiteMargin.address, getChainId(network));
-  } else {
-    await deployer.deploy(SignedOperationProxy, getNoOverwriteParams());
-  }
+  const signedOperationProxy = await deployContractIfNecessary(artifacts, deployer, network, SignedOperationProxy, [
+    dolomiteMargin.address,
+    getChainId(network),
+  ]);
 
   if (isDevNetwork(network)) {
     await Promise.all([
-      dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV1.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(BorrowPositionProxyV2.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(DepositWithdrawalProxy.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(Expiry.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(GenericTraderProxyV1.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(SignedOperationProxy.address, true),
-      dolomiteMargin.ownerSetGlobalOperator(TransferProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(borrowPositionProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(borrowPositionProxyV2.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(depositWithdrawalProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(expiry.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(genericTraderProxyV1.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(signedOperationProxy.address, true),
+      dolomiteMargin.ownerSetGlobalOperator(transferProxy.address, true),
     ]);
   } else {
-    await setGlobalOperatorIfNecessary(dolomiteMargin, BorrowPositionProxyV1.address);
-    await setGlobalOperatorIfNecessary(dolomiteMargin, BorrowPositionProxyV2.address);
-    await setGlobalOperatorIfNecessary(dolomiteMargin, DepositWithdrawalProxy.address);
-    await setGlobalOperatorIfNecessary(dolomiteMargin, Expiry.address);
-    await setGlobalOperatorIfNecessary(dolomiteMargin, GenericTraderProxyV1.address);
-    await setGlobalOperatorIfNecessary(dolomiteMargin, TransferProxy.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, borrowPositionProxyV1.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, borrowPositionProxyV2.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, depositWithdrawalProxy.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, expiry.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, genericTraderProxyV1.address);
+    await setGlobalOperatorIfNecessary(dolomiteMargin, transferProxy.address);
   }
 }
 
 async function getDolomiteMargin(network) {
-  if (isDevNetwork(network)) {
-    return TestDolomiteMargin.deployed();
-  }
-  return DolomiteMargin.deployed();
+  return getContract(network, isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin);
 }

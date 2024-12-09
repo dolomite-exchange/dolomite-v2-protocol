@@ -22,10 +22,10 @@
 
 const {
   isDevNetwork,
-  shouldOverwrite,
-  getNoOverwriteParams,
   setGlobalOperatorIfNecessary,
   getChainId,
+  getContract,
+  deployContractIfNecessary,
 } = require('./helpers');
 
 // ============ Contracts ============
@@ -55,50 +55,32 @@ module.exports = migration;
 
 async function deploySecondLayer(deployer, network) {
   const dolomiteMargin = await getDolomiteMargin(network);
+  const expiry = await getContract(network, Expiry);
+  const liquidatorAssetRegistry = await getContract(network, LiquidatorAssetRegistry);
 
-  if (shouldOverwrite(LiquidatorAssetRegistry, network)) {
-    await deployer.deploy(LiquidatorAssetRegistry, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(LiquidatorAssetRegistry, getNoOverwriteParams());
-  }
+  const expiryProxy = await deployContractIfNecessary(artifacts, deployer, network, ExpiryProxy, [
+    liquidatorAssetRegistry.address,
+    expiry.address,
+    dolomiteMargin.address,
+  ]);
+  const liquidatorProxyV1 = await deployContractIfNecessary(artifacts, deployer, network, LiquidatorProxyV1, [
+    getChainId(network),
+    liquidatorAssetRegistry.address,
+    dolomiteMargin.address,
+  ]);
+  const liquidatorProxyV4WithGenericTrader = await deployContractIfNecessary(
+    artifacts,
+    deployer,
+    network,
+    LiquidatorProxyV4WithGenericTrader,
+    [getChainId(network), expiry.address, dolomiteMargin.address, liquidatorAssetRegistry.address],
+  );
 
-  if (shouldOverwrite(ExpiryProxy, network)) {
-    await deployer.deploy(ExpiryProxy, LiquidatorAssetRegistry.address, Expiry.address, dolomiteMargin.address);
-  } else {
-    await deployer.deploy(ExpiryProxy, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(LiquidatorProxyV1, network)) {
-    await deployer.deploy(
-      LiquidatorProxyV1,
-      getChainId(network),
-      LiquidatorAssetRegistry.address,
-      dolomiteMargin.address,
-    );
-  } else {
-    await deployer.deploy(LiquidatorProxyV1, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(LiquidatorProxyV4WithGenericTrader, network)) {
-    await deployer.deploy(
-      LiquidatorProxyV4WithGenericTrader,
-      getChainId(network),
-      Expiry.address,
-      dolomiteMargin.address,
-      LiquidatorAssetRegistry.address,
-    );
-  } else {
-    await deployer.deploy(LiquidatorProxyV4WithGenericTrader, getNoOverwriteParams());
-  }
-
-  await setGlobalOperatorIfNecessary(dolomiteMargin, ExpiryProxy.address);
-  await setGlobalOperatorIfNecessary(dolomiteMargin, LiquidatorProxyV1.address);
-  await setGlobalOperatorIfNecessary(dolomiteMargin, LiquidatorProxyV4WithGenericTrader.address);
+  await setGlobalOperatorIfNecessary(dolomiteMargin, expiryProxy.address);
+  await setGlobalOperatorIfNecessary(dolomiteMargin, liquidatorProxyV1.address);
+  await setGlobalOperatorIfNecessary(dolomiteMargin, liquidatorProxyV4WithGenericTrader.address);
 }
 
 async function getDolomiteMargin(network) {
-  if (isDevNetwork(network)) {
-    return TestDolomiteMargin.deployed();
-  }
-  return DolomiteMargin.deployed();
+  return getContract(network, isDevNetwork(network) ? TestDolomiteMargin : DolomiteMargin);
 }

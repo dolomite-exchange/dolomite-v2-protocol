@@ -22,8 +22,8 @@
 
 const {
   isDevNetwork,
-  shouldOverwrite,
-  getNoOverwriteParams,
+  getContract,
+  deployContractIfNecessary,
 } = require('./helpers');
 
 // ============ Main Migration ============
@@ -38,12 +38,12 @@ module.exports = migration;
 
 async function deployBaseProtocol(deployer, network) {
   // Base Protocol
-  const CallImpl = artifacts.require('CallImpl');
-  const DepositImpl = artifacts.require('DepositImpl');
-  const LiquidateOrVaporizeImpl = artifacts.require('LiquidateOrVaporizeImpl');
-  const TradeImpl = artifacts.require('TradeImpl');
-  const TransferImpl = artifacts.require('TransferImpl');
-  const WithdrawalImpl = artifacts.require('WithdrawalImpl');
+  const callImpl = await getContract(network, artifacts.require('CallImpl'));
+  const depositImpl = await getContract(network, artifacts.require('DepositImpl'));
+  const liquidateOrVaporizeImpl = await getContract(network, artifacts.require('LiquidateOrVaporizeImpl'));
+  const tradeImpl = await getContract(network, artifacts.require('TradeImpl'));
+  const transferImpl = await getContract(network, artifacts.require('TransferImpl'));
+  const withdrawalImpl = await getContract(network, artifacts.require('WithdrawalImpl'));
 
   let operationImpl;
   if (!isDevNetwork(network)) {
@@ -52,23 +52,14 @@ async function deployBaseProtocol(deployer, network) {
     operationImpl = artifacts.require('TestOperationImpl');
   }
 
-  operationImpl.link('CallImpl', CallImpl.address);
-  operationImpl.link('DepositImpl', DepositImpl.address);
-  operationImpl.link('LiquidateOrVaporizeImpl', LiquidateOrVaporizeImpl.address);
-  operationImpl.link('TradeImpl', TradeImpl.address);
-  operationImpl.link('TransferImpl', TransferImpl.address);
-  operationImpl.link('WithdrawalImpl', WithdrawalImpl.address);
-  if (shouldOverwrite(operationImpl, network)) {
-    await deployer.deploy(operationImpl);
-  } else {
-    await deployer.deploy(operationImpl, getNoOverwriteParams());
-  }
+  operationImpl.link('CallImpl', callImpl.address);
+  operationImpl.link('DepositImpl', depositImpl.address);
+  operationImpl.link('LiquidateOrVaporizeImpl', liquidateOrVaporizeImpl.address);
+  operationImpl.link('TradeImpl', tradeImpl.address);
+  operationImpl.link('TransferImpl', transferImpl.address);
+  operationImpl.link('WithdrawalImpl', withdrawalImpl.address);
+  await deployContractIfNecessary(artifacts, deployer, network, operationImpl);
 
-  // Oracle Sentinels
   const AlwaysOnlineOracleSentinel = artifacts.require('AlwaysOnlineOracleSentinel');
-  if (shouldOverwrite(AlwaysOnlineOracleSentinel, network)) {
-    await deployer.deploy(AlwaysOnlineOracleSentinel);
-  } else {
-    await deployer.deploy(AlwaysOnlineOracleSentinel, getNoOverwriteParams());
-  }
+  await deployContractIfNecessary(artifacts, deployer, network, AlwaysOnlineOracleSentinel);
 }

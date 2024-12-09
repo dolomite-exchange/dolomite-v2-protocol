@@ -182,6 +182,7 @@ OnlyDolomiteMargin,
         public
         OnlyDolomiteMargin(dolomiteMargin)
     {
+        _transferOwnership(tx.origin);
         g_isOperational = true;
 
         /* solium-disable-next-line indentation */

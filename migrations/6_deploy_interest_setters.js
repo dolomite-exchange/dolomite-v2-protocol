@@ -20,12 +20,7 @@
  * @typedef {Object} artifacts
  */
 
-const {
-  isDevNetwork,
-  getDoubleExponentParams,
-  shouldOverwrite,
-  getNoOverwriteParams,
-} = require('./helpers');
+const { isDevNetwork, deployContractIfNecessary, getDoubleExponentParams } = require('./helpers');
 
 // ============ Contracts ============
 
@@ -50,30 +45,13 @@ module.exports = migration;
 
 async function deployInterestSetters(deployer, network) {
   if (isDevNetwork(network)) {
-    await deployer.deploy(TestInterestSetter);
+    await deployContractIfNecessary(artifacts, deployer, network, TestInterestSetter);
   }
 
-  if (shouldOverwrite(AAVECopyCatAltCoinInterestSetter, network)) {
-    await deployer.deploy(AAVECopyCatAltCoinInterestSetter);
-  } else {
-    await deployer.deploy(AAVECopyCatAltCoinInterestSetter, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(AAVECopyCatStableCoinInterestSetter, network)) {
-    await deployer.deploy(AAVECopyCatStableCoinInterestSetter);
-  } else {
-    await deployer.deploy(AAVECopyCatStableCoinInterestSetter, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(AlwaysZeroInterestSetter, network)) {
-    await deployer.deploy(AlwaysZeroInterestSetter);
-  } else {
-    await deployer.deploy(AlwaysZeroInterestSetter, getNoOverwriteParams());
-  }
-
-  if (shouldOverwrite(DoubleExponentInterestSetter, network)) {
-    await deployer.deploy(DoubleExponentInterestSetter, getDoubleExponentParams(network));
-  } else {
-    await deployer.deploy(DoubleExponentInterestSetter, getNoOverwriteParams());
-  }
+  await deployContractIfNecessary(artifacts, deployer, network, AAVECopyCatAltCoinInterestSetter);
+  await deployContractIfNecessary(artifacts, deployer, network, AAVECopyCatStableCoinInterestSetter);
+  await deployContractIfNecessary(artifacts, deployer, network, AlwaysZeroInterestSetter);
+  await deployContractIfNecessary(artifacts, deployer, network, DoubleExponentInterestSetter, [
+    await getDoubleExponentParams(network),
+  ]);
 }
