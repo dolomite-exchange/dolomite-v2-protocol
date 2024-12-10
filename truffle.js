@@ -108,7 +108,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider({
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: process.env.ARBITRUM_NODE_URL,
+          providerOrUrl: process.env.ARBITRUM_RPC_URL,
         });
       },
       gasPrice: 1000000000, // 1 gwei
@@ -117,28 +117,6 @@ module.exports = {
       networkCheckTimeout: 120000,
       confirmations: 0,
       disableConfirmationListener: true,
-    },
-    polygon_zkevm: {
-      network_id: '1101',
-      provider: () => {
-        return new HDWalletProvider({
-          pollingInterval,
-          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: process.env.POLYGON_ZKEVM_NODE_URL,
-        });
-      },
-      gasPrice: 7500000000, // 7.5 gwei
-      gas: 12000000,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-      confirmations: 0,
-      deploymentPollingInterval: pollingInterval,
-      disableConfirmationListener: true,
-      verify: {
-        apiUrl: 'https://api-zkevm.polygonscan.com/api',
-        apiKey: process.env.POLYGONSCAN_API_KEY,
-        explorerUrl: 'https://zkevm.polygonscan.com/address',
-      },
     },
     base: {
       network_id: '8453',
@@ -184,59 +162,13 @@ module.exports = {
         explorerUrl: 'https://sepolia.basescan.org/address',
       },
     },
-    x_layer: {
-      network_id: '196',
-      provider: () => {
-        return new HDWalletProvider({
-          pollingInterval,
-          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          // providerOrUrl: 'https://rpc.xlayer.tech',
-          providerOrUrl: 'https://rpc.ankr.com/xlayer',
-        });
-      },
-      gasPrice: 5500000000, // 5.5 gwei
-      gas: 25000000, // 25M
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-      confirmations: 0,
-      deploymentPollingInterval: pollingInterval,
-      disableConfirmationListener: true,
-      verify: {
-        apiUrl: 'https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER@truffle',
-        apiKey: process.env.XLAYER_API_KEY,
-        explorerUrl: 'https://www.oklink.com/xlayer/address',
-      },
-    },
-    mantle: {
-      network_id: '5000',
-      provider: () => {
-        return new HDWalletProvider({
-          pollingInterval,
-          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          // providerOrUrl: 'https://rpc.mantle.xyz',
-          providerOrUrl: 'https://rpc.ankr.com/mantle',
-        });
-      },
-      gasPrice: 50000000, // 0.05 gwei
-      gas: 25000000000, // 25B
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-      confirmations: 0,
-      deploymentPollingInterval: pollingInterval,
-      disableConfirmationListener: true,
-      verify: {
-        apiUrl: 'https://api.mantlescan.xyz/api',
-        apiKey: process.env.MANTLE_API_KEY,
-        explorerUrl: 'https://mantlescan.xyz/address',
-      },
-    },
     berachain_bartio: {
       network_id: '80084',
       provider: () => {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: process.env.BERACHAIN_BARTIO_NODE_URL,
+          providerOrUrl: process.env.BERACHAIN_BARTIO_RPC_URL,
         });
       },
       gasPrice: 1000000, // 0.001 gwei
@@ -272,6 +204,74 @@ module.exports = {
         apiUrl: 'https://api.routescan.io/v2/network/testnet/evm/80000/etherscan/api',
         apiKey: process.env.BERACHAIN_API_KEY,
         explorerUrl: 'https://80000.testnet.routescan.io',
+      },
+    },
+    mantle: {
+      network_id: '5000',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          // providerOrUrl: 'https://rpc.mantle.xyz',
+          providerOrUrl: 'https://rpc.ankr.com/mantle',
+        });
+      },
+      gasPrice: 50000000, // 0.05 gwei
+      gas: 25000000000, // 25B
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://api.mantlescan.xyz/api',
+        apiKey: process.env.MANTLE_API_KEY,
+        explorerUrl: 'https://mantlescan.xyz/address',
+      },
+    },
+    polygon_zkevm: {
+      network_id: '1101',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: process.env.POLYGON_ZKEVM_RPC_URL,
+        });
+      },
+      gasPrice: 7500000000, // 7.5 gwei
+      gas: 12000000,
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://api-zkevm.polygonscan.com/api',
+        apiKey: process.env.POLYGONSCAN_API_KEY,
+        explorerUrl: 'https://zkevm.polygonscan.com/address',
+      },
+    },
+    x_layer: {
+      network_id: '196',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          // providerOrUrl: 'https://rpc.xlayer.tech',
+          providerOrUrl: 'https://rpc.ankr.com/xlayer',
+        });
+      },
+      gasPrice: 5500000000, // 5.5 gwei
+      gas: 25000000, // 25M
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER@truffle',
+        apiKey: process.env.XLAYER_API_KEY,
+        explorerUrl: 'https://www.oklink.com/xlayer/address',
       },
     },
   },
