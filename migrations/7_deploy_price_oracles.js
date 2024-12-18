@@ -20,12 +20,8 @@
  * @typedef {Object} artifacts
  */
 
-const {
-  isDevNetwork,
-  deployContractIfNecessary,
-  getContract,
-} = require('./helpers');
-const { getChainlinkPriceOracleContract, getChainlinkPriceOracleV1Params } = require('./oracle_helpers');
+const { isDevNetwork, deployContractIfNecessary, getContract } = require('./helpers');
+const { getChainlinkPriceOracleV1Params, getChainlinkPriceOracleArtifact } = require('./oracle_helpers');
 
 // ============ Contracts ============
 
@@ -98,7 +94,7 @@ async function deployPriceOracles(deployer, network) {
     params = getChainlinkPriceOracleV1Params(network, {}, {});
   }
 
-  const oracleContract = getChainlinkPriceOracleContract(network, artifacts);
+  const oracleContract = getChainlinkPriceOracleArtifact(network, artifacts);
 
   const dolomiteMargin = await getDolomiteMargin(network);
   await deployContractIfNecessary(artifacts, deployer, network, oracleContract, [

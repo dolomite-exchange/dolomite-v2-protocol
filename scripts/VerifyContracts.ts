@@ -1,6 +1,8 @@
 import { execSync } from 'child_process';
 import deployed from '../migrations/deployed.json';
-import truffleConfig from '../truffle';
+import getConstructorArgsByContractName from './getConstructorArgsByContractName';
+
+const truffleConfig = require('../truffle.js');
 
 async function verifyAll(): Promise<void> {
   if (!process.env.NETWORK) {
@@ -8,6 +10,7 @@ async function verifyAll(): Promise<void> {
   }
 
   const keys = Object.keys(deployed);
+  const provider = truffleConfig.networks[process.env.NETWORK].provider();
   const networkId = truffleConfig.networks[process.env.NETWORK]['network_id'];
   console.log('Looking for contracts with network ID:', networkId);
 
@@ -16,12 +19,15 @@ async function verifyAll(): Promise<void> {
     if (contract && contract.address && !keys[i].toLowerCase().includes('AmmRebalancer'.toLowerCase())) {
       try {
         const contractName = contract.contractName ?? keys[i];
-        execSync(`truffle run verify --network ${process.env.NETWORK} ${contractName}@${contract.address}`, {
-          stdio: 'inherit',
-        });
-      } catch (e) {
-        console.error(`Could not verify ${keys[i]} due to error:`, e.message);
-      }
+        const constructorArgs = await getConstructorArgsByContractName(contractName, provider, networkId);
+        execSync(
+          `truffle run verify --forceConstructorArgs string:${constructorArgs} --network ${process.env.NETWORK} ${contractName}@${contract.address}`,
+          {
+            stdio: 'inherit',
+          },
+        );
+        // eslint-disable-next-line no-empty
+      } catch (e) {}
     } else {
       console.warn('No contract found for key:', keys[i]);
     }

@@ -3,7 +3,10 @@ const {
   isEthereumMainnet,
   isArbitrumOne,
   isPolygonZkEvm,
-  isBaseNetwork, isMantleNetwork, isXLayerNetwork, isBeraBartio,
+  isBaseNetwork,
+  isMantleNetwork,
+  isXLayerNetwork,
+  isBeraCartio,
 } = require('./helpers');
 
 function getDaiAddress(network, TokenB) {
@@ -40,7 +43,7 @@ function getLrcAddress(network, TokenF) {
     return '0xbbbbca6a901c926f240b89eacb641d8aec7aeafd';
   }
   if (isArbitrumOne(network)) {
-    return '0x46d0cE7de6247b0A95f67b43B589b4041BaE7fbE'
+    return '0x46d0cE7de6247b0A95f67b43B589b4041BaE7fbE';
   }
   throw new Error('Cannot find LRC');
 }
@@ -99,7 +102,7 @@ function getWethAddress(network, WETH) {
 
 function getWrappedCurrencyAddress(network, WETH) {
   // If a network we deploy to uses a different base currency...
-  if (isBeraBartio(network)) {
+  if (isBeraCartio(network)) {
     return '0x7507c1dc16935B82698e4C63f2746A2fCf994dF8'; // wBERA
   } else if (isMantleNetwork(network)) {
     return '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8'; // wMNT
@@ -108,7 +111,7 @@ function getWrappedCurrencyAddress(network, WETH) {
   }
 
   // fall through case
-  return getWethAddress(network, WETH)
+  return getWethAddress(network, WETH);
 }
 
 module.exports = {

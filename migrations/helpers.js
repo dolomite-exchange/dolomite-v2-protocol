@@ -10,6 +10,12 @@ async function setGlobalOperatorIfNecessary(dolomiteMargin, contractAddress) {
   }
 }
 
+async function setAutoTraderSpecialIfNecessary(dolomiteMargin, contractAddress) {
+  if (!(await dolomiteMargin.getIsAutoTraderSpecial(contractAddress))) {
+    await dolomiteMargin.ownerSetAutoTraderSpecial(contractAddress, true);
+  }
+}
+
 function isDevNetwork(network) {
   verifyNetwork(network);
   return network === 'dev' || network === 'docker' || isCoverageTestNetwork(network) || isLocalTestNetwork(network);
@@ -48,19 +54,24 @@ function isXLayerNetwork(network) {
 }
 
 function isBaseNetwork(network) {
-  return isBase(network) || isBaseSepolia(network);
+  return isBase(network);
 }
 
 // ================== Production Networks ==================
 
+function isArbitrumOne(network) {
+  verifyNetwork(network);
+  return network === 'arbitrum_one';
+}
+
+function isBase(network) {
+  verifyNetwork(network);
+  return network === 'base';
+}
+
 function isEthereumMainnet(network) {
   verifyNetwork(network);
   return network === 'mainnet';
-}
-
-function isPolygonZkEvm(network) {
-  verifyNetwork(network);
-  return network === 'polygon_zkevm';
 }
 
 function isBeraBartio(network) {
@@ -73,9 +84,24 @@ function isBeraCartio(network) {
   return network === 'berachain_cartio';
 }
 
+function isInk(network) {
+  verifyNetwork(network);
+  return network === 'ink';
+}
+
 function isMantle(network) {
   verifyNetwork(network);
   return network === 'mantle';
+}
+
+function isPolygonZkEvm(network) {
+  verifyNetwork(network);
+  return network === 'polygon_zkevm';
+}
+
+function isSuperSeed(network) {
+  verifyNetwork(network);
+  return network === 'super_seed';
 }
 
 function isXLayer(network) {
@@ -83,22 +109,7 @@ function isXLayer(network) {
   return network === 'x_layer';
 }
 
-function isArbitrumOne(network) {
-  verifyNetwork(network);
-  return network === 'arbitrum_one';
-}
-
-function isBase(network) {
-  verifyNetwork(network);
-  return network === 'base';
-}
-
 // ================== Test Networks ==================
-
-function isBaseSepolia(network) {
-  verifyNetwork(network);
-  return network === 'base_sepolia';
-}
 
 function isDocker(network) {
   verifyNetwork(network);
@@ -112,35 +123,38 @@ function getChainId(network) {
   if (isArbitrumOne(network)) {
     return 42161;
   }
-  if (isPolygonZkEvm(network)) {
-    return 1101;
-  }
   if (isBase(network)) {
     return 8453;
-  }
-  if (isBaseSepolia(network)) {
-    return 84532;
-  }
-  if (isCoverageTestNetwork(network)) {
-    return 1002;
-  }
-  if (network === 'docker') {
-    return 1313;
-  }
-  if (isLocalTestNetwork(network)) {
-    return 1001;
-  }
-  if (isXLayer(network)) {
-    return 196;
-  }
-  if (isMantle(network)) {
-    return 5000;
   }
   if (isBeraBartio(network)) {
     return 80084;
   }
   if (isBeraCartio(network)) {
     return 80000;
+  }
+  if (isCoverageTestNetwork(network)) {
+    return 1002;
+  }
+  if ('docker' === network) {
+    return 1313;
+  }
+  if (isInk(network)) {
+    return 57073;
+  }
+  if (isLocalTestNetwork(network)) {
+    return 1001;
+  }
+  if (isMantle(network)) {
+    return 5000;
+  }
+  if (isPolygonZkEvm(network)) {
+    return 1101;
+  }
+  if (isSuperSeed(network)) {
+    return 5330;
+  }
+  if (isXLayer(network)) {
+    return 196;
   }
   throw new Error('No chainId for network ' + network);
 }
@@ -199,12 +213,14 @@ function verifyNetwork(network) {
 
 function getDelayedMultisigAddress(network) {
   if (
-    isEthereumMainnet(network) ||
     isArbitrumNetwork(network) ||
-    isPolygonZkEvmNetwork(network) ||
-    isBaseNetwork(network) ||
-    isMantleNetwork(network) ||
     isBeraNetwork(network) ||
+    isBaseNetwork(network) ||
+    isEthereumMainnet(network) ||
+    isInk(network) ||
+    isMantleNetwork(network) ||
+    isPolygonZkEvmNetwork(network) ||
+    isSuperSeed(network) ||
     isXLayerNetwork(network)
   ) {
     return '0x52d7BcB650c591f6E8da90f797A1d0Bfd8fD05F9';
@@ -223,9 +239,14 @@ function getChainlinkSequencerUptimeFeed(network, TestSequencerUptimeFeedAggrega
     return '0xFdB631F5EE196F0ed6FAa767959853A9F217697D';
   } else if (isBase(network)) {
     return '0xBCF85224fc0756B9Fa45aA7892530B47e10b6433';
-  } else if (isBaseSepolia(network)) {
-    return null;
-  } else if (isBeraNetwork(network) || isMantle(network) || isPolygonZkEvm(network) || isXLayer(network)) {
+  } else if (
+    isBeraNetwork(network) ||
+    isInk(network) ||
+    isMantle(network) ||
+    isPolygonZkEvm(network) ||
+    isSuperSeed(network) ||
+    isXLayer(network)
+  ) {
     return null;
   }
 
@@ -248,6 +269,10 @@ const shouldOverwrite = (contract, network) => {
 
 const getNoOverwriteParams = () => ({ overwrite: false });
 
+async function sleep(millis) {
+  return new Promise(resolve => setTimeout(resolve, millis));
+}
+
 async function deployContractIfNecessary(artifacts, deployer, network, artifact, parameters) {
   const contractName = artifact.toJSON().contractName;
 
@@ -257,6 +282,7 @@ async function deployContractIfNecessary(artifacts, deployer, network, artifact,
       if (
         json[contractName] &&
         json[contractName][getChainId(network)] &&
+        json[contractName][getChainId(network)].address &&
         json[contractName][getChainId(network)].address !== '0x0000000000000000000000000000000000000000'
       ) {
         return await artifact.at(json[contractName][getChainId(network)].address);
@@ -279,19 +305,33 @@ async function deployContractIfNecessary(artifacts, deployer, network, artifact,
         .require('ICREATE3Factory')
         .at('0xa8F7e7A361De6A2172fcb2accE68bd21597599F7');
 
+      let transactionHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
       const deployerAddress = web3.eth.accounts.privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY);
       const contractAddress = await CREATE3Factory.getDeployed(deployerAddress.address, salt);
       if ((await web3.eth.getCode(contractAddress)) === '0x') {
         const result = await CREATE3Factory.deploy(salt, code);
+        await sleep(2000);
         if (!json[contractName]) {
           json[contractName] = {};
         }
-        json[contractName][getChainId(network)] = {
+        transactionHash = result.receipt.transactionHash;
+      }
+
+      if (!json[contractName][getChainId(network)] || !json[contractName][getChainId(network)].address) {
+        const data = {
           links: artifact.links,
           address: contractAddress,
-          transactionHash: result.receipt.transactionHash,
+          transactionHash: transactionHash,
         };
-        writeFileSync('migrations/deployed.json', JSON.stringify(json, null, 2));
+        console.log(
+          '='.repeat(49 - (contractName.length / 2)),
+          contractName,
+          '='.repeat(49 - (contractName.length / 2)),
+        );
+        console.log(JSON.stringify(data, null, 2));
+        console.log('='.repeat(100));
+        json[contractName][getChainId(network)] = data;
+        writeFileSync('migrations/deployed.json', JSON.stringify(sortFileAndReturn(json), null, 2));
       }
 
       return await artifact.at(contractAddress);
@@ -303,6 +343,28 @@ async function deployContractIfNecessary(artifacts, deployer, network, artifact,
     const json = JSON.parse(readFileSync('migrations/deployed.json').toString());
     return artifact.at(json[contractName][getChainId(network)].address);
   }
+}
+
+function sortFileAndReturn(file) {
+  const sortedFileKeys = Object.keys(file).sort((a, b) => {
+    const aSplitPoint = a.search(/V\d+$/);
+    const bSplitPoint = b.search(/V\d+$/);
+    if (aSplitPoint !== -1 && bSplitPoint !== -1) {
+      const aBase = a.substring(0, aSplitPoint);
+      const bBase = b.substring(0, bSplitPoint);
+      if (aBase === bBase) {
+        const aVersion = a.substring(aSplitPoint + 1);
+        const bVersion = b.substring(bSplitPoint + 1);
+        return parseInt(aVersion, 10) - parseInt(bVersion, 10);
+      }
+    }
+    return a.localeCompare(b);
+  });
+  const sortedFile = {};
+  for (const key of sortedFileKeys) {
+    sortedFile[key] = file[key];
+  }
+  return sortedFile;
 }
 
 async function getContract(network, artifact) {
@@ -324,10 +386,12 @@ module.exports = {
   getChainId,
   isDevNetwork,
   isEthereumMainnet,
-  isPolygonZkEvm,
   isBeraNetwork,
   isBeraCartio,
+  isInk,
   isMantleNetwork,
+  isPolygonZkEvm,
+  isSuperSeed,
   isXLayerNetwork,
   isDocker,
   getRiskLimits,
@@ -341,6 +405,7 @@ module.exports = {
   shouldOverwrite,
   getNoOverwriteParams,
   setGlobalOperatorIfNecessary,
+  setAutoTraderSpecialIfNecessary,
   deployContractIfNecessary,
   getContract,
 };

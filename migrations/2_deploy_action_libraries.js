@@ -24,8 +24,7 @@ const {
   isDevNetwork,
   getPolynomialParams,
   getDoubleExponentParams,
-  shouldOverwrite,
-  getNoOverwriteParams, deployContractIfNecessary,
+  deployContractIfNecessary,
 } = require('./helpers');
 
 // ============ Main Migration ============

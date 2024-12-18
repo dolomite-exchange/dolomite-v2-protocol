@@ -127,7 +127,7 @@ module.exports = {
           providerOrUrl: 'https://base.publicnode.com',
         });
       },
-      gasPrice: 1000000000, // 1 gwei
+      gasPrice: 100000000, // 0.1 gwei
       gas: 25000000,
       timeoutBlocks: 5000,
       networkCheckTimeout: 120000,
@@ -138,28 +138,6 @@ module.exports = {
         apiUrl: 'https://api.basescan.org/api',
         apiKey: process.env.BASESCAN_API_KEY,
         explorerUrl: 'https://basescan.org/address',
-      },
-    },
-    base_sepolia: {
-      network_id: '84532',
-      provider: () => {
-        return new HDWalletProvider({
-          pollingInterval,
-          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          providerOrUrl: 'https://sepolia.base.org',
-        });
-      },
-      gasPrice: 1000000000, // 1 gwei
-      gas: 25000000,
-      timeoutBlocks: 5000,
-      networkCheckTimeout: 120000,
-      confirmations: 0,
-      deploymentPollingInterval: pollingInterval,
-      disableConfirmationListener: true,
-      verify: {
-        apiUrl: 'https://api-sepolia.basescan.org/api',
-        apiKey: process.env.BASESCAN_API_KEY,
-        explorerUrl: 'https://sepolia.basescan.org/address',
       },
     },
     berachain_bartio: {
@@ -206,13 +184,34 @@ module.exports = {
         explorerUrl: 'https://80000.testnet.routescan.io',
       },
     },
+    ink: {
+      network_id: '57073',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          providerOrUrl: 'https://rpc-gel.inkonchain.com/fd96af67f38f4bf8a137b167171eeddd',
+        });
+      },
+      gasPrice: 5000000, // 0.005 gwei
+      gas: 10000000, // 10M
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://explorer.inkonchain.com/api',
+        apiKey: process.env.INK_API_KEY,
+        explorerUrl: 'https://explorer.inkonchain.com',
+      },
+    },
     mantle: {
       network_id: '5000',
       provider: () => {
         return new HDWalletProvider({
           pollingInterval,
           privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
-          // providerOrUrl: 'https://rpc.mantle.xyz',
           providerOrUrl: 'https://rpc.ankr.com/mantle',
         });
       },
@@ -226,7 +225,7 @@ module.exports = {
       verify: {
         apiUrl: 'https://api.mantlescan.xyz/api',
         apiKey: process.env.MANTLE_API_KEY,
-        explorerUrl: 'https://mantlescan.xyz/address',
+        explorerUrl: 'https://mantlescan.xyz',
       },
     },
     polygon_zkevm: {
@@ -249,6 +248,29 @@ module.exports = {
         apiUrl: 'https://api-zkevm.polygonscan.com/api',
         apiKey: process.env.POLYGONSCAN_API_KEY,
         explorerUrl: 'https://zkevm.polygonscan.com/address',
+      },
+    },
+    super_seed: {
+      network_id: '5330',
+      provider: () => {
+        return new HDWalletProvider({
+          pollingInterval,
+          privateKeys: [process.env.DEPLOYER_PRIVATE_KEY],
+          // providerOrUrl: 'https://mainnet.superseed.xyz',
+          providerOrUrl: 'https://magical-solemn-star.superseed-mainnet.quiknode.pro/ca608ad5d36db0699081667f87e312a5ee923627',
+        });
+      },
+      gasPrice: 5000000, // 0.005 gwei
+      gas: 10000000, // 10M
+      timeoutBlocks: 5000,
+      networkCheckTimeout: 120000,
+      confirmations: 0,
+      deploymentPollingInterval: pollingInterval,
+      disableConfirmationListener: true,
+      verify: {
+        apiUrl: 'https://explorer.superseed.xyz/api',
+        apiKey: process.env.SUPER_SEED_API_KEY,
+        explorerUrl: 'https://explorer.superseed.xyz',
       },
     },
     x_layer: {

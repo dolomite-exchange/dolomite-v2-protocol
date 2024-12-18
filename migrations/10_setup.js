@@ -28,7 +28,11 @@ const {
   isBeraNetwork,
   isMantleNetwork,
   isXLayerNetwork,
-  isBaseNetwork, getContract,
+  isBaseNetwork,
+  getContract,
+  isSuperSeed,
+  isInk,
+  setAutoTraderSpecialIfNecessary,
 } = require('./helpers');
 const {
   getDaiAddress,
@@ -73,12 +77,19 @@ module.exports = migration;
 async function setupProtocol(deployer, network) {
   const expiry = await getContract(network, Expiry);
   const dolomiteMargin = await getDolomiteMargin(network);
-  await dolomiteMargin.ownerSetAutoTraderSpecial(expiry.address, true);
+
+  await setAutoTraderSpecialIfNecessary(dolomiteMargin, expiry.address);
 
   if (isDevNetwork(network) && !isDocker(network)) {
     return;
   }
-  if (isMantleNetwork(network) || isXLayerNetwork(network) || isBeraNetwork(network)) {
+  if (
+    isMantleNetwork(network) ||
+    isBeraNetwork(network) ||
+    isInk(network) ||
+    isSuperSeed(network) ||
+    isXLayerNetwork(network)
+  ) {
     return;
   }
 
@@ -86,8 +97,10 @@ async function setupProtocol(deployer, network) {
 
   await addMarkets(dolomiteMargin, tokens, oracles, setters);
 
-  const depositWithdrawalProxy = await DepositWithdrawalProxy.deployed();
-  depositWithdrawalProxy.initializePayableMarket(getWrappedCurrencyAddress(network, TestWETH));
+  const depositWithdrawalProxy = await getContract(network, DepositWithdrawalProxy);
+  if (!(await depositWithdrawalProxy.g_initialized())) {
+    depositWithdrawalProxy.initializePayableMarket(getWrappedCurrencyAddress(network, TestWETH));
+  }
 }
 
 async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters) {
@@ -98,18 +111,22 @@ async function addMarkets(dolomiteMargin, tokens, priceOracles, interestSetters)
   const earningsRateOverride = '0';
 
   for (let i = 0; i < tokens.length; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    await dolomiteMargin.ownerAddMarket(
-      tokens[i].address,
-      priceOracles[i].address,
-      interestSetters[i].address,
-      marginPremium,
-      liquidationSpreadPremium,
-      maxWei,
-      maxWei,
-      { value: earningsRateOverride },
-      isClosing,
-    );
+    try {
+      await dolomiteMargin.getMarketIdByTokenAddress(tokens[i].address);
+    } catch (e) {
+      // The market has not been added yet. Add it now
+      await dolomiteMargin.ownerAddMarket(
+        tokens[i].address,
+        priceOracles[i].address,
+        interestSetters[i].address,
+        marginPremium,
+        liquidationSpreadPremium,
+        maxWei,
+        maxWei,
+        { value: earningsRateOverride },
+        isClosing,
+      );
+    }
   }
 }
 
@@ -124,9 +141,7 @@ async function getDolomiteMargin(network) {
 
 function getTokens(network) {
   if (isPolygonZkEvm(network) || isBaseNetwork(network)) {
-    return [
-      { address: getWethAddress(network, TestWETH) },
-    ];
+    return [{ address: getWethAddress(network, TestWETH) }];
   } else if (isArbitrumOne(network)) {
     const tokens = [
       { address: getWethAddress(network, TestWETH) },
@@ -150,11 +165,12 @@ async function getOracles(network) {
     return tokens.map(() => ({ address: TestPriceOracle.address }));
   }
 
-  const OracleContract = getChainlinkPriceOracleContract(network, artifacts);
+  const OracleContract = await getChainlinkPriceOracleContract(network, artifacts);
   return tokens.map(() => ({ address: OracleContract.address }));
 }
 
 async function getSetters(network) {
   const tokens = getTokens(network);
-  return tokens.map(() => ({ address: AlwaysZeroInterestSetter.address }));
+  const alwaysZeroInterestSetter = await getContract(network, AlwaysZeroInterestSetter);
+  return tokens.map(() => ({ address: alwaysZeroInterestSetter.address }));
 }

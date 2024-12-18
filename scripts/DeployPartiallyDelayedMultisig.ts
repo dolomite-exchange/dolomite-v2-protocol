@@ -18,18 +18,22 @@ async function deploy(): Promise<void> {
   if (!network) {
     return Promise.reject(new Error('No NETWORK specified!'));
   }
+  if (!truffle.networks[network]) {
+    return Promise.reject(new Error('Invalid NETWORK specified!'));
+  }
 
   const nodeVersion = execSync('node --version', { stdio: 'pipe' });
   if (nodeVersion.toString().trim() !== 'v16.15.1') {
     return Promise.reject(new Error('Incorrect node version! Expected v16.15.1'));
   }
 
+  console.log(`Deploying to ${network}...`);
   const contractName = PartiallyDelayedMultisig.contractName;
   const networkId = truffle.networks[network]['network_id'];
   const provider = truffle.networks[network].provider();
   const dolomiteMargin = new DolomiteMargin(provider, networkId);
   const deployer = (await dolomiteMargin.web3.eth.getAccounts())[0];
-  console.log('Deploying from: ', deployer);
+  console.log('Deploying from:', deployer);
 
   const contract = new dolomiteMargin.web3.eth.Contract(PartiallyDelayedMultisig.abi);
   const txResult = await dolomiteMargin.contracts.callContractFunction(
@@ -72,8 +76,8 @@ async function deploy(): Promise<void> {
 }
 
 deploy()
+  .then(() => process.exit(0))
   .catch(e => {
-    console.error(e.message);
+    console.error(e);
     process.exit(1);
-  })
-  .then(() => process.exit(0));
+  });

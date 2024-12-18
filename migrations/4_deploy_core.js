@@ -35,6 +35,8 @@ const {
   isBeraNetwork,
   getContract,
   deployContractIfNecessary,
+  isInk,
+  isSuperSeed,
 } = require('./helpers');
 
 const DolomiteMargin = artifacts.require('DolomiteMargin');
@@ -59,7 +61,7 @@ async function deployBaseProtocol(deployer, network) {
 
   let operationImplName;
   if (!isDevNetwork(network)) {
-    operationImplName = 'OperationImpl'
+    operationImplName = 'OperationImpl';
   } else {
     operationImplName = 'TestOperationImpl';
   }
@@ -68,14 +70,16 @@ async function deployBaseProtocol(deployer, network) {
   let dolomiteMargin;
   if (isDevNetwork(network)) {
     dolomiteMargin = artifacts.require('TestDolomiteMargin');
-    await dolomiteMargin.link('TestOperationImpl', OperationImpl.address)
+    await dolomiteMargin.link('TestOperationImpl', OperationImpl.address);
   } else if (
     isEthereumMainnet(network) ||
     isArbitrumNetwork(network) ||
     isBaseNetwork(network) ||
     isBeraNetwork(network) ||
+    isInk(network) ||
     isMantleNetwork(network) ||
     isPolygonZkEvmNetwork(network) ||
+    isSuperSeed(network) ||
     isXLayerNetwork(network)
   ) {
     dolomiteMargin = DolomiteMargin;
@@ -90,22 +94,16 @@ async function deployBaseProtocol(deployer, network) {
   ]);
 
   const riskParams = await getRiskParams(network);
-  dolomiteMargin = await deployContractIfNecessary(
-    artifacts,
-    deployer,
-    network,
-    dolomiteMargin,
-    [
-      await getRiskLimits(),
-      riskParams.marginRatio,
-      riskParams.liquidationSpread,
-      riskParams.earningsRate,
-      riskParams.minBorrowedValue,
-      riskParams.accountMaxNumberOfMarketsWithBalances,
-      AlwaysOnlineOracleSentinel.address,
-      riskParams.callbackGasLimit,
-    ],
-  );
+  dolomiteMargin = await deployContractIfNecessary(artifacts, deployer, network, dolomiteMargin, [
+    await getRiskLimits(),
+    riskParams.marginRatio,
+    riskParams.liquidationSpread,
+    riskParams.earningsRate,
+    riskParams.minBorrowedValue,
+    riskParams.accountMaxNumberOfMarketsWithBalances,
+    AlwaysOnlineOracleSentinel.address,
+    riskParams.callbackGasLimit,
+  ]);
 
   const TestSequencerUptimeFeedAggregator = artifacts.require('TestSequencerUptimeFeedAggregator');
   const ChainlinkOracleSentinel = artifacts.require('ChainlinkOracleSentinel');
@@ -116,12 +114,8 @@ async function deployBaseProtocol(deployer, network) {
       deployer,
       network,
       ChainlinkOracleSentinel,
-      [
-        getChainlinkOracleSentinelGracePeriod(),
-        uptimeFeed,
-        dolomiteMargin.address,
-      ],
-    )
+      [getChainlinkOracleSentinelGracePeriod(), uptimeFeed, dolomiteMargin.address],
+    );
 
     if ((await dolomiteMargin.getOracleSentinel()).toLowerCase() !== chainlinkOracleSentinel.address.toLowerCase()) {
       await dolomiteMargin.ownerSetOracleSentinel(chainlinkOracleSentinel.address);

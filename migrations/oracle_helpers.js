@@ -10,6 +10,9 @@ const {
   isXLayerNetwork,
   isBase,
   isBeraNetwork,
+  isInk,
+  isSuperSeed,
+  getContract,
 } = require('./helpers');
 const {
   getDaiAddress,
@@ -111,11 +114,19 @@ function getUsdcEthAggregatorAddress(network, TestUsdcEthChainlinkAggregator) {
   throw new Error(`Cannot find USDC-ETH aggregator for network: ${network}`);
 }
 
-function getChainlinkPriceOracleContract(network, artifacts) {
+function getChainlinkPriceOracleArtifact(network, artifacts) {
   if (isDevNetwork(network)) {
     return artifacts.require('TestChainlinkPriceOracleV1');
   } else {
     return artifacts.require('ChainlinkPriceOracleV1');
+  }
+}
+
+async function getChainlinkPriceOracleContract(network, artifacts) {
+  if (isDevNetwork(network)) {
+    return artifacts.require('TestChainlinkPriceOracleV1');
+  } else {
+    return getContract(network, artifacts.require('ChainlinkPriceOracleV1'));
   }
 }
 
@@ -135,7 +146,13 @@ function getChainlinkPriceOracleV1Params(network, tokens, aggregators) {
   } else if (isBaseNetwork(network) || isPolygonZkEvmNetwork(network)) {
     const pairs = [[getWethAddress(network), getEthUsdAggregatorAddress(network), 18, ADDRESSES.ZERO]];
     return mapPairsToParams(pairs);
-  } else if (isBeraNetwork(network) || isMantleNetwork(network) || isXLayerNetwork(network)) {
+  } else if (
+    isBeraNetwork(network) ||
+    isInk(network) ||
+    isMantleNetwork(network) ||
+    isSuperSeed(network) ||
+    isXLayerNetwork(network)
+  ) {
     return undefined; // return nothing since Chainlink is not live
   } else if (isDevNetwork(network)) {
     const { TokenA, TokenB, TokenD, TokenE, TokenF, TestWETH } = tokens;
@@ -185,5 +202,6 @@ function mapPairsToParams(pairs) {
 
 module.exports = {
   getChainlinkPriceOracleV1Params,
+  getChainlinkPriceOracleArtifact,
   getChainlinkPriceOracleContract,
 };
