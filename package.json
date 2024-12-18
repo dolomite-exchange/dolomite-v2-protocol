@@ -1,6 +1,6 @@
 {
   "name": "@dolomite-exchange/dolomite-margin",
-  "version": "0.12.15",
+  "version": "0.13.0",
   "description": "Ethereum Smart Contracts and TypeScript library used for the DolomiteMargin trading protocol",
   "engines": {
     "npm": "6.14.x"
@@ -48,7 +48,7 @@
     "docker_node": "ganache-cli -i 1313 -d -p 8545 -h 0.0.0.0 --db=/home/.ganache",
     "clean_contract_json": "ts-node ./scripts/CleanBuild.ts",
     "fix_deployment_file": "ts-node ./scripts/FixDeploymentFile.ts",
-    "deploy": "npm run fix_deployment_file && NODE_ENV=production node --max-old-space-size=16384 node_modules/.bin/truffle migrate --network $NETWORK && npm run save_deployed_addresses",
+    "deploy": "npm run fix_deployment_file && NODE_ENV=production node --max-old-space-size=32384 node_modules/.bin/truffle migrate --network $NETWORK && npm run save_deployed_addresses",
     "deploy_single": "NODE_ENV=production ts-node scripts/DeployContract.ts",
     "deploy_partially_delayed_multisig": "NODE_ENV=production ts-node scripts/DeployPartiallyDelayedMultisig.ts",
     "deploy_arbitrum_goerli": "NETWORK=arbitrum_goerli npm run deploy",
@@ -57,9 +57,11 @@
     "deploy_base_sepolia": "NETWORK=base_sepolia npm run deploy",
     "deploy_berachain_bartio": "NETWORK=berachain_bartio npm run deploy",
     "deploy_berachain_cartio": "NETWORK=berachain_cartio npm run deploy",
+    "deploy_ink": "NETWORK=ink npm run deploy",
     "deploy_mainnet": "NETWORK=mainnet npm run deploy",
-    "deploy_polygon_zkevm": "NETWORK=polygon_zkevm npm run deploy",
     "deploy_mantle": "NETWORK=mantle npm run deploy",
+    "deploy_polygon_zkevm": "NETWORK=polygon_zkevm npm run deploy",
+    "deploy_super_seed": "NETWORK=super_seed npm run deploy",
     "deploy_x_layer": "NETWORK=x_layer npm run deploy",
     "deploy_coverage": "RPC_NODE_URI=http:/w/127.0.01:8545 npm run reset_test_evm && COVERAGE_REPLICA_DEPLOY=true node --max-old-space-size=32768 node_modules/.bin/truffle migrate --network coverage_replica && RPC_NODE_URI=http://127.0.0.1:8545 npm run snapshot_test_evm && npm run build:contract-artifacts",
     "deploy_test": "npm run reset_test_evm && npm run migrate -- --network test --reset && npm run snapshot_test_evm && npm run build:contract-artifacts",
